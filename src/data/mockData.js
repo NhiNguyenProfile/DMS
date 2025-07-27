@@ -1,0 +1,262 @@
+// Field Groups
+export const FIELD_GROUPS = [
+  { group_code: "general", name: "General Info" },
+  { group_code: "address", name: "Address Details" },
+  { group_code: "credit", name: "Credit Info" },
+  { group_code: "contact", name: "Contact Information" },
+];
+
+// Sample Fields
+export const SAMPLE_FIELDS = [
+  {
+    id: 1,
+    field_code: "customerName",
+    label: "Tên khách hàng",
+    type: "Text",
+    required: true,
+    auto_fill_json: null,
+    order: 1,
+    group_code: "general",
+    default_value: "",
+    validation_rule: "",
+  },
+  {
+    id: 2,
+    field_code: "taxCode",
+    label: "Mã số thuế",
+    type: "Text",
+    required: false,
+    auto_fill_json: null,
+    order: 2,
+    group_code: "general",
+    default_value: "",
+    validation_rule: "",
+  },
+  {
+    id: 3,
+    field_code: "email",
+    label: "Email",
+    type: "Text",
+    required: true,
+    auto_fill_json: '{"source": "user_profile", "field": "email"}',
+    order: 3,
+    group_code: "contact",
+    default_value: "",
+    validation_rule: "email_format",
+  },
+  {
+    id: 4,
+    field_code: "address",
+    label: "Địa chỉ",
+    type: "Text",
+    required: true,
+    auto_fill_json: null,
+    order: 1,
+    group_code: "address",
+    default_value: "",
+    validation_rule: "",
+  },
+  {
+    id: 5,
+    field_code: "creditLimit",
+    label: "Hạn mức tín dụng",
+    type: "Text",
+    required: false,
+    auto_fill_json: null,
+    order: 1,
+    group_code: "credit",
+    default_value: "0",
+    validation_rule: "credit_limit_validation",
+  },
+];
+
+// Sample Validation Rules
+export const SAMPLE_VALIDATION_RULES = [
+  {
+    id: 1,
+    rule_name: "Email Format Check",
+    rule_description: "Validate email format using regex",
+    applied_entity: "Customer",
+    applied_request_type: "Create",
+    status: "Active",
+    criteria: [{ field_name: "level", operator: "IN", values: ["L1", "L2"] }],
+    configuration: [
+      {
+        field_name: "email",
+        operator: "REGEX",
+        value: "^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$",
+        message: "Invalid email format",
+      },
+    ],
+  },
+  {
+    id: 2,
+    rule_name: "Credit Limit >= 0",
+    rule_description: "Ensure credit limit is not negative",
+    applied_entity: "Customer",
+    applied_request_type: "Create",
+    status: "Active",
+    criteria: [
+      { field_name: "customer_type", operator: "EQUALS", value: "BUSINESS" },
+    ],
+    configuration: [
+      {
+        field_name: "creditLimit",
+        operator: "GREATER_THAN",
+        value: "0",
+        message: "Credit limit must be greater than 0",
+      },
+    ],
+  },
+  {
+    id: 3,
+    rule_name: "Required Tax Code",
+    rule_description: "Tax code is required for business customers",
+    applied_entity: "Customer",
+    applied_request_type: "Create",
+    status: "Active",
+    criteria: [
+      { field_name: "customer_type", operator: "EQUALS", value: "BUSINESS" },
+    ],
+    configuration: [
+      {
+        field_name: "taxCode",
+        operator: "NOT_EQUALS",
+        value: "",
+        message: "Tax code is required for business customers",
+      },
+    ],
+  },
+];
+
+// Entity configurations
+export const ENTITY_CONFIGS = {
+  Customer: {
+    available_request_types: [
+      { value: "Create", label: "Create" },
+      { value: "Edit", label: "Edit" },
+      { value: "Disable", label: "Disable" },
+      { value: "Unlock", label: "Unlock" },
+    ],
+    default_groups: ["general", "address", "contact", "credit"],
+  },
+  "Spare Part": {
+    available_request_types: [
+      { value: "Create", label: "Create" },
+      { value: "Edit", label: "Edit" },
+      { value: "Disable", label: "Disable" },
+      { value: "Unlock", label: "Unlock" },
+    ],
+    default_groups: ["general"],
+  },
+  "Finished Good": {
+    available_request_types: [
+      { value: "Create", label: "Create" },
+      { value: "Edit", label: "Edit" },
+      { value: "Disable", label: "Disable" },
+      { value: "Unlock", label: "Unlock" },
+    ],
+    default_groups: ["general"],
+  },
+};
+
+// Sample Workflows
+export const SAMPLE_WORKFLOWS = [
+  {
+    id: 1,
+    name: "Customer Create – Standard",
+    description: "Standard workflow for creating new customers",
+    entity: "Customer",
+    request_type: "Create",
+    status: "Active",
+    steps: [
+      {
+        id: 1,
+        order: 1,
+        step_name: "Entry by Sale Admin",
+        type: "Input",
+        field_groups: ["general", "contact"],
+        assignee_type: "Role",
+        assignee: "Sale Admin",
+        sla_hours: 24,
+        timeout_action: "Remind",
+      },
+      {
+        id: 2,
+        order: 2,
+        step_name: "Credit Approval",
+        type: "Approval",
+        field_groups: ["credit"],
+        assignee_type: "Role",
+        assignee: "Credit Officer",
+        sla_hours: 48,
+        timeout_action: "Escalate",
+      },
+      {
+        id: 3,
+        order: 3,
+        step_name: "Legal & Finance Review",
+        type: "Approval",
+        field_groups: ["credit", "contact"],
+        assignee_type: "Role",
+        assignee: "Legal,Finance",
+        sla_hours: 72,
+        timeout_action: "Auto-Reject",
+      },
+      {
+        id: 4,
+        order: 4,
+        step_name: "Sync to Dynamics",
+        type: "System",
+        field_groups: [],
+        assignee_type: "System",
+        assignee: "System",
+        sla_hours: 1,
+        timeout_action: "None",
+      },
+    ],
+  },
+  {
+    id: 2,
+    name: "Spare Part Disable – Quick",
+    description: "Quick workflow for disabling spare parts",
+    entity: "Spare Part",
+    request_type: "Disable",
+    status: "Inactive",
+    steps: [
+      {
+        id: 5,
+        order: 1,
+        step_name: "Manager Approval",
+        type: "Approval",
+        field_groups: ["general"],
+        assignee_type: "Role",
+        assignee: "Manager",
+        sla_hours: 24,
+        timeout_action: "Remind",
+      },
+      {
+        id: 6,
+        order: 2,
+        step_name: "Inventory Check",
+        type: "Input",
+        field_groups: ["general"],
+        assignee_type: "User",
+        assignee: "john.doe",
+        sla_hours: 12,
+        timeout_action: "Escalate",
+      },
+      {
+        id: 7,
+        order: 3,
+        step_name: "System Update",
+        type: "System",
+        field_groups: [],
+        assignee_type: "System",
+        assignee: "System",
+        sla_hours: 1,
+        timeout_action: "None",
+      },
+    ],
+  },
+];

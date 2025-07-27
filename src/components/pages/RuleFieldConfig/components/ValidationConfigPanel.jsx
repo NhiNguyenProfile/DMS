@@ -1,0 +1,275 @@
+import { useState, useEffect } from "react";
+import Text from "../../../atoms/Text";
+import Button from "../../../atoms/Button";
+import Input from "../../../atoms/Input";
+
+import Toggle from "../../../atoms/Toggle";
+import Tabs, { TabPanel } from "../../../atoms/Tabs";
+import { X, Save, Info } from "lucide-react";
+
+const ValidationConfigPanel = ({
+  config,
+  selectedEntity,
+  selectedRequestType,
+  onClose,
+  onSave,
+}) => {
+  const [formData, setFormData] = useState({
+    ruleName: "",
+    ruleDescription: "",
+    status: "Active",
+    validationConfigJson: "",
+  });
+
+  const [errors, setErrors] = useState({});
+  const [activeTab, setActiveTab] = useState("general");
+
+  // Load config data when editing
+  useEffect(() => {
+    if (config) {
+      setFormData({
+        ruleName: config.ruleName || "",
+        ruleDescription: config.ruleDescription || "",
+        status: config.status || "Active",
+        validationConfigJson: config.validationConfig
+          ? JSON.stringify(config.validationConfig, null, 2)
+          : "",
+      });
+    }
+  }, [config]);
+
+  const handleInputChange = (field, value) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: null }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Validate JSON configuration
+    if (formData.validationConfigJson) {
+      try {
+        JSON.parse(formData.validationConfigJson);
+      } catch {
+        newErrors.validationConfigJson = "Invalid JSON format";
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSave = () => {
+    if (validateForm()) {
+      // Prepare final data for JSON mode only
+      let finalData = {
+        ...formData,
+      };
+
+      // Parse JSON configuration
+      try {
+        finalData.validationConfig = JSON.parse(formData.validationConfigJson);
+      } catch (error) {
+        // Should not happen due to validation
+        finalData.validationConfig = {};
+      }
+
+      onSave(finalData);
+    }
+  };
+
+  const renderGeneralTab = () => (
+    <div className="p-6 space-y-4">
+      <div>
+        <Text variant="body" weight="medium" className="mb-2">
+          Rule Name
+        </Text>
+        <Input
+          value={formData.ruleName}
+          onChange={(e) => handleInputChange("ruleName", e.target.value)}
+          placeholder="Enter rule name"
+        />
+      </div>
+
+      <div>
+        <Text variant="body" weight="medium" className="mb-2">
+          Rule Description
+        </Text>
+        <Input
+          value={formData.ruleDescription}
+          onChange={(e) => handleInputChange("ruleDescription", e.target.value)}
+          placeholder="Enter rule description"
+        />
+      </div>
+
+      <div>
+        <Text variant="body" weight="medium" className="mb-2">
+          Status
+        </Text>
+        <Toggle
+          checked={formData.status === "Active"}
+          onChange={(checked) =>
+            handleInputChange("status", checked ? "Active" : "Inactive")
+          }
+          label={formData.status}
+        />
+      </div>
+    </div>
+  );
+
+  const renderConfigurationTab = () => (
+    <div className="p-6 space-y-6">
+      <Text variant="heading" size="md" weight="semibold">
+        JSON Configuration
+      </Text>
+
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Text variant="body" weight="medium">
+              Validation Configuration (JSON)
+            </Text>
+            <div className="group relative">
+              <Info
+                size={16}
+                className="text-gray-400 hover:text-gray-600 cursor-help"
+              />
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                Define validation rules in JSON format
+                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+              </div>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="small"
+            onClick={() => {
+              handleInputChange(
+                "validationConfigJson",
+                JSON.stringify(
+                  [
+                    {
+                      fieldKey: "taxCode",
+                      validations: [
+                        { type: "required", message: "Trường này là bắt buộc" },
+                        {
+                          type: "regex",
+                          pattern: "^[0-9]{10}$",
+                          message: "Mã số thuế phải gồm đúng 10 chữ số",
+                        },
+                      ],
+                    },
+                    {
+                      fieldKey: "email",
+                      validations: [
+                        { type: "required", message: "Vui lòng nhập email" },
+                        {
+                          type: "regex",
+                          pattern: "^[^@\\\\s]+@[^@\\\\s]+\\\\.[^@\\\\s]+$",
+                          message: "Email không đúng định dạng",
+                        },
+                      ],
+                    },
+                  ],
+                  null,
+                  2
+                )
+              );
+            }}
+          >
+            Load Template
+          </Button>
+        </div>
+        <textarea
+          className="w-full h-64 p-3 border border-gray-200 rounded-lg font-mono text-sm"
+          value={formData.validationConfigJson || ""}
+          onChange={(e) =>
+            handleInputChange("validationConfigJson", e.target.value)
+          }
+          placeholder={`[
+  {
+    "fieldKey": "taxCode",
+    "validations": [
+      { "type": "required", "message": "Trường này là bắt buộc" },
+      { "type": "regex", "pattern": "^[0-9]{10}$", "message": "Mã số thuế phải gồm đúng 10 chữ số" }
+    ]
+  },
+  {
+    "fieldKey": "email",
+    "validations": [
+      { "type": "required", "message": "Vui lòng nhập email" },
+      { "type": "regex", "pattern": "^[^@\\\\s]+@[^@\\\\s]+\\\\.[^@\\\\s]+$", "message": "Email không đúng định dạng" }
+    ]
+  },
+  {
+    "fieldKey": "age",
+    "validations": [
+      { "type": "required" },
+      { "type": "min", "value": 18, "message": "Tuổi tối thiểu là 18" },
+      { "type": "max", "value": 65, "message": "Tuổi tối đa là 65" }
+    ]
+  },
+  {
+    "fieldKey": "phoneNumber",
+    "validations": [
+      { "type": "regex", "pattern": "^0\\\\d{9}$", "message": "Số điện thoại không hợp lệ" }
+    ]
+  }
+]`}
+        />
+        {errors.validationConfigJson && (
+          <Text variant="caption" color="error" className="mt-1">
+            {errors.validationConfigJson}
+          </Text>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="fixed inset-y-0 right-0 w-1/2 bg-white shadow-xl z-50 flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div>
+          <Text variant="heading" size="lg" weight="semibold">
+            {config ? "Edit Validation Config" : "Add Validation Config"}
+          </Text>
+          <Text variant="body" color="muted" className="mt-1">
+            Configure field validation rules
+          </Text>
+        </div>
+        <Button variant="ghost" onClick={onClose}>
+          <X size={20} />
+        </Button>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+        <Tabs activeTab={activeTab} onTabChange={setActiveTab}>
+          <TabPanel tabId="general" label="General">
+            {renderGeneralTab()}
+          </TabPanel>
+          <TabPanel tabId="configuration" label="Configuration">
+            {renderConfigurationTab()}
+          </TabPanel>
+        </Tabs>
+      </div>
+
+      {/* Footer */}
+      <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
+        <Button variant="outline" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button variant="primary" onClick={handleSave}>
+          <Save size={16} className="mr-2" />
+          Save Config
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+export default ValidationConfigPanel;
