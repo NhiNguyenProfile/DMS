@@ -1,5 +1,8 @@
 import { RouterProvider, useRouter } from "./hooks/useRouter.jsx";
 import DashboardLayout from "./components/templates/DashboardLayout";
+import MyRequest from "./components/pages/MyRequest";
+import Approval from "./components/pages/Approval";
+import Search from "./components/pages/Search";
 import ConfigurationWizard from "./components/pages/RuleFieldConfig";
 import WorkflowWizard from "./components/pages/Workflows";
 import WorkflowEdit from "./components/pages/WorkflowEdit";
@@ -9,6 +12,12 @@ function AppContent() {
 
   const renderPageContent = () => {
     switch (currentRoute) {
+      case "my-request":
+        return <MyRequest />;
+      case "approval":
+        return <Approval />;
+      case "search":
+        return <Search />;
       case "rule-field-config":
         return <ConfigurationWizard />;
       case "workflows":
@@ -16,7 +25,7 @@ function AppContent() {
       case "workflow-edit":
         return <WorkflowEdit />;
       default:
-        return <WorkflowWizard />;
+        return <MyRequest />;
     }
   };
 

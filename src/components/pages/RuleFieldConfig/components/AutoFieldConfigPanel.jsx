@@ -3,6 +3,7 @@ import Text from "../../../atoms/Text";
 import Button from "../../../atoms/Button";
 import Input from "../../../atoms/Input";
 import Select from "../../../atoms/Select";
+import MultiSelect from "../../../atoms/MultiSelect";
 import Toggle from "../../../atoms/Toggle";
 import Tabs from "../../../atoms/Tabs";
 import { X, Save, Settings, Target, Zap, Info, Edit3 } from "lucide-react";
@@ -39,6 +40,7 @@ const AutoFieldConfigPanel = ({
     ruleDescription: "",
     status: "Active",
     autoFillType: "default",
+    legalEntities: [],
     criteriaJson: "",
     configurationJson: "",
   });
@@ -48,6 +50,16 @@ const AutoFieldConfigPanel = ({
   const [showCriteriaEditor, setShowCriteriaEditor] = useState(false);
   const [showConfigEditor, setShowConfigEditor] = useState(false);
 
+  // Legal entities options
+  const legalEntitiesOptions = [
+    { value: "DHV", label: "DHV" },
+    { value: "PBH", label: "PBH" },
+    { value: "PHP", label: "PHP" },
+    { value: "PHY", label: "PHY" },
+    { value: "DGC", label: "DGC" },
+    { value: "DGD", label: "DGD" },
+  ];
+
   // Load config data when editing
   useEffect(() => {
     if (config) {
@@ -56,6 +68,7 @@ const AutoFieldConfigPanel = ({
         ruleDescription: config.ruleDescription || "",
         status: config.status || "Active",
         autoFillType: config.type || "default",
+        legalEntities: config.legalEntities || [],
         criteriaJson: config.criteria
           ? JSON.stringify(config.criteria, null, 2)
           : "",
@@ -166,6 +179,24 @@ const AutoFieldConfigPanel = ({
           }
           label={formData.status}
         />
+      </div>
+
+      <div>
+        <Text variant="body" weight="medium" className="mb-2">
+          Legal Entities (Apply)
+        </Text>
+        <MultiSelect
+          options={legalEntitiesOptions}
+          value={formData.legalEntities}
+          onChange={(selectedValues) =>
+            handleInputChange("legalEntities", selectedValues)
+          }
+          placeholder="Select legal entities"
+          className="w-full"
+        />
+        <Text variant="caption" color="muted" className="mt-1">
+          Select which legal entities this auto-field rule applies to
+        </Text>
       </div>
     </div>
   );

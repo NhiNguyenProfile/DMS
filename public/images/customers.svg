@@ -1,0 +1,24 @@
+<svg width="400" height="300" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="400" height="300" fill="#f8fafc"/>
+  
+  <!-- Main customer icon -->
+  <circle cx="200" cy="150" r="40" fill="#3b82f6"/>
+  <circle cx="200" cy="135" r="18" fill="white"/>
+  <path d="M170 170c0-16.569 13.431-30 30-30s30 13.431 30 30v20h-60v-20z" fill="white"/>
+
+  <!-- Additional customer icons -->
+  <circle cx="120" cy="170" r="25" fill="#60a5fa" opacity="0.8"/>
+  <circle cx="120" cy="160" r="12" fill="white"/>
+  <path d="M105 180c0-8.284 6.716-15 15-15s15 6.716 15 15v12h-30v-12z" fill="white"/>
+
+  <circle cx="280" cy="170" r="25" fill="#60a5fa" opacity="0.8"/>
+  <circle cx="280" cy="160" r="12" fill="white"/>
+  <path d="M265 180c0-8.284 6.716-15 15-15s15 6.716 15 15v12h-30v-12z" fill="white"/>
+
+  <!-- Connection lines -->
+  <line x1="145" y1="170" x2="175" y2="160" stroke="#3b82f6" stroke-width="2" opacity="0.5"/>
+  <line x1="255" y1="160" x2="225" y2="170" stroke="#3b82f6" stroke-width="2" opacity="0.5"/>
+  
+
+</svg>

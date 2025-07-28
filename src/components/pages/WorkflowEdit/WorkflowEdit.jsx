@@ -3,6 +3,7 @@ import Text from "../../atoms/Text";
 import Button from "../../atoms/Button";
 import Input from "../../atoms/Input";
 import Select from "../../atoms/Select";
+import MultiSelect from "../../atoms/MultiSelect";
 import Table from "../../atoms/Table";
 import IconButton from "../../atoms/IconButton";
 import AddStepModal from "./components/AddStepModal";
@@ -51,6 +52,7 @@ const WorkflowEdit = () => {
     description: "",
     status: "Active",
     entity: entity || "",
+    legalEntities: [],
     request_type: "",
     steps: [],
   });
@@ -58,6 +60,16 @@ const WorkflowEdit = () => {
   const [errors, setErrors] = useState({});
   const [showAddStepModal, setShowAddStepModal] = useState(false);
   const [editingStep, setEditingStep] = useState(null);
+
+  // Legal entities options
+  const legalEntitiesOptions = [
+    { value: "DHV", label: "DHV" },
+    { value: "PBH", label: "PBH" },
+    { value: "PHP", label: "PHP" },
+    { value: "PHY", label: "PHY" },
+    { value: "DGC", label: "DGC" },
+    { value: "DGD", label: "DGD" },
+  ];
   const [availableRequestTypes, setAvailableRequestTypes] = useState([]);
 
   // Load available request types when entity changes
@@ -77,8 +89,13 @@ const WorkflowEdit = () => {
         description: workflow.description || "",
         status: workflow.status || "Active",
         entity: workflow.entity || "",
+        legalEntities: workflow.legalEntities || [],
         request_type: workflow.request_type || "",
-        steps: workflow.steps || [],
+        steps:
+          workflow.steps?.map((step) => ({
+            ...step,
+            subSteps: step.subSteps || [],
+          })) || [],
       });
     }
   }, [workflow]);
@@ -111,20 +128,57 @@ const WorkflowEdit = () => {
   };
 
   const handleSaveStep = (stepData) => {
-    if (editingStep) {
-      // Update existing step
+    if (editingStep && editingStep.id) {
+      // Update existing step or sub-step
       setFormData((prev) => ({
         ...prev,
-        steps: prev.steps.map((step) =>
-          step.id === editingStep.id ? { ...stepData, order: step.order } : step
+        steps: prev.steps.map((step) => {
+          if (step.id === editingStep.id) {
+            return {
+              ...stepData,
+              order: step.order,
+              subSteps: step.subSteps || [],
+            };
+          }
+          // Check if editing a sub-step (recursive)
+          if (step.subSteps && step.subSteps.length > 0) {
+            const updatedSubSteps = updateSubStepRecursive(
+              step.subSteps,
+              editingStep.id,
+              stepData
+            );
+            if (updatedSubSteps !== step.subSteps) {
+              return { ...step, subSteps: updatedSubSteps };
+            }
+          }
+          return step;
+        }),
+      }));
+    } else if (editingStep && editingStep.parentId) {
+      // Add new sub-step (could be nested)
+      const newSubStep = {
+        ...stepData,
+        id: Date.now(),
+        order: editingStep.order,
+        parentId: editingStep.parentId,
+        subSteps: [],
+      };
+
+      setFormData((prev) => ({
+        ...prev,
+        steps: addSubStepToStructure(
+          prev.steps,
+          editingStep.parentId,
+          newSubStep
         ),
       }));
     } else {
-      // Add new step
+      // Add new main step
       const newStep = {
         ...stepData,
         id: Date.now(),
         order: formData.steps.length + 1,
+        subSteps: [],
       };
       setFormData((prev) => ({
         ...prev,
@@ -141,15 +195,101 @@ const WorkflowEdit = () => {
   };
 
   const handleDeleteStep = (stepId) => {
-    setFormData((prev) => ({
-      ...prev,
-      steps: prev.steps
-        .filter((s) => s.id !== stepId)
-        .map((step, index) => ({
-          ...step,
-          order: index + 1,
-        })),
+    if (window.confirm("Are you sure you want to delete this step?")) {
+      setFormData((prev) => ({
+        ...prev,
+        steps: deleteStepFromStructure(prev.steps, stepId),
+      }));
+    }
+  };
+
+  const deleteStepFromStructure = (steps, stepId) => {
+    return steps
+      .map((step) => {
+        // Check if deleting a sub-step recursively
+        if (step.subSteps && step.subSteps.length > 0) {
+          const updatedSubSteps = deleteStepFromSubSteps(
+            step.subSteps,
+            stepId,
+            step.order
+          );
+          return { ...step, subSteps: updatedSubSteps };
+        }
+        return step;
+      })
+      .filter((s) => s.id !== stepId) // Remove main step if it matches
+      .map((step, index) => ({
+        ...step,
+        order: index + 1,
+        // Re-number all sub-steps when main step order changes
+        subSteps: renumberSubSteps(step.subSteps, index + 1),
+      }));
+  };
+
+  const deleteStepFromSubSteps = (subSteps, stepId, parentOrder) => {
+    return subSteps
+      .map((subStep) => {
+        // Check nested sub-steps
+        if (subStep.subSteps && subStep.subSteps.length > 0) {
+          const updatedNestedSubSteps = deleteStepFromSubSteps(
+            subStep.subSteps,
+            stepId,
+            subStep.order
+          );
+          return { ...subStep, subSteps: updatedNestedSubSteps };
+        }
+        return subStep;
+      })
+      .filter((sub) => sub.id !== stepId) // Remove sub-step if it matches
+      .map((subStep, index) => ({
+        ...subStep,
+        order: `${parentOrder}.${index + 1}`,
+        // Re-number nested sub-steps
+        subSteps: renumberSubSteps(
+          subStep.subSteps,
+          `${parentOrder}.${index + 1}`
+        ),
+      }));
+  };
+
+  const renumberSubSteps = (subSteps, parentOrder) => {
+    if (!subSteps || subSteps.length === 0) return [];
+
+    return subSteps.map((subStep, index) => ({
+      ...subStep,
+      order: `${parentOrder}.${index + 1}`,
+      subSteps: renumberSubSteps(
+        subStep.subSteps,
+        `${parentOrder}.${index + 1}`
+      ),
     }));
+  };
+
+  const updateSubStepRecursive = (subSteps, targetId, stepData) => {
+    return subSteps.map((subStep) => {
+      if (subStep.id === targetId) {
+        // Found the target sub-step, update it
+        return {
+          ...stepData,
+          order: subStep.order,
+          subSteps: subStep.subSteps || [],
+        };
+      }
+
+      // Check nested sub-steps
+      if (subStep.subSteps && subStep.subSteps.length > 0) {
+        const updatedNestedSubSteps = updateSubStepRecursive(
+          subStep.subSteps,
+          targetId,
+          stepData
+        );
+        if (updatedNestedSubSteps !== subStep.subSteps) {
+          return { ...subStep, subSteps: updatedNestedSubSteps };
+        }
+      }
+
+      return subStep;
+    });
   };
 
   const handleMoveStep = (stepId, direction) => {
@@ -226,6 +366,304 @@ const WorkflowEdit = () => {
 
   const handleCancel = () => {
     navigate("workflows");
+  };
+
+  const handleAddSubStep = (parentStepId, parentOrder = null) => {
+    // Find parent step (could be main step or sub-step)
+    let parentStep = null;
+    let parentOrderStr = "";
+
+    if (parentOrder) {
+      // Adding sub-step to an existing sub-step
+      parentOrderStr = parentOrder;
+    } else {
+      // Adding sub-step to main step
+      parentStep = formData.steps.find((step) => step.id === parentStepId);
+      if (parentStep) {
+        parentOrderStr = parentStep.order.toString();
+      }
+    }
+
+    if (parentOrderStr) {
+      // Count existing sub-steps at this level
+      const existingSubSteps = getAllSubStepsAtLevel(parentOrderStr);
+      const subStepOrder = `${parentOrderStr}.${existingSubSteps.length + 1}`;
+
+      setEditingStep({
+        parentId: parentStepId,
+        parentOrder: parentOrderStr,
+        order: subStepOrder,
+        isSubStep: true,
+      });
+      setShowAddStepModal(true);
+    }
+  };
+
+  const getAllSubStepsAtLevel = (parentOrder) => {
+    const allSubSteps = [];
+    const searchInSteps = (steps, targetParentOrder) => {
+      steps.forEach((step) => {
+        if (step.subSteps) {
+          step.subSteps.forEach((subStep) => {
+            if (
+              subStep.order.startsWith(`${targetParentOrder}.`) &&
+              subStep.order.split(".").length ===
+                targetParentOrder.split(".").length + 1
+            ) {
+              allSubSteps.push(subStep);
+            }
+            // Recursively search in nested sub-steps
+            if (subStep.subSteps) {
+              searchInSteps(
+                [{ subSteps: subStep.subSteps }],
+                targetParentOrder
+              );
+            }
+          });
+        }
+      });
+    };
+
+    searchInSteps(formData.steps, parentOrder);
+    return allSubSteps;
+  };
+
+  const addSubStepToStructure = (steps, parentId, newSubStep) => {
+    return steps.map((step) => {
+      if (step.id === parentId) {
+        // Found the parent, add sub-step
+        return {
+          ...step,
+          subSteps: [...(step.subSteps || []), newSubStep],
+        };
+      }
+
+      // Search in sub-steps recursively
+      if (step.subSteps && step.subSteps.length > 0) {
+        const updatedSubSteps = addSubStepToSubSteps(
+          step.subSteps,
+          parentId,
+          newSubStep
+        );
+        if (updatedSubSteps !== step.subSteps) {
+          return { ...step, subSteps: updatedSubSteps };
+        }
+      }
+
+      return step;
+    });
+  };
+
+  const addSubStepToSubSteps = (subSteps, parentId, newSubStep) => {
+    for (let i = 0; i < subSteps.length; i++) {
+      const subStep = subSteps[i];
+
+      if (subStep.id === parentId) {
+        // Found the parent sub-step, add new sub-step
+        const updatedSubSteps = [...subSteps];
+        updatedSubSteps[i] = {
+          ...subStep,
+          subSteps: [...(subStep.subSteps || []), newSubStep],
+        };
+        return updatedSubSteps;
+      }
+
+      // Search deeper if this sub-step has its own sub-steps
+      if (subStep.subSteps && subStep.subSteps.length > 0) {
+        const updatedNestedSubSteps = addSubStepToSubSteps(
+          subStep.subSteps,
+          parentId,
+          newSubStep
+        );
+        if (updatedNestedSubSteps !== subStep.subSteps) {
+          const updatedSubSteps = [...subSteps];
+          updatedSubSteps[i] = { ...subStep, subSteps: updatedNestedSubSteps };
+          return updatedSubSteps;
+        }
+      }
+    }
+
+    return subSteps; // No changes
+  };
+
+  const renderWorkflowSteps = () => {
+    return (
+      <div className="space-y-6">
+        {formData.steps.map((step, index) => (
+          <div key={step.id} className="relative">
+            {/* Main Step */}
+            <div className="bg-blue-500 text-white p-4 rounded-lg shadow-md relative">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-white text-blue-500 px-3 py-1 rounded font-bold text-lg">
+                    {step.order}
+                  </div>
+                  <div>
+                    <Text
+                      variant="body"
+                      weight="semibold"
+                      className="text-white"
+                    >
+                      {step.step_name}
+                    </Text>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <span className="bg-blue-400 px-2 py-1 rounded text-xs">
+                        {step.type}
+                      </span>
+                      <span className="text-blue-100 text-sm">
+                        SLA: {step.sla_hours}h
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="small"
+                    onClick={() => handleAddSubStep(step.id)}
+                    className="bg-white text-blue-500 border-white hover:bg-blue-50"
+                  >
+                    <Plus size={14} className="mr-1" />
+                    Add Sub-step
+                  </Button>
+                  <IconButton
+                    variant="icon"
+                    color="white"
+                    size="small"
+                    tooltip="Edit step"
+                    onClick={() => handleEditStep(step)}
+                    className="text-white hover:bg-blue-400"
+                  >
+                    <Edit size={16} />
+                  </IconButton>
+                  <IconButton
+                    variant="icon"
+                    color="white"
+                    size="small"
+                    tooltip="Delete step"
+                    onClick={() => handleDeleteStep(step.id)}
+                    className="text-white hover:bg-red-500"
+                  >
+                    <Trash2 size={16} />
+                  </IconButton>
+                </div>
+              </div>
+
+              {/* Arrow pointing to sub-steps */}
+              {step.subSteps && step.subSteps.length > 0 && (
+                <div className="absolute -right-4 top-1/2 transform -translate-y-1/2">
+                  <div className="w-8 h-0.5 bg-gray-800"></div>
+                  <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-0 h-0 border-l-4 border-l-gray-800 border-t-2 border-b-2 border-t-transparent border-b-transparent"></div>
+                </div>
+              )}
+            </div>
+
+            {/* Sub-steps */}
+            {step.subSteps && step.subSteps.length > 0 && (
+              <div className="ml-12 mt-4 space-y-3">
+                {step.subSteps.map((subStep, subIndex) =>
+                  renderSubStep(subStep, subIndex, step.subSteps.length, 1)
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const renderSubStep = (subStep, subIndex, totalSubSteps, level) => {
+    const bgColor = level === 1 ? "bg-blue-400" : "bg-blue-300";
+    const textColor = level === 1 ? "text-blue-400" : "text-blue-300";
+    const hoverColor = level === 1 ? "hover:bg-blue-300" : "hover:bg-blue-200";
+
+    return (
+      <div key={subStep.id} className="relative">
+        <div className={`${bgColor} text-white p-3 rounded-lg shadow-sm`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div
+                className={`bg-white ${textColor} px-2 py-1 rounded font-bold`}
+              >
+                {subStep.order}
+              </div>
+              <div>
+                <Text variant="body" weight="medium" className="text-white">
+                  {subStep.step_name}
+                </Text>
+                <div className="flex items-center space-x-2 mt-1">
+                  <span
+                    className={`${
+                      level === 1 ? "bg-blue-300" : "bg-blue-200"
+                    } px-2 py-1 rounded text-xs`}
+                  >
+                    {subStep.type}
+                  </span>
+                  <span className="text-blue-100 text-sm">
+                    SLA: {subStep.sla_hours}h
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-1">
+              <Button
+                variant="outline"
+                size="small"
+                onClick={() => handleAddSubStep(subStep.id, subStep.order)}
+                className="bg-white text-blue-500 border-white hover:bg-blue-50 text-xs px-2 py-1"
+              >
+                <Plus size={12} className="mr-1" />
+                Add Sub-step
+              </Button>
+              <IconButton
+                variant="icon"
+                color="white"
+                size="small"
+                tooltip="Edit sub-step"
+                onClick={() => handleEditStep(subStep)}
+                className={`text-white ${hoverColor}`}
+              >
+                <Edit size={14} />
+              </IconButton>
+              <IconButton
+                variant="icon"
+                color="white"
+                size="small"
+                tooltip="Delete sub-step"
+                onClick={() => handleDeleteStep(subStep.id)}
+                className="text-white hover:bg-red-400"
+              >
+                <Trash2 size={14} />
+              </IconButton>
+            </div>
+          </div>
+        </div>
+
+        {/* Nested Sub-steps */}
+        {subStep.subSteps && subStep.subSteps.length > 0 && (
+          <div className="ml-8 mt-3 space-y-2">
+            {subStep.subSteps.map((nestedSubStep, nestedIndex) =>
+              renderSubStep(
+                nestedSubStep,
+                nestedIndex,
+                subStep.subSteps.length,
+                level + 1
+              )
+            )}
+          </div>
+        )}
+
+        {/* Arrow for next sub-step at same level */}
+        {subIndex < totalSubSteps - 1 && (
+          <div className="absolute -right-4 top-1/2 transform -translate-y-1/2">
+            <div className="w-8 h-0.5 bg-gray-600"></div>
+            <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-0 h-0 border-l-4 border-l-gray-600 border-t-2 border-b-2 border-t-transparent border-b-transparent"></div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -342,6 +780,24 @@ const WorkflowEdit = () => {
 
           <div>
             <Text variant="body" weight="medium" className="mb-2">
+              Legal Entities *
+            </Text>
+            <MultiSelect
+              options={legalEntitiesOptions}
+              value={formData.legalEntities}
+              onChange={(selectedValues) =>
+                handleInputChange("legalEntities", selectedValues)
+              }
+              placeholder="Select legal entities"
+              className="w-full"
+            />
+            <Text variant="caption" color="muted" className="mt-1">
+              Select which legal entities this workflow applies to
+            </Text>
+          </div>
+
+          <div>
+            <Text variant="body" weight="medium" className="mb-2">
               Request Type *
             </Text>
             <Select
@@ -387,126 +843,22 @@ const WorkflowEdit = () => {
           </Text>
         )}
 
-        <div className="overflow-x-auto">
-          <Table bordered>
-            <Table.Header>
-              <Table.Row>
-                <Table.HeaderCell>Ord</Table.HeaderCell>
-                <Table.HeaderCell>Step Name</Table.HeaderCell>
-                <Table.HeaderCell>Type</Table.HeaderCell>
-                <Table.HeaderCell>Field Group(s)</Table.HeaderCell>
-                <Table.HeaderCell>Assigned Type</Table.HeaderCell>
-                <Table.HeaderCell>Assignee(s)</Table.HeaderCell>
-                <Table.HeaderCell>SLA (h)</Table.HeaderCell>
-                <Table.HeaderCell>Actions</Table.HeaderCell>
-              </Table.Row>
-            </Table.Header>
-            <Table.Body>
-              {formData.steps.map((step, index) => (
-                <Table.Row key={step.id}>
-                  <Table.Cell>
-                    <Text variant="body" weight="medium">
-                      {step.order}
-                    </Text>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <Text variant="body">{step.step_name}</Text>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <span
-                      className={`px-2 py-1 text-xs font-medium rounded ${
-                        step.type === "Input"
-                          ? "bg-blue-100 text-blue-800"
-                          : step.type === "Approval"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {step.type}
-                    </span>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <Text variant="body" size="small">
-                      {step.field_groups && step.field_groups.length > 0
-                        ? step.field_groups
-                            .map(
-                              (groupCode) =>
-                                FIELD_GROUPS.find(
-                                  (g) => g.group_code === groupCode
-                                )?.name || groupCode
-                            )
-                            .join(", ")
-                        : "—"}
-                    </Text>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <Text variant="body" size="small">
-                      {step.assigned_type || "User"}
-                    </Text>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <Text variant="body" size="small">
-                      {step.assignee}
-                    </Text>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <Text variant="body">{step.sla_hours}</Text>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <div className="flex items-center space-x-1">
-                      <IconButton
-                        variant="icon"
-                        color="gray"
-                        size="small"
-                        tooltip="Move up"
-                        onClick={() => handleMoveStep(step.id, "up")}
-                        disabled={index === 0}
-                      >
-                        <ChevronUp size={14} />
-                      </IconButton>
-                      <IconButton
-                        variant="icon"
-                        color="gray"
-                        size="small"
-                        tooltip="Move down"
-                        onClick={() => handleMoveStep(step.id, "down")}
-                        disabled={index === formData.steps.length - 1}
-                      >
-                        <ChevronDown size={14} />
-                      </IconButton>
-                      <IconButton
-                        variant="icon"
-                        color="blue"
-                        size="small"
-                        tooltip="Edit step"
-                        onClick={() => handleEditStep(step)}
-                      >
-                        <Edit size={14} />
-                      </IconButton>
-                      <IconButton
-                        variant="icon"
-                        color="red"
-                        size="small"
-                        tooltip="Delete step"
-                        onClick={() => handleDeleteStep(step.id)}
-                      >
-                        <Trash2 size={14} />
-                      </IconButton>
-                    </div>
-                  </Table.Cell>
-                </Table.Row>
-              ))}
-            </Table.Body>
-          </Table>
+        {/* Visual Workflow Builder */}
+        <div className="space-y-4">
+          {formData.steps.length === 0 ? (
+            <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
+              <Text variant="body" color="muted" className="mb-4">
+                No steps configured yet
+              </Text>
+              <Button variant="outline" onClick={handleAddStep}>
+                <Plus size={16} className="mr-2" />
+                Add Your First Step
+              </Button>
+            </div>
+          ) : (
+            renderWorkflowSteps()
+          )}
         </div>
-
-        {formData.steps.length === 0 && (
-          <div className="text-center py-8 border border-gray-200 rounded-lg mt-4">
-            <Text variant="body" color="muted">
-              No steps configured. Click "Add Step" to get started.
-            </Text>
-          </div>
-        )}
       </div>
 
       {/* Add Step Modal */}

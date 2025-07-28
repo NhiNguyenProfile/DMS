@@ -2,13 +2,36 @@ import clsx from "clsx";
 import Text from "../../atoms/Text";
 import Button from "../../atoms/Button";
 import SidebarItem from "../../molecules/SidebarItem";
-import { Settings, Workflow, Menu, X } from "lucide-react";
+import {
+  Settings,
+  Workflow,
+  Menu,
+  X,
+  FileText,
+  CheckCircle,
+  Search,
+} from "lucide-react";
 import { useRouter } from "../../../hooks/useRouter.jsx";
 
 const Sidebar = ({ isOpen = true, onToggle, className = "", ...props }) => {
   const { currentRoute, navigate } = useRouter();
 
   const menuItems = [
+    {
+      id: "my-request",
+      icon: <FileText size={20} />,
+      label: "My Request",
+    },
+    {
+      id: "approval",
+      icon: <CheckCircle size={20} />,
+      label: "Approval",
+    },
+    {
+      id: "search",
+      icon: <Search size={20} />,
+      label: "Search",
+    },
     {
       id: "rule-field-config",
       icon: <Settings size={20} />,
@@ -76,7 +99,7 @@ const Sidebar = ({ isOpen = true, onToggle, className = "", ...props }) => {
         </nav>
 
         {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+        <div className="absolute bottom-0 left-0 right-0 p-[18px] border-t border-gray-200">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
               <Text variant="body" size="small" color="white" weight="medium">

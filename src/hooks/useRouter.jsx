@@ -5,7 +5,7 @@ const RouterContext = createContext();
 
 // Router Provider
 export const RouterProvider = ({ children }) => {
-  const [currentRoute, setCurrentRoute] = useState("workflows");
+  const [currentRoute, setCurrentRoute] = useState("my-request");
 
   const navigate = (route) => {
     console.log("Navigating to:", route); // Debug log
@@ -43,6 +43,21 @@ export const useRouter = () => {
 
 // Route definitions
 export const ROUTES = {
+  "my-request": {
+    id: "my-request",
+    title: "My Request",
+    breadcrumb: "My Request",
+  },
+  approval: {
+    id: "approval",
+    title: "Approval",
+    breadcrumb: "Approval",
+  },
+  search: {
+    id: "search",
+    title: "Search",
+    breadcrumb: "Search",
+  },
   "rule-field-config": {
     id: "rule-field-config",
     title: "Rule & Field Configuration",

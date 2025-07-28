@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Text from "../../../atoms/Text";
 import Button from "../../../atoms/Button";
 import Input from "../../../atoms/Input";
-
+import MultiSelect from "../../../atoms/MultiSelect";
 import Toggle from "../../../atoms/Toggle";
 import Tabs, { TabPanel } from "../../../atoms/Tabs";
 import { X, Save, Info } from "lucide-react";
@@ -18,11 +18,22 @@ const ValidationConfigPanel = ({
     ruleName: "",
     ruleDescription: "",
     status: "Active",
+    legalEntities: [],
     validationConfigJson: "",
   });
 
   const [errors, setErrors] = useState({});
   const [activeTab, setActiveTab] = useState("general");
+
+  // Legal entities options
+  const legalEntitiesOptions = [
+    { value: "DHV", label: "DHV" },
+    { value: "PBH", label: "PBH" },
+    { value: "PHP", label: "PHP" },
+    { value: "PHY", label: "PHY" },
+    { value: "DGC", label: "DGC" },
+    { value: "DGD", label: "DGD" },
+  ];
 
   // Load config data when editing
   useEffect(() => {
@@ -31,6 +42,7 @@ const ValidationConfigPanel = ({
         ruleName: config.ruleName || "",
         ruleDescription: config.ruleDescription || "",
         status: config.status || "Active",
+        legalEntities: config.legalEntities || [],
         validationConfigJson: config.validationConfig
           ? JSON.stringify(config.validationConfig, null, 2)
           : "",
@@ -116,6 +128,24 @@ const ValidationConfigPanel = ({
           }
           label={formData.status}
         />
+      </div>
+
+      <div>
+        <Text variant="body" weight="medium" className="mb-2">
+          Legal Entities (Apply)
+        </Text>
+        <MultiSelect
+          options={legalEntitiesOptions}
+          value={formData.legalEntities}
+          onChange={(selectedValues) =>
+            handleInputChange("legalEntities", selectedValues)
+          }
+          placeholder="Select legal entities"
+          className="w-full"
+        />
+        <Text variant="caption" color="muted" className="mt-1">
+          Select which legal entities this validation rule applies to
+        </Text>
       </div>
     </div>
   );
