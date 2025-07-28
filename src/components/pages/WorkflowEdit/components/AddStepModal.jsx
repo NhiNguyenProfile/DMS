@@ -719,8 +719,7 @@ const AddStepModal = ({ visible, onCancel, onOk, editingStep = null }) => {
           {/* Only show Criteria tab for sub-steps */}
           {editingStep &&
             (editingStep.parentId ||
-              (editingStep.order &&
-                String(editingStep.order).includes("."))) && (
+              (editingStep.order && editingStep.order.includes("."))) && (
               <Tabs.Panel tabId="criteria" label="Criteria">
                 {renderCriteriaTab()}
               </Tabs.Panel>
