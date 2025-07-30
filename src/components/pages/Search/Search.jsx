@@ -115,7 +115,7 @@ const Search = () => {
         {/* Header */}
         <div>
           <Text variant="heading" size="xl" weight="bold" className="mb-2">
-            Search
+            Master Data Records
           </Text>
           <Text variant="body" color="muted">
             Select a country to search records
@@ -157,7 +157,7 @@ const Search = () => {
           </Button>
           <div>
             <Text variant="heading" size="xl" weight="bold" className="mb-2">
-              Search - {selectedCountry.name}
+              Master Data Records - {selectedCountry.name}
             </Text>
             <Text variant="body" color="muted">
               Search and view records by entity type

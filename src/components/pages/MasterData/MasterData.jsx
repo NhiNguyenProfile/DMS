@@ -12,10 +12,11 @@ const MasterData = () => {
       {/* Header */}
       <div>
         <Text variant="heading" size="xl" weight="bold" className="mb-2">
-          Master Data Management
+          Data Management
         </Text>
         <Text variant="body" color="muted">
-          Manage countries, legal entities, and departments with Dynamic 365 synchronization
+          Manage countries, legal entities, and departments with Dynamic 365
+          synchronization
         </Text>
       </div>
 

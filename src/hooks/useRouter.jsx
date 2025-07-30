@@ -55,8 +55,8 @@ export const ROUTES = {
   },
   search: {
     id: "search",
-    title: "Search",
-    breadcrumb: "Search",
+    title: "Master Data Records",
+    breadcrumb: "Master Data Records",
   },
   "rule-field-config": {
     id: "rule-field-config",
@@ -80,7 +80,7 @@ export const ROUTES = {
   },
   "master-data": {
     id: "master-data",
-    title: "Master Data Management",
-    breadcrumb: "Master Data",
+    title: "Data Management",
+    breadcrumb: "Data Management",
   },
 };

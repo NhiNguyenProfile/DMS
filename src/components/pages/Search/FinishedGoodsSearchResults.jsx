@@ -149,7 +149,7 @@ const FinishedGoodsSearchResults = ({ onBack, country }) => {
         </Button>
         <div>
           <Text variant="heading" size="xl" weight="bold" className="mb-2">
-            Finished Good Records - {country?.name}
+            Master Data Records - Finished Good - {country?.name}
           </Text>
           <Text variant="body" color="muted">
             Search and view finished goods inventory

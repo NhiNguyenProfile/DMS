@@ -164,7 +164,7 @@ const SparePartsSearchResults = ({ onBack, country }) => {
         </Button>
         <div>
           <Text variant="heading" size="xl" weight="bold" className="mb-2">
-            Spare Part Records - {country?.name}
+            Master Data Records - Spare Part - {country?.name}
           </Text>
           <Text variant="body" color="muted">
             Search and view spare parts inventory

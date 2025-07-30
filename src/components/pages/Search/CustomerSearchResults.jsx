@@ -153,7 +153,7 @@ const CustomerSearchResults = ({ onBack, country }) => {
         </Button>
         <div>
           <Text variant="heading" size="xl" weight="bold" className="mb-2">
-            Customer Records - {country?.name}
+            Master Data Records - Customer - {country?.name}
           </Text>
           <Text variant="body" color="muted">
             Search and view customer information

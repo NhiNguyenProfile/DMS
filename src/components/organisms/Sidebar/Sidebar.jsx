@@ -32,7 +32,7 @@ const Sidebar = ({ isOpen = true, onToggle, className = "", ...props }) => {
     {
       id: "search",
       icon: <Search size={20} />,
-      label: "Search",
+      label: "Master Data Records",
     },
     {
       id: "rule-field-config",
@@ -52,7 +52,7 @@ const Sidebar = ({ isOpen = true, onToggle, className = "", ...props }) => {
     {
       id: "master-data",
       icon: <Database size={20} />,
-      label: "Master Data",
+      label: "Data Management",
     },
   ];
 
