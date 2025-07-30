@@ -164,7 +164,7 @@ const STATUS_OPTIONS = [
   { value: "Synced", label: "Synced" },
 ];
 
-const CustomerRequestList = ({ onBack }) => {
+const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
   const [requests, setRequests] = useState(CUSTOMER_REQUESTS);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -228,7 +228,27 @@ const CustomerRequestList = ({ onBack }) => {
     } else {
       // If no approval tree data, still allow viewing detail form
       setSelectedRequestData(request);
-      setShowDetailForm(true);
+      if (onShowDetail) {
+        // Direct mode - pass detail component to parent
+        onShowDetail(
+          <CustomerDetailForm
+            requestData={request}
+            onBack={() => onShowDetail(null)}
+            onSave={(updatedRequest) => {
+              // Update the request in the list
+              setRequests((prev) =>
+                prev.map((r) =>
+                  r.id === updatedRequest.id ? updatedRequest : r
+                )
+              );
+              onShowDetail(null);
+            }}
+          />
+        );
+      } else {
+        // Cards mode - show detail form locally
+        setShowDetailForm(true);
+      }
     }
   };
 
@@ -239,7 +259,25 @@ const CustomerRequestList = ({ onBack }) => {
 
   const handleViewDetail = () => {
     setShowApprovalSlider(false);
-    setShowDetailForm(true);
+    if (onShowDetail) {
+      // Direct mode - pass detail component to parent
+      onShowDetail(
+        <CustomerDetailForm
+          requestData={selectedRequestData}
+          onBack={() => onShowDetail(null)}
+          onSave={(updatedRequest) => {
+            // Update the request in the list
+            setRequests((prev) =>
+              prev.map((r) => (r.id === updatedRequest.id ? updatedRequest : r))
+            );
+            onShowDetail(null);
+          }}
+        />
+      );
+    } else {
+      // Cards mode - show detail form locally
+      setShowDetailForm(true);
+    }
   };
 
   const handleBackFromDetail = () => {
@@ -288,44 +326,51 @@ const CustomerRequestList = ({ onBack }) => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={onBack}>
-            <ArrowLeft size={16} className="mr-2" />
-            Back
-          </Button>
-          <div>
-            <Text variant="heading" size="xl" weight="bold" className="mb-2">
-              Customer Requests
-            </Text>
-            <Text variant="body" color="muted">
-              Manage customer-related requests and workflows
-            </Text>
+      {!hideHeader && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={onBack}>
+              <ArrowLeft size={16} className="mr-2" />
+              Back
+            </Button>
+            <div>
+              <Text variant="heading" size="xl" weight="bold" className="mb-2">
+                Customer Requests
+              </Text>
+              <Text variant="body" color="muted">
+                Manage customer-related requests and workflows
+              </Text>
+            </div>
           </div>
         </div>
+      )}
+
+      {/* Actions */}
+      <div className="flex items-center justify-between">
+        {/* Search and Filter */}
+        <div className="flex items-center gap-4">
+          <div className="relative max-w-md">
+            <Search
+              size={20}
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            />
+            <Input
+              placeholder="Search requests..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button variant="outline" onClick={() => setShowFilterModal(true)}>
+            <Filter size={16} className="mr-2" />
+            Filter
+          </Button>
+        </div>
+
+        {/* Add New Button */}
         <Button onClick={() => setShowAddModal(true)}>
           <Plus size={16} className="mr-2" />
           Add New
-        </Button>
-      </div>
-
-      {/* Search and Filter */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search
-            size={20}
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-          />
-          <Input
-            placeholder="Search requests..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Button variant="outline" onClick={() => setShowFilterModal(true)}>
-          <Filter size={16} className="mr-2" />
-          Filter
         </Button>
       </div>
 
@@ -375,7 +420,9 @@ const CustomerRequestList = ({ onBack }) => {
                     </Text>
                   </Table.Cell>
                   <Table.Cell>
-                    <Text variant="body">{request.requestType}</Text>
+                    <Text variant="body" className="text-sm truncate">
+                      {request.requestType}
+                    </Text>
                   </Table.Cell>
                   <Table.Cell>
                     <Text
@@ -387,10 +434,14 @@ const CustomerRequestList = ({ onBack }) => {
                     </Text>
                   </Table.Cell>
                   <Table.Cell>
-                    <Text variant="body">{request.stepOwner}</Text>
+                    <Text variant="body" className="text-sm truncate">
+                      {request.stepOwner}
+                    </Text>
                   </Table.Cell>
                   <Table.Cell>
-                    <Text variant="body">{request.currentSteps}</Text>
+                    <Text variant="body" className="text-sm truncate">
+                      {request.currentSteps}
+                    </Text>
                   </Table.Cell>
                   <Table.Cell>
                     <span className={getStatusBadge(request.status)}>
@@ -398,7 +449,7 @@ const CustomerRequestList = ({ onBack }) => {
                     </span>
                   </Table.Cell>
                   <Table.Cell>
-                    <Text variant="body" className="text-sm">
+                    <Text variant="body" className="text-xs">
                       {formatDate(request.createdDate)}
                     </Text>
                   </Table.Cell>

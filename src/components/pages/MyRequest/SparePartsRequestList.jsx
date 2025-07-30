@@ -29,6 +29,15 @@ const SPARE_PARTS_REQUESTS = [
     status: "Pending",
     createdDate: "2025-07-25T11:15:00Z",
   },
+  {
+    id: "REQ-20250724-007",
+    requestType: "Create",
+    requestTitle: "New Hydraulic Pump",
+    stepOwner: "You",
+    currentSteps: "Waiting for Entry",
+    status: "Draft",
+    createdDate: "2025-07-29T09:00:00Z",
+  },
 ];
 
 // Sample approval tree data for spare parts
@@ -106,7 +115,11 @@ const STATUS_OPTIONS = [
   { value: "Synced", label: "Synced" },
 ];
 
-const SparePartsRequestList = ({ onBack }) => {
+const SparePartsRequestList = ({
+  onBack,
+  hideHeader = false,
+  onShowDetail,
+}) => {
   const [requests, setRequests] = useState(SPARE_PARTS_REQUESTS);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -158,6 +171,7 @@ const SparePartsRequestList = ({ onBack }) => {
   };
 
   const handleRowClick = (request) => {
+    console.log("handleRowClick - request data:", request);
     const approvalData = SPARE_PARTS_APPROVAL_TREES[request.id];
     if (approvalData) {
       // Combine request data with approval data
@@ -165,12 +179,34 @@ const SparePartsRequestList = ({ onBack }) => {
         ...approvalData,
         ...request,
       };
+      console.log("handleRowClick - combinedData:", combinedData);
       setSelectedRequestData(combinedData);
       setShowApprovalSlider(true);
     } else {
       // If no approval tree data, still allow viewing detail form
+      console.log("handleRowClick - no approval data, using request:", request);
       setSelectedRequestData(request);
-      setShowDetailForm(true);
+      if (onShowDetail) {
+        // Direct mode - pass detail component to parent
+        onShowDetail(
+          <SparePartsDetailForm
+            requestData={request}
+            onBack={() => onShowDetail(null)}
+            onSave={(updatedRequest) => {
+              // Update the request in the list
+              setRequests((prev) =>
+                prev.map((r) =>
+                  r.id === updatedRequest.id ? updatedRequest : r
+                )
+              );
+              onShowDetail(null);
+            }}
+          />
+        );
+      } else {
+        // Cards mode - show detail form locally
+        setShowDetailForm(true);
+      }
     }
   };
 
@@ -180,8 +216,27 @@ const SparePartsRequestList = ({ onBack }) => {
   };
 
   const handleViewDetail = () => {
+    console.log("handleViewDetail - selectedRequestData:", selectedRequestData);
     setShowApprovalSlider(false);
-    setShowDetailForm(true);
+    if (onShowDetail) {
+      // Direct mode - pass detail component to parent
+      onShowDetail(
+        <SparePartsDetailForm
+          requestData={selectedRequestData}
+          onBack={() => onShowDetail(null)}
+          onSave={(updatedRequest) => {
+            // Update the request in the list
+            setRequests((prev) =>
+              prev.map((r) => (r.id === updatedRequest.id ? updatedRequest : r))
+            );
+            onShowDetail(null);
+          }}
+        />
+      );
+    } else {
+      // Cards mode - show detail form locally
+      setShowDetailForm(true);
+    }
   };
 
   const handleBackFromDetail = () => {
@@ -224,44 +279,51 @@ const SparePartsRequestList = ({ onBack }) => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={onBack}>
-            <ArrowLeft size={16} className="mr-2" />
-            Back
-          </Button>
-          <div>
-            <Text variant="heading" size="xl" weight="bold" className="mb-2">
-              Spare Parts Requests
-            </Text>
-            <Text variant="body" color="muted">
-              Manage spare parts inventory and procurement requests
-            </Text>
+      {!hideHeader && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={onBack}>
+              <ArrowLeft size={16} className="mr-2" />
+              Back
+            </Button>
+            <div>
+              <Text variant="heading" size="xl" weight="bold" className="mb-2">
+                Spare Parts Requests
+              </Text>
+              <Text variant="body" color="muted">
+                Manage spare parts inventory and procurement requests
+              </Text>
+            </div>
           </div>
         </div>
+      )}
+
+      {/* Actions */}
+      <div className="flex items-center justify-between">
+        {/* Search and Filter */}
+        <div className="flex items-center gap-4">
+          <div className="relative max-w-md">
+            <Search
+              size={20}
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            />
+            <Input
+              placeholder="Search requests..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button variant="outline" onClick={() => setShowFilterModal(true)}>
+            <Filter size={16} className="mr-2" />
+            Filter
+          </Button>
+        </div>
+
+        {/* Add New Button */}
         <Button onClick={() => setShowAddModal(true)}>
           <Plus size={16} className="mr-2" />
           Add New
-        </Button>
-      </div>
-
-      {/* Search and Filter */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search
-            size={20}
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-          />
-          <Input
-            placeholder="Search requests..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        <Button variant="outline" onClick={() => setShowFilterModal(true)}>
-          <Filter size={16} className="mr-2" />
-          Filter
         </Button>
       </div>
 

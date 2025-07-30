@@ -170,9 +170,6 @@ const FinishedGoodsApprovalDetailForm = ({ requestData, onBack }) => {
             </Button>
             <div>
               <Text variant="heading" size="xl" weight="bold">
-                Finished Goods Approval Review
-              </Text>
-              <Text variant="body" color="muted" className="mt-1">
                 {requestData?.id} - {requestData?.requestTitle}
               </Text>
               {/* Current Step Indicator */}
@@ -184,7 +181,7 @@ const FinishedGoodsApprovalDetailForm = ({ requestData, onBack }) => {
                   {requestData?.currentSteps}
                 </span>
                 <span className="text-xs text-orange-600 font-medium">
-                  Pending Approval
+                  {requestData?.stepOwner}
                 </span>
               </div>
             </div>

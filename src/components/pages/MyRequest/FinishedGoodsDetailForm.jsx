@@ -13,30 +13,51 @@ const GENERAL_FIELDS = [
   { label: "Item Number", type: "text", required: true, key: "itemNumber" },
   { label: "SKU", type: "text", required: true, key: "sku" },
   { label: "Sales Unit", type: "text", required: true, key: "salesUnit" },
-  { label: "Product Form", type: "select", options: ["Solid", "Liquid", "Powder"], required: true, key: "productForm" },
-  { label: "Packaging Type", type: "text", required: true, key: "packagingType" },
+  {
+    label: "Product Form",
+    type: "select",
+    options: ["Solid", "Liquid", "Powder"],
+    required: true,
+    key: "productForm",
+  },
+  {
+    label: "Packaging Type",
+    type: "text",
+    required: true,
+    key: "packagingType",
+  },
   { label: "Dimensions", type: "text", required: false, key: "dimensions" },
   { label: "Net Weight", type: "text", required: false, key: "netWeight" },
-  { label: "Item Group", type: "select", options: ["FGD"], required: true, key: "itemGroup" },
-  { label: "Sales Tax Group", type: "select", options: ["VAT", "PPN"], required: true, key: "salesTaxGroup" },
-  { label: "Sync to DHC", type: "yes-no", required: false, key: "syncToDHC" }
+  {
+    label: "Item Group",
+    type: "select",
+    options: ["FGD"],
+    required: true,
+    key: "itemGroup",
+  },
+  {
+    label: "Sales Tax Group",
+    type: "select",
+    options: ["VAT", "PPN"],
+    required: true,
+    key: "salesTaxGroup",
+  },
+  { label: "Sync to DHC", type: "yes-no", required: false, key: "syncToDHC" },
 ];
 
-const FinishedGoodsDetailForm = ({ requestData, onBack }) => {
+const FinishedGoodsDetailForm = ({ requestData, onBack, onSave }) => {
   const [activeTab, setActiveTab] = useState("general");
   const [formData, setFormData] = useState({});
   const [showApprovalSlider, setShowApprovalSlider] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
 
-  const tabs = [
-    { id: "general", label: "General", fields: GENERAL_FIELDS }
-  ];
+  const tabs = [{ id: "general", label: "General", fields: GENERAL_FIELDS }];
 
   const handleInputChange = (key, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [key]: value
+      [key]: value,
     }));
   };
 
@@ -59,7 +80,11 @@ const FinishedGoodsDetailForm = ({ requestData, onBack }) => {
         {field.type === "text" && (
           <Input
             value={value}
-            onChange={isEditable ? (e) => handleInputChange(field.key, e.target.value) : undefined}
+            onChange={
+              isEditable
+                ? (e) => handleInputChange(field.key, e.target.value)
+                : undefined
+            }
             placeholder={isEditable ? `Enter ${field.label.toLowerCase()}` : ""}
             required={field.required}
             disabled={!isEditable}
@@ -71,8 +96,14 @@ const FinishedGoodsDetailForm = ({ requestData, onBack }) => {
           <Select
             options={field.options.map((opt) => ({ value: opt, label: opt }))}
             value={value}
-            onChange={isEditable ? (val) => handleInputChange(field.key, val) : undefined}
-            placeholder={isEditable ? `Select ${field.label.toLowerCase()}` : ""}
+            onChange={
+              isEditable
+                ? (val) => handleInputChange(field.key, val)
+                : undefined
+            }
+            placeholder={
+              isEditable ? `Select ${field.label.toLowerCase()}` : ""
+            }
             disabled={!isEditable}
           />
         )}
@@ -84,7 +115,11 @@ const FinishedGoodsDetailForm = ({ requestData, onBack }) => {
               { value: "no", label: "No" },
             ]}
             value={value}
-            onChange={isEditable ? (val) => handleInputChange(field.key, val) : undefined}
+            onChange={
+              isEditable
+                ? (val) => handleInputChange(field.key, val)
+                : undefined
+            }
             placeholder={isEditable ? "Select option" : ""}
             disabled={!isEditable}
           />
@@ -107,14 +142,14 @@ const FinishedGoodsDetailForm = ({ requestData, onBack }) => {
   // Determine available actions based on request status
   const getAvailableActions = () => {
     if (!requestData) return [];
-    
+
     const actions = [];
-    
+
     // Cancel button always available
     actions.push({
       label: "Cancel",
       variant: "outline",
-      action: "cancel"
+      action: "cancel",
     });
 
     // Submit button only for "Waiting for Entry" status
@@ -122,7 +157,7 @@ const FinishedGoodsDetailForm = ({ requestData, onBack }) => {
       actions.push({
         label: "Submit Request",
         variant: "primary",
-        action: "submit"
+        action: "submit",
       });
     }
 
@@ -152,6 +187,9 @@ const FinishedGoodsDetailForm = ({ requestData, onBack }) => {
     console.log("Submit finished goods request", formData);
     setShowSubmitModal(false);
     // Handle submit logic
+    if (onSave) {
+      onSave({ ...requestData, ...formData });
+    }
   };
 
   return (
@@ -166,9 +204,6 @@ const FinishedGoodsDetailForm = ({ requestData, onBack }) => {
             </Button>
             <div>
               <Text variant="heading" size="xl" weight="bold">
-                Finished Goods Request Detail
-              </Text>
-              <Text variant="body" color="muted" className="mt-1">
                 {requestData?.id} - {requestData?.requestTitle}
               </Text>
               {/* Current Step Indicator */}
@@ -184,6 +219,15 @@ const FinishedGoodsDetailForm = ({ requestData, onBack }) => {
                   }`}
                 >
                   {requestData?.currentSteps}
+                </span>
+                <span
+                  className={`text-xs font-medium  ${
+                    requestData?.currentSteps === "Waiting for Entry"
+                      ? " text-blue-800"
+                      : " text-gray-600"
+                  }`}
+                >
+                  {requestData?.stepOwner}
                 </span>
                 {requestData?.currentSteps === "Waiting for Entry" && (
                   <span className="text-xs text-green-600 font-medium">

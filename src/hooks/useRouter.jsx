@@ -61,7 +61,7 @@ export const ROUTES = {
   "rule-field-config": {
     id: "rule-field-config",
     title: "Rule & Field Configuration",
-    breadcrumb: "Configuration",
+    breadcrumb: "Form Configuration",
   },
   workflows: {
     id: "workflows",
@@ -72,5 +72,15 @@ export const ROUTES = {
     id: "workflow-edit",
     title: "Edit Workflow",
     breadcrumb: "Edit Workflow",
+  },
+  permissions: {
+    id: "permissions",
+    title: "Permissions Management",
+    breadcrumb: "Permissions",
+  },
+  "master-data": {
+    id: "master-data",
+    title: "Master Data Management",
+    breadcrumb: "Master Data",
   },
 };

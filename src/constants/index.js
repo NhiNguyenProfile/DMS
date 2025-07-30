@@ -38,8 +38,7 @@ export const RULE_STATUS = [
 // Countries
 export const COUNTRIES = [
   { value: "VN", label: "Vietnam" },
-  { value: "US", label: "United States" },
-  { value: "JP", label: "Japan" },
+  { value: "NL", label: "Netherlands" },
 ];
 
 // Default country

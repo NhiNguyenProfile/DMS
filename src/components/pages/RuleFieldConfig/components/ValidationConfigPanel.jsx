@@ -19,7 +19,28 @@ const ValidationConfigPanel = ({
     ruleDescription: "",
     status: "Active",
     legalEntities: [],
-    validationConfigJson: "",
+    validationConfigJson: `[
+  {
+    "field_name": "CustomerType",
+    "field_name_display": "Customer Type",
+    "validations": "[ { 'type': 'VALUE', 'operator': 'DEFAULT', 'message': '', 'value': 'A,B,C'}, { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'} ]"
+  },
+  {
+    "field_name": "Organizationname",
+    "field_name_display": "Organization Name",
+    "validations": "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'},{ 'type': 'MAXLENGTH', 'operator': 'DEFAULT', 'message': 'tối đa 10 ký tự', 'value': '10'} ]"
+  },
+  {
+    "field_name": "Salary",
+    "field_name_display": "Salary",
+    "validations": "[ {'type': 'MAX', 'operator': 'DEFAULT', 'message': 'MAX 10', 'value': '10'}, {'type': 'MIN', 'operator': 'DEFAULT', 'message': 'MIN 1', 'value': '1'}]"
+  },
+  {
+    "field_name": "Country",
+    "field_name_display": "Country",
+    "validations": "[ {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DISPLAYMODE', 'operator': 'DEFAULT', 'message': '', 'value': 'DISABLE'}]"
+  }
+]`,
   });
 
   const [errors, setErrors] = useState({});
@@ -28,25 +49,38 @@ const ValidationConfigPanel = ({
   // Legal entities options
   const legalEntitiesOptions = [
     { value: "DHV", label: "DHV" },
-    { value: "PBH", label: "PBH" },
-    { value: "PHP", label: "PHP" },
-    { value: "PHY", label: "PHY" },
-    { value: "DGC", label: "DGC" },
-    { value: "DGD", label: "DGD" },
+    { value: "DHBH", label: "DHBH" },
+    { value: "DHHP", label: "DHHP" },
+    { value: "DHHY", label: "DHHY" },
+    { value: "DHGC", label: "DHGC" },
+    { value: "DHGD", label: "DHGD" },
   ];
 
   // Load config data when editing
   useEffect(() => {
     if (config) {
-      setFormData({
-        ruleName: config.ruleName || "",
-        ruleDescription: config.ruleDescription || "",
-        status: config.status || "Active",
-        legalEntities: config.legalEntities || [],
-        validationConfigJson: config.validationConfig
-          ? JSON.stringify(config.validationConfig, null, 2)
-          : "",
-      });
+      // Check if config has new format (field_name) or old format (ruleName)
+      if (config.field_name) {
+        // New format - single field config
+        setFormData({
+          ruleName: config.field_name_display || "",
+          ruleDescription: `Configuration for ${config.field_name}`,
+          status: "Active",
+          legalEntities: [],
+          validationConfigJson: JSON.stringify([config], null, 2),
+        });
+      } else {
+        // Old format - multiple field config
+        setFormData({
+          ruleName: config.ruleName || "",
+          ruleDescription: config.ruleDescription || "",
+          status: config.status || "Active",
+          legalEntities: config.legalEntities || [],
+          validationConfigJson: config.validationConfig
+            ? JSON.stringify(config.validationConfig, null, 2)
+            : "",
+        });
+      }
     }
   }, [config]);
 
@@ -76,18 +110,21 @@ const ValidationConfigPanel = ({
 
   const handleSave = () => {
     if (validateForm()) {
-      // Prepare final data for JSON mode only
-      let finalData = {
-        ...formData,
-      };
-
       // Parse JSON configuration
+      let parsedConfig = [];
       try {
-        finalData.validationConfig = JSON.parse(formData.validationConfigJson);
+        parsedConfig = JSON.parse(formData.validationConfigJson);
       } catch (error) {
         // Should not happen due to validation
-        finalData.validationConfig = {};
+        parsedConfig = [];
       }
+
+      // Prepare final data for JSON mode only
+      const finalData = {
+        ...formData,
+        validationConfig: parsedConfig,
+        parsedValidationConfig: parsedConfig,
+      };
 
       onSave(finalData);
     }
@@ -168,7 +205,8 @@ const ValidationConfigPanel = ({
                 className="text-gray-400 hover:text-gray-600 cursor-help"
               />
               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                Define validation rules in JSON format
+                New format: field_name, field_name_display, validations (JSON
+                string)
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
               </div>
             </div>
@@ -182,26 +220,28 @@ const ValidationConfigPanel = ({
                 JSON.stringify(
                   [
                     {
-                      fieldKey: "taxCode",
-                      validations: [
-                        { type: "required", message: "Trường này là bắt buộc" },
-                        {
-                          type: "regex",
-                          pattern: "^[0-9]{10}$",
-                          message: "Mã số thuế phải gồm đúng 10 chữ số",
-                        },
-                      ],
+                      field_name: "CustomerType",
+                      field_name_display: "Customer Type",
+                      validations:
+                        "[ { 'type': 'VALUE', 'operator': 'DEFAULT', 'message': '', 'value': 'A,B,C'}, { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'} ]",
                     },
                     {
-                      fieldKey: "email",
-                      validations: [
-                        { type: "required", message: "Vui lòng nhập email" },
-                        {
-                          type: "regex",
-                          pattern: "^[^@\\\\s]+@[^@\\\\s]+\\\\.[^@\\\\s]+$",
-                          message: "Email không đúng định dạng",
-                        },
-                      ],
+                      field_name: "Organizationname",
+                      field_name_display: "Organization Name",
+                      validations:
+                        "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'},{ 'type': 'MAXLENGTH', 'operator': 'DEFAULT', 'message': 'tối đa 10 ký tự', 'value': '10'} ]",
+                    },
+                    {
+                      field_name: "Salary",
+                      field_name_display: "Salary",
+                      validations:
+                        "[ {'type': 'MAX', 'operator': 'DEFAULT', 'message': 'MAX 10', 'value': '10'}, {'type': 'MIN', 'operator': 'DEFAULT', 'message': 'MIN 1', 'value': '1'}]",
+                    },
+                    {
+                      field_name: "Country",
+                      field_name_display: "Country",
+                      validations:
+                        "[ {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DISPLAYMODE', 'operator': 'DEFAULT', 'message': '', 'value': 'DISABLE'}]",
                     },
                   ],
                   null,
@@ -221,32 +261,24 @@ const ValidationConfigPanel = ({
           }
           placeholder={`[
   {
-    "fieldKey": "taxCode",
-    "validations": [
-      { "type": "required", "message": "Trường này là bắt buộc" },
-      { "type": "regex", "pattern": "^[0-9]{10}$", "message": "Mã số thuế phải gồm đúng 10 chữ số" }
-    ]
+    "field_name": "CustomerType",
+    "field_name_display": "Customer Type",
+    "validations": "[ { 'type': 'VALUE', 'operator': 'DEFAULT', 'message': '', 'value': 'A,B,C'}, { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'} ]"
   },
   {
-    "fieldKey": "email",
-    "validations": [
-      { "type": "required", "message": "Vui lòng nhập email" },
-      { "type": "regex", "pattern": "^[^@\\\\s]+@[^@\\\\s]+\\\\.[^@\\\\s]+$", "message": "Email không đúng định dạng" }
-    ]
+    "field_name": "Organizationname",
+    "field_name_display": "Organization Name",
+    "validations": "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'},{ 'type': 'MAXLENGTH', 'operator': 'DEFAULT', 'message': 'tối đa 10 ký tự', 'value': '10'} ]"
   },
   {
-    "fieldKey": "age",
-    "validations": [
-      { "type": "required" },
-      { "type": "min", "value": 18, "message": "Tuổi tối thiểu là 18" },
-      { "type": "max", "value": 65, "message": "Tuổi tối đa là 65" }
-    ]
+    "field_name": "Salary",
+    "field_name_display": "Salary",
+    "validations": "[ {'type': 'MAX', 'operator': 'DEFAULT', 'message': 'MAX 10', 'value': '10'}, {'type': 'MIN', 'operator': 'DEFAULT', 'message': 'MIN 1', 'value': '1'}]"
   },
   {
-    "fieldKey": "phoneNumber",
-    "validations": [
-      { "type": "regex", "pattern": "^0\\\\d{9}$", "message": "Số điện thoại không hợp lệ" }
-    ]
+    "field_name": "Country",
+    "field_name_display": "Country",
+    "validations": "[ {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DISPLAYMODE', 'operator': 'DEFAULT', 'message': '', 'value': 'DISABLE'}]"
   }
 ]`}
         />

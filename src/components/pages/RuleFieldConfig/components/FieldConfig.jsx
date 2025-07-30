@@ -92,7 +92,7 @@ const FieldConfig = ({ selectedEntity, selectedRequestType, disabled }) => {
       <div className="flex items-center justify-between">
         <div>
           <Text variant="heading" size="lg" weight="semibold">
-            Field Configuration
+            Form Configuration
           </Text>
           <Text variant="body" color="muted" className="mt-1">
             Configure display names for field keys

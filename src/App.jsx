@@ -6,6 +6,8 @@ import Search from "./components/pages/Search";
 import ConfigurationWizard from "./components/pages/RuleFieldConfig";
 import WorkflowWizard from "./components/pages/Workflows";
 import WorkflowEdit from "./components/pages/WorkflowEdit";
+import Permissions from "./components/pages/Permissions";
+import MasterData from "./components/pages/MasterData";
 
 function AppContent() {
   const { currentRoute } = useRouter();
@@ -24,6 +26,10 @@ function AppContent() {
         return <WorkflowWizard />;
       case "workflow-edit":
         return <WorkflowEdit />;
+      case "permissions":
+        return <Permissions />;
+      case "master-data":
+        return <MasterData />;
       default:
         return <MyRequest />;
     }

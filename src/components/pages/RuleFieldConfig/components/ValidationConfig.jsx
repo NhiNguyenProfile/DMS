@@ -15,44 +15,28 @@ const SAMPLE_VALIDATION_CONFIG = [
     status: "Active",
     validationConfig: [
       {
-        fieldKey: "taxCode",
-        validations: [
-          { type: "required", message: "Trường này là bắt buộc" },
-          {
-            type: "regex",
-            pattern: "^[0-9]{10}$",
-            message: "Mã số thuế phải gồm đúng 10 chữ số",
-          },
-        ],
+        field_name: "CustomerType",
+        field_name_display: "Customer Type",
+        validations:
+          "[ { 'type': 'VALUE', 'operator': 'DEFAULT', 'message': '', 'value': 'A,B,C'}, { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'} ]",
       },
       {
-        fieldKey: "email",
-        validations: [
-          { type: "required", message: "Vui lòng nhập email" },
-          {
-            type: "regex",
-            pattern: "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
-            message: "Email không đúng định dạng",
-          },
-        ],
+        field_name: "Organizationname",
+        field_name_display: "Organization Name",
+        validations:
+          "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'},{ 'type': 'MAXLENGTH', 'operator': 'DEFAULT', 'message': 'tối đa 10 ký tự', 'value': '10'} ]",
       },
       {
-        fieldKey: "age",
-        validations: [
-          { type: "required" },
-          { type: "min", value: 18, message: "Tuổi tối thiểu là 18" },
-          { type: "max", value: 65, message: "Tuổi tối đa là 65" },
-        ],
+        field_name: "Salary",
+        field_name_display: "Salary",
+        validations:
+          "[ {'type': 'MAX', 'operator': 'DEFAULT', 'message': 'MAX 10', 'value': '10'}, {'type': 'MIN', 'operator': 'DEFAULT', 'message': 'MIN 1', 'value': '1'}]",
       },
       {
-        fieldKey: "phoneNumber",
-        validations: [
-          {
-            type: "regex",
-            pattern: "^0\\d{9}$",
-            message: "Số điện thoại không hợp lệ",
-          },
-        ],
+        field_name: "Country",
+        field_name_display: "Country",
+        validations:
+          "[ {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DISPLAYMODE', 'operator': 'DEFAULT', 'message': '', 'value': 'DISABLE'}]",
       },
     ],
   },
@@ -63,42 +47,22 @@ const SAMPLE_VALIDATION_CONFIG = [
     status: "Active",
     validationConfig: [
       {
-        fieldKey: "fullName",
-        validations: [
-          { type: "required", message: "Họ tên là bắt buộc" },
-          {
-            type: "minLength",
-            value: 2,
-            message: "Họ tên phải có ít nhất 2 ký tự",
-          },
-          {
-            type: "maxLength",
-            value: 50,
-            message: "Họ tên không được quá 50 ký tự",
-          },
-        ],
+        field_name: "FullName",
+        field_name_display: "Full Name",
+        validations:
+          "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'Họ tên là bắt buộc', 'value': 'true'}, { 'type': 'MINLENGTH', 'operator': 'DEFAULT', 'message': 'Họ tên phải có ít nhất 2 ký tự', 'value': '2'}, { 'type': 'MAXLENGTH', 'operator': 'DEFAULT', 'message': 'Họ tên không được quá 50 ký tự', 'value': '50'} ]",
       },
       {
-        fieldKey: "idNumber",
-        validations: [
-          { type: "required", message: "Số CMND/CCCD là bắt buộc" },
-          {
-            type: "regex",
-            pattern: "^[0-9]{9,12}$",
-            message: "Số CMND/CCCD không hợp lệ",
-          },
-        ],
+        field_name: "IdNumber",
+        field_name_display: "ID Number",
+        validations:
+          "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'Số CMND/CCCD là bắt buộc', 'value': 'true'}, { 'type': 'REGEX', 'operator': 'DEFAULT', 'message': 'Số CMND/CCCD không hợp lệ', 'value': '^[0-9]{9,12}$'} ]",
       },
       {
-        fieldKey: "address",
-        validations: [
-          { type: "required", message: "Địa chỉ là bắt buộc" },
-          {
-            type: "minLength",
-            value: 10,
-            message: "Địa chỉ phải có ít nhất 10 ký tự",
-          },
-        ],
+        field_name: "Address",
+        field_name_display: "Address",
+        validations:
+          "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'Địa chỉ là bắt buộc', 'value': 'true'}, { 'type': 'MINLENGTH', 'operator': 'DEFAULT', 'message': 'Địa chỉ phải có ít nhất 10 ký tự', 'value': '10'} ]",
       },
     ],
   },
@@ -109,37 +73,22 @@ const SAMPLE_VALIDATION_CONFIG = [
     status: "Active",
     validationConfig: [
       {
-        fieldKey: "companyName",
-        validations: [
-          { type: "required", message: "Tên công ty là bắt buộc" },
-          {
-            type: "minLength",
-            value: 5,
-            message: "Tên công ty phải có ít nhất 5 ký tự",
-          },
-        ],
+        field_name: "CompanyName",
+        field_name_display: "Company Name",
+        validations:
+          "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'Tên công ty là bắt buộc', 'value': 'true'}, { 'type': 'MINLENGTH', 'operator': 'DEFAULT', 'message': 'Tên công ty phải có ít nhất 5 ký tự', 'value': '5'} ]",
       },
       {
-        fieldKey: "businessLicense",
-        validations: [
-          { type: "required", message: "Giấy phép kinh doanh là bắt buộc" },
-          {
-            type: "regex",
-            pattern: "^[0-9]{10,13}$",
-            message: "Số giấy phép không hợp lệ",
-          },
-        ],
+        field_name: "BusinessLicense",
+        field_name_display: "Business License",
+        validations:
+          "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'Giấy phép kinh doanh là bắt buộc', 'value': 'true'}, { 'type': 'REGEX', 'operator': 'DEFAULT', 'message': 'Số giấy phép không hợp lệ', 'value': '^[0-9]{10,13}$'} ]",
       },
       {
-        fieldKey: "registeredCapital",
-        validations: [
-          { type: "required", message: "Vốn điều lệ là bắt buộc" },
-          {
-            type: "min",
-            value: 15000000,
-            message: "Vốn điều lệ tối thiểu 15 triệu VND",
-          },
-        ],
+        field_name: "RegisteredCapital",
+        field_name_display: "Registered Capital",
+        validations:
+          "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'Vốn điều lệ là bắt buộc', 'value': 'true'}, { 'type': 'MIN', 'operator': 'DEFAULT', 'message': 'Vốn điều lệ tối thiểu 15 triệu VND', 'value': '15000000'} ]",
       },
     ],
   },
@@ -150,43 +99,52 @@ const SAMPLE_VALIDATION_CONFIG = [
     status: "Inactive",
     validationConfig: [
       {
-        fieldKey: "accountNumber",
-        validations: [
-          { type: "required", message: "Số tài khoản là bắt buộc" },
-          {
-            type: "regex",
-            pattern: "^[0-9]{8,16}$",
-            message: "Số tài khoản không hợp lệ",
-          },
-        ],
+        field_name: "AccountNumber",
+        field_name_display: "Account Number",
+        validations:
+          "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'Số tài khoản là bắt buộc', 'value': 'true'}, { 'type': 'REGEX', 'operator': 'DEFAULT', 'message': 'Số tài khoản không hợp lệ', 'value': '^[0-9]{8,16}$'} ]",
       },
       {
-        fieldKey: "amount",
-        validations: [
-          { type: "required", message: "Số tiền là bắt buộc" },
-          {
-            type: "min",
-            value: 10000,
-            message: "Số tiền tối thiểu 10,000 VND",
-          },
-          {
-            type: "max",
-            value: 500000000,
-            message: "Số tiền tối đa 500,000,000 VND",
-          },
-        ],
+        field_name: "Amount",
+        field_name_display: "Amount",
+        validations:
+          "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'Số tiền là bắt buộc', 'value': 'true'}, { 'type': 'MIN', 'operator': 'DEFAULT', 'message': 'Số tiền tối thiểu 10,000 VND', 'value': '10000'}, { 'type': 'MAX', 'operator': 'DEFAULT', 'message': 'Số tiền tối đa 500,000,000 VND', 'value': '500000000'} ]",
       },
       {
-        fieldKey: "transferNote",
-        validations: [
-          {
-            type: "maxLength",
-            value: 200,
-            message: "Ghi chú không được quá 200 ký tự",
-          },
-        ],
+        field_name: "TransferNote",
+        field_name_display: "Transfer Note",
+        validations:
+          "[ { 'type': 'MAXLENGTH', 'operator': 'DEFAULT', 'message': 'Ghi chú không được quá 200 ký tự', 'value': '200'} ]",
       },
     ],
+  },
+];
+
+// Sample validation config data - Updated to new format
+const SAMPLE_VALIDATION_CONFIG_OLD = [
+  {
+    field_name: "CustomerType",
+    field_name_display: "Customer Type",
+    validations:
+      "[ { 'type': 'VALUE', 'operator': 'DEFAULT', 'message': '', 'value': 'A,B,C'}, { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'} ]",
+  },
+  {
+    field_name: "Organizationname",
+    field_name_display: "Organization Name",
+    validations:
+      "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'},{ 'type': 'MAXLENGTH', 'operator': 'DEFAULT', 'message': 'tối đa 10 ký tự', 'value': '10'} ]",
+  },
+  {
+    field_name: "Salary",
+    field_name_display: "Salary",
+    validations:
+      "[ {'type': 'MAX', 'operator': 'DEFAULT', 'message': 'MAX 10', 'value': '10'}, {'type': 'MIN', 'operator': 'DEFAULT', 'message': 'MIN 1', 'value': '1'}]",
+  },
+  {
+    field_name: "Country",
+    field_name_display: "Country",
+    validations:
+      "[ {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DISPLAYMODE', 'operator': 'DEFAULT', 'message': '', 'value': 'DISABLE'}]",
   },
 ];
 
@@ -202,12 +160,8 @@ const ValidationConfig = ({
   // Load configs when entity/request type changes
   useEffect(() => {
     if (selectedEntity && selectedRequestType) {
-      // Filter configs by entity and request type
-      const filteredConfigs = SAMPLE_VALIDATION_CONFIG.filter(
-        (config) =>
-          config.applied_entity === selectedEntity || !config.applied_entity
-      );
-      setConfigs(filteredConfigs);
+      // For demo, load all sample configs
+      setConfigs(SAMPLE_VALIDATION_CONFIG);
     }
   }, [selectedEntity, selectedRequestType]);
 

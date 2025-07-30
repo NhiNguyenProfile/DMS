@@ -3,7 +3,8 @@ import Text from "../../atoms/Text";
 import Button from "../../atoms/Button";
 import Input from "../../atoms/Input";
 import Table from "../../atoms/Table";
-import { Search as SearchIcon, ArrowLeft } from "lucide-react";
+import Modal from "../../atoms/Modal";
+import { Search as SearchIcon, ArrowLeft, Loader2 } from "lucide-react";
 
 // Sample spare parts records data
 const SPARE_PARTS_RECORDS = [
@@ -72,6 +73,13 @@ const SPARE_PARTS_RECORDS = [
 const SparePartsSearchResults = ({ onBack, country }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchWithDynamic365, setSearchWithDynamic365] = useState(false);
+  const [showDynamic365Modal, setShowDynamic365Modal] = useState(false);
+  const [showDynamic365SearchModal, setShowDynamic365SearchModal] =
+    useState(false);
+  const [dynamic365SearchTerm, setDynamic365SearchTerm] = useState("");
+  const [isSearchingDynamic365, setIsSearchingDynamic365] = useState(false);
+  const [dynamic365SearchCompleted, setDynamic365SearchCompleted] =
+    useState(false);
 
   // Filter records based on search term
   const filteredRecords = SPARE_PARTS_RECORDS.filter(
@@ -83,10 +91,34 @@ const SparePartsSearchResults = ({ onBack, country }) => {
       record.purchaseUnit.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Check if search has no results and should show Dynamic 365 modal
+  const shouldShowDynamic365Suggestion =
+    searchTerm.length > 0 && filteredRecords.length === 0;
+
   const handleToggleDynamic365 = () => {
     setSearchWithDynamic365(!searchWithDynamic365);
     console.log("Search with Dynamic 365:", !searchWithDynamic365);
     // Handle Dynamic 365 search integration
+  };
+
+  const handleSearchDynamic365 = () => {
+    setShowDynamic365Modal(false);
+    setDynamic365SearchTerm(searchTerm);
+    setShowDynamic365SearchModal(true);
+    setIsSearchingDynamic365(true);
+    setDynamic365SearchCompleted(false);
+
+    // Simulate search with 2 second delay
+    setTimeout(() => {
+      setIsSearchingDynamic365(false);
+      setDynamic365SearchCompleted(true);
+    }, 2000);
+  };
+
+  const handleCloseDynamic365SearchModal = () => {
+    setShowDynamic365SearchModal(false);
+    setDynamic365SearchCompleted(false);
+    setIsSearchingDynamic365(false);
   };
 
   const getProductTypeBadge = (type) => {
@@ -154,13 +186,6 @@ const SparePartsSearchResults = ({ onBack, country }) => {
             className="pl-10"
           />
         </div>
-        <Button
-          variant={searchWithDynamic365 ? "primary" : "outline"}
-          onClick={handleToggleDynamic365}
-          size="small"
-        >
-          {searchWithDynamic365 ? "✓ Dynamic 365" : "Search with Dynamic 365"}
-        </Button>
       </div>
 
       {/* Results Table */}
@@ -260,11 +285,18 @@ const SparePartsSearchResults = ({ onBack, country }) => {
       </div>
 
       {/* No results */}
-      {filteredRecords.length === 0 && (
+      {filteredRecords.length === 0 && searchTerm && (
         <div className="text-center py-12">
-          <Text variant="body" color="muted">
+          <Text variant="body" color="muted" className="mb-4">
             No spare parts records found matching "{searchTerm}"
           </Text>
+          <Button
+            variant="outline"
+            onClick={() => setShowDynamic365Modal(true)}
+            className="mt-2"
+          >
+            Search on Dynamic 365
+          </Button>
         </div>
       )}
 
@@ -275,6 +307,98 @@ const SparePartsSearchResults = ({ onBack, country }) => {
           parts records
         </Text>
       </div>
+
+      {/* Dynamic 365 Confirmation Modal */}
+      <Modal
+        isOpen={showDynamic365Modal}
+        onClose={() => setShowDynamic365Modal(false)}
+        title="Search on Dynamic 365"
+      >
+        <div className="space-y-4">
+          <Text variant="body">
+            No results found in local database. Do you want to search for "
+            {searchTerm}" on Dynamic 365?
+          </Text>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setShowDynamic365Modal(false)}
+            >
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleSearchDynamic365}>
+              Yes, Search Dynamic 365
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Dynamic 365 Search Modal */}
+      <Modal
+        isOpen={showDynamic365SearchModal}
+        onClose={handleCloseDynamic365SearchModal}
+        title="Dynamic 365 Search"
+      >
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <SearchIcon size={20} className="text-gray-400" />
+            <Input
+              value={dynamic365SearchTerm}
+              onChange={(e) => setDynamic365SearchTerm(e.target.value)}
+              placeholder="Search on Dynamic 365..."
+              disabled={isSearchingDynamic365}
+              className="flex-1"
+            />
+          </div>
+
+          {isSearchingDynamic365 && (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 size={24} className="animate-spin text-blue-600 mr-2" />
+              <Text variant="body" color="muted">
+                Searching Dynamic 365...
+              </Text>
+            </div>
+          )}
+
+          {dynamic365SearchCompleted && !isSearchingDynamic365 && (
+            <div className="text-center py-8">
+              <Text variant="body" color="muted" className="mb-4">
+                No data found on Dynamic 365 for "{dynamic365SearchTerm}"
+              </Text>
+              <Button
+                variant="outline"
+                onClick={handleCloseDynamic365SearchModal}
+              >
+                Close
+              </Button>
+            </div>
+          )}
+
+          {!isSearchingDynamic365 && !dynamic365SearchCompleted && (
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={handleCloseDynamic365SearchModal}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setIsSearchingDynamic365(true);
+                  setDynamic365SearchCompleted(false);
+                  setTimeout(() => {
+                    setIsSearchingDynamic365(false);
+                    setDynamic365SearchCompleted(true);
+                  }, 2000);
+                }}
+              >
+                Search
+              </Button>
+            </div>
+          )}
+        </div>
+      </Modal>
     </div>
   );
 };

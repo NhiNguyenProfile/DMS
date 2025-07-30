@@ -10,6 +10,8 @@ import {
   FileText,
   CheckCircle,
   Search,
+  Shield,
+  Database,
 } from "lucide-react";
 import { useRouter } from "../../../hooks/useRouter.jsx";
 
@@ -35,12 +37,22 @@ const Sidebar = ({ isOpen = true, onToggle, className = "", ...props }) => {
     {
       id: "rule-field-config",
       icon: <Settings size={20} />,
-      label: "Configuration",
+      label: "Form Configuration",
     },
     {
       id: "workflows",
       icon: <Workflow size={20} />,
       label: "Workflows",
+    },
+    {
+      id: "permissions",
+      icon: <Shield size={20} />,
+      label: "Permissions",
+    },
+    {
+      id: "master-data",
+      icon: <Database size={20} />,
+      label: "Master Data",
     },
   ];
 

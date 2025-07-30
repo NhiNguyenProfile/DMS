@@ -217,6 +217,9 @@ const ENGINEER_FIELDS = [
 ];
 
 const SparePartsDetailForm = ({ requestData, onBack }) => {
+  // Debug: Log requestData to check if it's being passed correctly
+  console.log("SparePartsDetailForm - requestData:", requestData);
+
   const [activeTab, setActiveTab] = useState("general");
   const [formData, setFormData] = useState({});
   const [showApprovalSlider, setShowApprovalSlider] = useState(false);
@@ -382,11 +385,15 @@ const SparePartsDetailForm = ({ requestData, onBack }) => {
             </Button>
             <div>
               <Text variant="heading" size="xl" weight="bold">
-                Spare Parts Request Detail
+                {requestData?.id || "No ID"} -{" "}
+                {requestData?.requestTitle || "No Title"}
               </Text>
-              <Text variant="body" color="muted" className="mt-1">
-                {requestData?.id} - {requestData?.requestTitle}
-              </Text>
+              {/* Debug info */}
+              {!requestData && (
+                <div className="text-red-500 text-sm mt-1">
+                  Debug: requestData is null/undefined
+                </div>
+              )}
               {/* Current Step Indicator */}
               <div className="flex items-center gap-2 mt-2">
                 <Text variant="caption" color="muted">
@@ -400,6 +407,15 @@ const SparePartsDetailForm = ({ requestData, onBack }) => {
                   }`}
                 >
                   {requestData?.currentSteps}
+                </span>
+                <span
+                  className={`text-xs font-medium  ${
+                    requestData?.currentSteps === "Waiting for Entry"
+                      ? " text-blue-800"
+                      : " text-gray-600"
+                  }`}
+                >
+                  {requestData?.stepOwner}
                 </span>
                 {requestData?.currentSteps === "Waiting for Entry" && (
                   <span className="text-xs text-green-600 font-medium">

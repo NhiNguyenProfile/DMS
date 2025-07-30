@@ -31,7 +31,7 @@ const ConfigurationWizard = () => {
           </Button>
           <div>
             <Text variant="heading" size="xl" weight="bold" className="mb-2">
-              Field Configuration
+              Form Configuration
             </Text>
             <Text variant="body" color="muted">
               {COUNTRIES.find((c) => c.value === selectedCountry)?.label} →{" "}
@@ -100,7 +100,7 @@ const ConfigurationWizard = () => {
       {/* Header */}
       <div>
         <Text variant="heading" size="xl" weight="bold" className="mb-2">
-          Field Configuration
+          Form Configuration
         </Text>
         <Text variant="body" color="muted">
           Select a country to start configuring field rules and validation
@@ -117,8 +117,8 @@ const ConfigurationWizard = () => {
             image={`${
               country.value === "VN"
                 ? "https://www.deheus.com.vn/contentassets/20da7b24992f46eeb74f1914a3ce1735/premix-plant.png?mode=crop&width=622"
-                : country.value === "US"
-                ? "https://images.unsplash.com/photo-1506905925346-21bda4d32df4"
+                : country.value === "NL"
+                ? "https://www.deheus.com/globalassets/careers/hoofdkantoor-ede.jpg?mode=crop&width=750&height=402"
                 : "https://images.unsplash.com/photo-1480796927426-f609979314bd"
             }?w=400&h=200&fit=crop`}
             onClick={() => handleCountryClick(country)}

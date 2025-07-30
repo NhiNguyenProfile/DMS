@@ -166,20 +166,6 @@ const Search = () => {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-md">
-        <SearchIcon
-          size={20}
-          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-        />
-        <Input
-          placeholder="Search entities..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
-        />
-      </div>
-
       {/* Entity Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {filteredEntities.map((entity) => (

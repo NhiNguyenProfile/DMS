@@ -64,11 +64,11 @@ const WorkflowEdit = () => {
   // Legal entities options
   const legalEntitiesOptions = [
     { value: "DHV", label: "DHV" },
-    { value: "PBH", label: "PBH" },
-    { value: "PHP", label: "PHP" },
-    { value: "PHY", label: "PHY" },
-    { value: "DGC", label: "DGC" },
-    { value: "DGD", label: "DGD" },
+    { value: "DHBH", label: "DHBH" },
+    { value: "DHHP", label: "DHHP" },
+    { value: "DHHY", label: "DHHY" },
+    { value: "DHGC", label: "DHGC" },
+    { value: "DHGD", label: "DHGD" },
   ];
   const [availableRequestTypes, setAvailableRequestTypes] = useState([]);
 

@@ -331,7 +331,12 @@ const FINAL_CUSTOMER_PAYMENT = [
   },
 ];
 
-const CustomerDetailForm = ({ requestData, onBack, onViewApproval }) => {
+const CustomerDetailForm = ({
+  requestData,
+  onBack,
+  onViewApproval,
+  onSave,
+}) => {
   const [activeTab, setActiveTab] = useState("main");
   const [formData, setFormData] = useState({});
   const [showApprovalSlider, setShowApprovalSlider] = useState(false);
@@ -518,6 +523,9 @@ const CustomerDetailForm = ({ requestData, onBack, onViewApproval }) => {
     console.log("Submit request", formData);
     setShowSubmitModal(false);
     // Handle submit logic
+    if (onSave) {
+      onSave({ ...requestData, ...formData });
+    }
   };
 
   return (
@@ -532,9 +540,6 @@ const CustomerDetailForm = ({ requestData, onBack, onViewApproval }) => {
             </Button>
             <div>
               <Text variant="heading" size="xl" weight="bold">
-                Customer Request Detail
-              </Text>
-              <Text variant="body" color="muted" className="mt-1">
                 {requestData?.id} - {requestData?.requestTitle}
               </Text>
               {/* Current Step Indicator */}
@@ -550,6 +555,15 @@ const CustomerDetailForm = ({ requestData, onBack, onViewApproval }) => {
                   }`}
                 >
                   {requestData?.currentSteps}
+                </span>
+                <span
+                  className={`text-xs font-medium  ${
+                    requestData?.currentSteps === "Waiting for Entry"
+                      ? " text-blue-800"
+                      : " text-gray-600"
+                  }`}
+                >
+                  {requestData?.stepOwner}
                 </span>
                 {requestData?.currentSteps === "Waiting for Entry" && (
                   <span className="text-xs text-green-600 font-medium">

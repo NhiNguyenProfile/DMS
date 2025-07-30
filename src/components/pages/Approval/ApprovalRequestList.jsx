@@ -255,7 +255,12 @@ const STATUS_OPTIONS = [
   { value: "Rejected", label: "Rejected" },
 ];
 
-const ApprovalRequestList = ({ onBack, entityType = "Customers" }) => {
+const ApprovalRequestList = ({
+  onBack,
+  entityType = "Customers",
+  hideHeader = false,
+  onShowDetail,
+}) => {
   const [requests, setRequests] = useState(
     APPROVAL_REQUESTS_DATA[entityType] || []
   );
@@ -301,6 +306,48 @@ const ApprovalRequestList = ({ onBack, entityType = "Customers" }) => {
       };
       setSelectedRequestData(combinedData);
       setShowApprovalSlider(true);
+    } else {
+      // If no approval tree data, still allow viewing detail form
+      setSelectedRequestData(request);
+      if (onShowDetail) {
+        // Direct mode - pass detail component to parent
+        const getDetailComponent = () => {
+          switch (entityType) {
+            case "Customers":
+              return (
+                <ApprovalDetailForm
+                  requestData={request}
+                  onBack={() => onShowDetail(null)}
+                />
+              );
+            case "Spare Parts":
+              return (
+                <SparePartsApprovalDetailForm
+                  requestData={request}
+                  onBack={() => onShowDetail(null)}
+                />
+              );
+            case "Finished Goods":
+              return (
+                <FinishedGoodsApprovalDetailForm
+                  requestData={request}
+                  onBack={() => onShowDetail(null)}
+                />
+              );
+            default:
+              return (
+                <ApprovalDetailForm
+                  requestData={request}
+                  onBack={() => onShowDetail(null)}
+                />
+              );
+          }
+        };
+        onShowDetail(getDetailComponent());
+      } else {
+        // Cards mode - show detail form locally
+        setShowDetailForm(true);
+      }
     }
   };
 
@@ -311,7 +358,45 @@ const ApprovalRequestList = ({ onBack, entityType = "Customers" }) => {
 
   const handleViewDetail = () => {
     setShowApprovalSlider(false);
-    setShowDetailForm(true);
+    if (onShowDetail) {
+      // Direct mode - pass detail component to parent
+      const getDetailComponent = () => {
+        switch (entityType) {
+          case "Customers":
+            return (
+              <ApprovalDetailForm
+                requestData={selectedRequestData}
+                onBack={() => onShowDetail(null)}
+              />
+            );
+          case "Spare Parts":
+            return (
+              <SparePartsApprovalDetailForm
+                requestData={selectedRequestData}
+                onBack={() => onShowDetail(null)}
+              />
+            );
+          case "Finished Goods":
+            return (
+              <FinishedGoodsApprovalDetailForm
+                requestData={selectedRequestData}
+                onBack={() => onShowDetail(null)}
+              />
+            );
+          default:
+            return (
+              <ApprovalDetailForm
+                requestData={selectedRequestData}
+                onBack={() => onShowDetail(null)}
+              />
+            );
+        }
+      };
+      onShowDetail(getDetailComponent());
+    } else {
+      // Cards mode - show detail form locally
+      setShowDetailForm(true);
+    }
   };
 
   const handleBackFromDetail = () => {
@@ -395,22 +480,24 @@ const ApprovalRequestList = ({ onBack, entityType = "Customers" }) => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={onBack}>
-            <ArrowLeft size={16} className="mr-2" />
-            Back
-          </Button>
-          <div>
-            <Text variant="heading" size="xl" weight="bold" className="mb-2">
-              {entityType}
-            </Text>
-            <Text variant="body" color="muted">
-              Review and approve pending {entityType.toLowerCase()} requests
-            </Text>
+      {!hideHeader && (
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={onBack}>
+              <ArrowLeft size={16} className="mr-2" />
+              Back
+            </Button>
+            <div>
+              <Text variant="heading" size="xl" weight="bold" className="mb-2">
+                {entityType}
+              </Text>
+              <Text variant="body" color="muted">
+                Review and approve pending {entityType.toLowerCase()} requests
+              </Text>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Search and Filter */}
       <div className="flex items-center gap-4">
