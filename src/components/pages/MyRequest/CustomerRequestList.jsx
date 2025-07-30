@@ -150,10 +150,49 @@ const APPROVAL_TREES = {
 };
 
 const REQUEST_TYPES = [
-  { value: "Create", label: "Create Record" },
-  { value: "Edit", label: "Edit Record" },
-  { value: "Disable", label: "Disable Record" },
-  { value: "Reactivate", label: "Reactivate Record" },
+  { value: "Create", label: "Create New Record" },
+  { value: "Edit", label: "Edit Existing Record" },
+  { value: "Disable", label: "Disable Existing Record" },
+  { value: "Reactivate", label: "Reactivate Existing Record" },
+];
+
+// Sample existing customers for search
+const EXISTING_CUSTOMERS = [
+  {
+    id: "CUST-001",
+    name: "ABC Company Ltd.",
+    code: "ABC001",
+    type: "Corporate",
+    status: "Active",
+  },
+  {
+    id: "CUST-002",
+    name: "XYZ Corporation",
+    code: "XYZ002",
+    type: "Corporate",
+    status: "Active",
+  },
+  {
+    id: "CUST-003",
+    name: "DEF Industries",
+    code: "DEF003",
+    type: "SME",
+    status: "Active",
+  },
+  {
+    id: "CUST-004",
+    name: "GHI Trading Co.",
+    code: "GHI004",
+    type: "Individual",
+    status: "Inactive",
+  },
+  {
+    id: "CUST-005",
+    name: "JKL Manufacturing",
+    code: "JKL005",
+    type: "Corporate",
+    status: "Active",
+  },
 ];
 
 const STATUS_OPTIONS = [
@@ -172,6 +211,11 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
   const [showApprovalSlider, setShowApprovalSlider] = useState(false);
   const [selectedRequestData, setSelectedRequestData] = useState(null);
   const [showDetailForm, setShowDetailForm] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [selectedRequestType, setSelectedRequestType] = useState(null);
+  const [searchResults, setSearchResults] = useState([]);
+  const [customerSearchTerm, setCustomerSearchTerm] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [filters, setFilters] = useState({
     status: "",
     fromDate: "",
@@ -197,9 +241,144 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
   });
 
   const handleAddRequest = (requestType) => {
-    console.log("Creating new request:", requestType);
     setShowAddModal(false);
-    // Handle request creation
+    setSelectedRequestType(requestType);
+
+    if (requestType === "Create") {
+      // For Create New Record, create new request and go to detail form
+      const newRequest = {
+        id: `REQ-${Date.now()}`,
+        requestType: "Create",
+        requestTitle: "New Customer Record",
+        stepOwner: "You - Sale Admin",
+        currentSteps: "Waiting for Entry",
+        status: "Draft",
+        createdDate: new Date().toISOString(),
+        isNew: true, // Flag to indicate this is a new request
+        approvalTree: [
+          {
+            stepName: "Waiting for Entry",
+            owners: [{ name: "You", role: "Sale Admin", status: "current" }],
+            status: "current",
+          },
+          {
+            stepName: "Credit Check",
+            owners: [
+              { name: "Alicia", role: "Credit Officer", status: "pending" },
+            ],
+            status: "pending",
+          },
+          {
+            stepName: "Final Approval",
+            owners: [
+              { name: "James", role: "Credit Supervisor", status: "pending" },
+            ],
+            status: "pending",
+          },
+        ],
+      };
+
+      // Add to requests list
+      setRequests((prev) => [newRequest, ...prev]);
+
+      // Set as selected request and show detail form
+      setSelectedRequestData(newRequest);
+      setShowDetailForm(true);
+
+      // Also trigger onShowDetail if provided (for parent component)
+      if (onShowDetail) {
+        onShowDetail(
+          <CustomerDetailForm
+            requestData={newRequest}
+            onBack={() => {
+              setShowDetailForm(false);
+              onShowDetail(null);
+            }}
+            onSave={(updatedRequest) => {
+              // Update the request in the list
+              setRequests((prev) =>
+                prev.map((req) =>
+                  req.id === updatedRequest.id ? updatedRequest : req
+                )
+              );
+              setShowDetailForm(false);
+              onShowDetail(null);
+            }}
+          />
+        );
+      }
+    } else {
+      // For other types, show search modal to find existing records
+      setShowSearchModal(true);
+      setCustomerSearchTerm("");
+      setSearchResults([]);
+      setSelectedCustomer(null);
+    }
+  };
+
+  const handleSearch = (term) => {
+    setCustomerSearchTerm(term);
+    if (term.trim()) {
+      const results = EXISTING_CUSTOMERS.filter(
+        (customer) =>
+          customer.name.toLowerCase().includes(term.toLowerCase()) ||
+          customer.code.toLowerCase().includes(term.toLowerCase())
+      );
+      setSearchResults(results);
+    } else {
+      setSearchResults([]);
+    }
+  };
+
+  const handleSelectCustomer = (customer) => {
+    // Just set the selected customer, don't create request yet
+    setSelectedCustomer(customer);
+  };
+
+  const handleSendRequest = () => {
+    if (!selectedCustomer) return;
+
+    // Create request for selected customer
+    const newRequest = {
+      id: `REQ-${Date.now()}`,
+      requestType: selectedRequestType,
+      requestTitle: `${selectedRequestType} Customer - ${selectedCustomer.name}`,
+      stepOwner: "You - Sale Admin",
+      currentSteps: "Waiting for Approval",
+      status: "Pending",
+      createdDate: new Date().toISOString(),
+      customerId: selectedCustomer.id,
+      customerData: selectedCustomer,
+      approvalTree: [
+        {
+          stepName: "Review Request",
+          owners: [
+            { name: "Alicia", role: "Credit Officer", status: "current" },
+          ],
+          status: "current",
+        },
+        {
+          stepName: "Final Approval",
+          owners: [
+            { name: "James", role: "Credit Supervisor", status: "pending" },
+          ],
+          status: "pending",
+        },
+      ],
+    };
+
+    // Add to requests list
+    setRequests((prev) => [newRequest, ...prev]);
+
+    // Close search modal and reset
+    setShowSearchModal(false);
+    setSelectedRequestType(null);
+    setSelectedCustomer(null);
+    setCustomerSearchTerm("");
+    setSearchResults([]);
+
+    // Show success message (could be a toast notification)
+    console.log("Request sent successfully:", newRequest);
   };
 
   const handleApplyFilters = () => {
@@ -563,6 +742,142 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
           Showing {filteredRequests.length} of {requests.length} requests
         </Text>
       </div>
+
+      {/* Search Existing Records Modal */}
+      <Modal
+        isOpen={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+        title={`Search Customer for ${selectedRequestType} Request`}
+      >
+        <div className="space-y-4">
+          <Text variant="body" color="muted">
+            Enter customer code or search name to find existing records:
+          </Text>
+
+          {/* Search Input */}
+          <div className="relative">
+            <Search
+              size={16}
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            />
+            <Input
+              placeholder="Enter customer code or search name..."
+              value={customerSearchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          {/* Selected Customer */}
+          {selectedCustomer && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <Text
+                variant="body"
+                weight="medium"
+                className="text-blue-800 mb-2"
+              >
+                Selected Customer:
+              </Text>
+              <div className="flex justify-between items-start">
+                <div>
+                  <Text variant="body" weight="medium">
+                    {selectedCustomer.name}
+                  </Text>
+                  <Text variant="caption" color="muted">
+                    Code: {selectedCustomer.code} • Type:{" "}
+                    {selectedCustomer.type}
+                  </Text>
+                </div>
+                <span
+                  className={`px-2 py-1 text-xs rounded ${
+                    selectedCustomer.status === "Active"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-600"
+                  }`}
+                >
+                  {selectedCustomer.status}
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedCustomer(null)}
+                className="mt-2"
+              >
+                Change Selection
+              </Button>
+            </div>
+          )}
+
+          {/* Search Results */}
+          {!selectedCustomer && searchResults.length > 0 && (
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              <Text variant="body" weight="medium" className="text-sm">
+                Found {searchResults.length} customer(s):
+              </Text>
+              {searchResults.map((customer) => (
+                <div
+                  key={customer.id}
+                  className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                  onClick={() => handleSelectCustomer(customer)}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <Text variant="body" weight="medium">
+                        {customer.name}
+                      </Text>
+                      <Text variant="caption" color="muted">
+                        Code: {customer.code} • Type: {customer.type}
+                      </Text>
+                    </div>
+                    <span
+                      className={`px-2 py-1 text-xs rounded ${
+                        customer.status === "Active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {customer.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* No Results */}
+          {customerSearchTerm && searchResults.length === 0 && (
+            <div className="text-center py-8">
+              <Text variant="body" color="muted">
+                No customers found matching "{customerSearchTerm}"
+              </Text>
+            </div>
+          )}
+
+          {/* Instructions */}
+          {!customerSearchTerm && !selectedCustomer && (
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <Text variant="body" className="text-blue-800 text-sm">
+                Start typing to search for existing customers. You can search by
+                customer name or code. After selecting a customer, click "Send
+                Request" to submit.
+              </Text>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button variant="outline" onClick={() => setShowSearchModal(false)}>
+              Cancel
+            </Button>
+            {selectedCustomer && (
+              <Button variant="primary" onClick={handleSendRequest}>
+                Send Request
+              </Button>
+            )}
+          </div>
+        </div>
+      </Modal>
 
       {/* Approval Tree Slider */}
       <ApprovalTreeSlider

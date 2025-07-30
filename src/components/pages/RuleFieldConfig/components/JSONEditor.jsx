@@ -120,8 +120,8 @@ const JSONEditor = ({
 
       {/* Syntax highlighting hint */}
       <Text variant="caption" color="muted">
-        💡 Tip: Use proper JSON syntax with double quotes for strings. Press
-        Format to auto-format your JSON.
+        Tip: Use proper JSON syntax with double quotes for strings. Press Format
+        to auto-format your JSON.
       </Text>
     </div>
   );

@@ -529,7 +529,7 @@ const CustomerDetailForm = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="bg-gray-50 min-h-full">
       {/* Header */}
       <div className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between">
@@ -605,7 +605,7 @@ const CustomerDetailForm = ({
       </div>
 
       {/* Form Content */}
-      <div className="flex-1 px-6 py-8 pb-24">
+      <div className="flex-1 px-6 py-8">
         <div className="max-w-6xl mx-auto">
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             {renderTabContent()}
@@ -613,8 +613,8 @@ const CustomerDetailForm = ({
         </div>
       </div>
 
-      {/* Fixed Bottom Actions */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-4">
+      {/* Bottom Actions */}
+      <div className="bg-white border-t border-gray-200 px-6 py-4 mt-8">
         <div className="max-w-6xl mx-auto flex justify-end gap-3">
           {getAvailableActions().map((action, index) => (
             <Button

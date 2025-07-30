@@ -66,13 +66,15 @@ const MyRequest = () => {
   };
 
   const handleShowDetailInDirect = (component) => {
-    setDetailComponent(component);
-    setShowDetailInDirect(true);
-  };
-
-  const handleBackFromDetailInDirect = () => {
-    setShowDetailInDirect(false);
-    setDetailComponent(null);
+    if (component === null) {
+      // Back to list
+      setShowDetailInDirect(false);
+      setDetailComponent(null);
+    } else {
+      // Show detail form
+      setDetailComponent(component);
+      setShowDetailInDirect(true);
+    }
   };
 
   const renderRequestListByTab = (tabName) => {

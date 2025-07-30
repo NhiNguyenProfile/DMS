@@ -101,10 +101,49 @@ const SPARE_PARTS_APPROVAL_TREES = {
 };
 
 const REQUEST_TYPES = [
-  { value: "Create", label: "Create Record" },
-  { value: "Edit", label: "Edit Record" },
-  { value: "Disable", label: "Disable Record" },
-  { value: "Reactivate", label: "Reactivate Record" },
+  { value: "Create", label: "Create New Record" },
+  { value: "Edit", label: "Edit Existing Record" },
+  { value: "Disable", label: "Disable Existing Record" },
+  { value: "Reactivate", label: "Reactivate Existing Record" },
+];
+
+// Available spare parts for search
+const EXISTING_SPARE_PARTS = [
+  {
+    id: "PART-001",
+    name: "Hydraulic Pump Model HP-200",
+    code: "HP200",
+    category: "Hydraulic",
+    status: "Active",
+  },
+  {
+    id: "PART-002",
+    name: "Conveyor Belt 1200mm",
+    code: "CB1200",
+    category: "Conveyor",
+    status: "Active",
+  },
+  {
+    id: "PART-003",
+    name: "Motor Gear Assembly",
+    code: "MGA001",
+    category: "Motor",
+    status: "Active",
+  },
+  {
+    id: "PART-004",
+    name: "Safety Valve SV-50",
+    code: "SV050",
+    category: "Safety",
+    status: "Inactive",
+  },
+  {
+    id: "PART-005",
+    name: "Bearing Set BS-100",
+    code: "BS100",
+    category: "Bearing",
+    status: "Active",
+  },
 ];
 
 const STATUS_OPTIONS = [
@@ -125,6 +164,11 @@ const SparePartsRequestList = ({
   const [showAddModal, setShowAddModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showApprovalSlider, setShowApprovalSlider] = useState(false);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [selectedRequestType, setSelectedRequestType] = useState(null);
+  const [searchResults, setSearchResults] = useState([]);
+  const [partSearchTerm, setPartSearchTerm] = useState("");
+  const [selectedPart, setSelectedPart] = useState(null);
   const [showDetailForm, setShowDetailForm] = useState(false);
   const [selectedRequestData, setSelectedRequestData] = useState(null);
   const [filters, setFilters] = useState({
@@ -152,9 +196,140 @@ const SparePartsRequestList = ({
   });
 
   const handleAddRequest = (requestType) => {
-    console.log("Creating new spare parts request:", requestType);
     setShowAddModal(false);
-    // Handle request creation
+    setSelectedRequestType(requestType);
+
+    if (requestType === "Create") {
+      // For Create New Record, create new request and go to detail form
+      const newRequest = {
+        id: `REQ-${Date.now()}`,
+        requestType: "Create",
+        requestTitle: "New Spare Part Record",
+        stepOwner: "You - Technical Lead",
+        currentSteps: "Waiting for Entry",
+        status: "Draft",
+        createdDate: new Date().toISOString(),
+        isNew: true, // Flag to indicate this is a new request
+        approvalTree: [
+          {
+            stepName: "Waiting for Entry",
+            owners: [
+              { name: "You", role: "Technical Lead", status: "current" },
+            ],
+            status: "current",
+          },
+          {
+            stepName: "Technical Review",
+            owners: [
+              { name: "Mike", role: "Senior Engineer", status: "pending" },
+            ],
+            status: "pending",
+          },
+          {
+            stepName: "Final Approval",
+            owners: [
+              { name: "Sarah", role: "Operations Manager", status: "pending" },
+            ],
+            status: "pending",
+          },
+        ],
+      };
+
+      // Add to requests list
+      setRequests((prev) => [newRequest, ...prev]);
+
+      // Also trigger onShowDetail if provided (for parent component)
+      if (onShowDetail) {
+        onShowDetail(
+          <SparePartsDetailForm
+            requestData={newRequest}
+            onBack={() => {
+              onShowDetail(null);
+            }}
+            onSave={(updatedRequest) => {
+              // Update the request in the list
+              setRequests((prev) =>
+                prev.map((req) =>
+                  req.id === updatedRequest.id ? updatedRequest : req
+                )
+              );
+              onShowDetail(null);
+            }}
+          />
+        );
+      }
+    } else {
+      // For other types, show search modal to find existing records
+      setShowSearchModal(true);
+      setPartSearchTerm("");
+      setSearchResults([]);
+      setSelectedPart(null);
+    }
+  };
+
+  const handleSearch = (term) => {
+    setPartSearchTerm(term);
+    if (term.trim()) {
+      const results = EXISTING_SPARE_PARTS.filter(
+        (part) =>
+          part.name.toLowerCase().includes(term.toLowerCase()) ||
+          part.code.toLowerCase().includes(term.toLowerCase())
+      );
+      setSearchResults(results);
+    } else {
+      setSearchResults([]);
+    }
+  };
+
+  const handleSelectPart = (part) => {
+    // Just set the selected part, don't create request yet
+    setSelectedPart(part);
+  };
+
+  const handleSendRequest = () => {
+    if (!selectedPart) return;
+
+    // Create request for selected part
+    const newRequest = {
+      id: `REQ-${Date.now()}`,
+      requestType: selectedRequestType,
+      requestTitle: `${selectedRequestType} Spare Part - ${selectedPart.name}`,
+      stepOwner: "You - Technical Lead",
+      currentSteps: "Waiting for Approval",
+      status: "Pending",
+      createdDate: new Date().toISOString(),
+      partId: selectedPart.id,
+      partData: selectedPart,
+      approvalTree: [
+        {
+          stepName: "Review Request",
+          owners: [
+            { name: "Mike", role: "Senior Engineer", status: "current" },
+          ],
+          status: "current",
+        },
+        {
+          stepName: "Final Approval",
+          owners: [
+            { name: "Sarah", role: "Operations Manager", status: "pending" },
+          ],
+          status: "pending",
+        },
+      ],
+    };
+
+    // Add to requests list
+    setRequests((prev) => [newRequest, ...prev]);
+
+    // Close search modal and reset
+    setShowSearchModal(false);
+    setSelectedRequestType(null);
+    setSelectedPart(null);
+    setPartSearchTerm("");
+    setSearchResults([]);
+
+    // Show success message (could be a toast notification)
+    console.log("Request sent successfully:", newRequest);
   };
 
   const handleApplyFilters = () => {
@@ -520,6 +695,142 @@ const SparePartsRequestList = ({
           Showing {filteredRequests.length} of {requests.length} requests
         </Text>
       </div>
+
+      {/* Search Existing Records Modal */}
+      <Modal
+        isOpen={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+        title={`Search Spare Part for ${selectedRequestType} Request`}
+      >
+        <div className="space-y-4">
+          <Text variant="body" color="muted">
+            Enter part code or search name to find existing records:
+          </Text>
+
+          {/* Search Input */}
+          <div className="relative">
+            <Search
+              size={16}
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            />
+            <Input
+              placeholder="Enter part code or search name..."
+              value={partSearchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          {/* Selected Part */}
+          {selectedPart && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <Text
+                variant="body"
+                weight="medium"
+                className="text-blue-800 mb-2"
+              >
+                Selected Spare Part:
+              </Text>
+              <div className="flex justify-between items-start">
+                <div>
+                  <Text variant="body" weight="medium">
+                    {selectedPart.name}
+                  </Text>
+                  <Text variant="caption" color="muted">
+                    Code: {selectedPart.code} • Category:{" "}
+                    {selectedPart.category}
+                  </Text>
+                </div>
+                <span
+                  className={`px-2 py-1 text-xs rounded ${
+                    selectedPart.status === "Active"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-600"
+                  }`}
+                >
+                  {selectedPart.status}
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedPart(null)}
+                className="mt-2"
+              >
+                Change Selection
+              </Button>
+            </div>
+          )}
+
+          {/* Search Results */}
+          {!selectedPart && searchResults.length > 0 && (
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              <Text variant="body" weight="medium" className="text-sm">
+                Found {searchResults.length} spare part(s):
+              </Text>
+              {searchResults.map((part) => (
+                <div
+                  key={part.id}
+                  className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                  onClick={() => handleSelectPart(part)}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <Text variant="body" weight="medium">
+                        {part.name}
+                      </Text>
+                      <Text variant="caption" color="muted">
+                        Code: {part.code} • Category: {part.category}
+                      </Text>
+                    </div>
+                    <span
+                      className={`px-2 py-1 text-xs rounded ${
+                        part.status === "Active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {part.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* No Results */}
+          {partSearchTerm && searchResults.length === 0 && (
+            <div className="text-center py-8">
+              <Text variant="body" color="muted">
+                No spare parts found matching "{partSearchTerm}"
+              </Text>
+            </div>
+          )}
+
+          {/* Instructions */}
+          {!partSearchTerm && !selectedPart && (
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <Text variant="body" className="text-blue-800 text-sm">
+                Start typing to search for existing spare parts. You can search
+                by part name or code. After selecting a part, click "Send
+                Request" to submit.
+              </Text>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button variant="outline" onClick={() => setShowSearchModal(false)}>
+              Cancel
+            </Button>
+            {selectedPart && (
+              <Button variant="primary" onClick={handleSendRequest}>
+                Send Request
+              </Button>
+            )}
+          </div>
+        </div>
+      </Modal>
 
       {/* Approval Tree Slider */}
       <ApprovalTreeSlider

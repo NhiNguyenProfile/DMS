@@ -128,10 +128,49 @@ const FINISHED_GOODS_APPROVAL_TREES = {
 };
 
 const REQUEST_TYPES = [
-  { value: "Create", label: "Create Record" },
-  { value: "Edit", label: "Edit Record" },
-  { value: "Disable", label: "Disable Record" },
-  { value: "Reactivate", label: "Reactivate Record" },
+  { value: "Create", label: "Create New Record" },
+  { value: "Edit", label: "Edit Existing Record" },
+  { value: "Disable", label: "Disable Existing Record" },
+  { value: "Reactivate", label: "Reactivate Existing Record" },
+];
+
+// Available finished goods for search
+const EXISTING_FINISHED_GOODS = [
+  {
+    id: "FG-001",
+    name: "Premium Steel Pipe 100mm",
+    code: "PSP100",
+    category: "Steel Products",
+    status: "Active",
+  },
+  {
+    id: "FG-002",
+    name: "Industrial Valve Set",
+    code: "IVS200",
+    category: "Valve Systems",
+    status: "Active",
+  },
+  {
+    id: "FG-003",
+    name: "Heavy Duty Bearing Unit",
+    code: "HDBU300",
+    category: "Bearings",
+    status: "Active",
+  },
+  {
+    id: "FG-004",
+    name: "Precision Gear Assembly",
+    code: "PGA400",
+    category: "Gears",
+    status: "Inactive",
+  },
+  {
+    id: "FG-005",
+    name: "Control Panel Module",
+    code: "CPM500",
+    category: "Electronics",
+    status: "Active",
+  },
 ];
 
 const STATUS_OPTIONS = [
@@ -154,6 +193,11 @@ const FinishedGoodsRequestList = ({
   const [showApprovalSlider, setShowApprovalSlider] = useState(false);
   const [showDetailForm, setShowDetailForm] = useState(false);
   const [selectedRequestData, setSelectedRequestData] = useState(null);
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [selectedRequestType, setSelectedRequestType] = useState(null);
+  const [searchResults, setSearchResults] = useState([]);
+  const [goodsSearchTerm, setGoodsSearchTerm] = useState("");
+  const [selectedGoods, setSelectedGoods] = useState(null);
   const [filters, setFilters] = useState({
     status: "",
     fromDate: "",
@@ -179,9 +223,136 @@ const FinishedGoodsRequestList = ({
   });
 
   const handleAddRequest = (requestType) => {
-    console.log("Creating new finished goods request:", requestType);
     setShowAddModal(false);
-    // Handle request creation
+    setSelectedRequestType(requestType);
+
+    if (requestType === "Create") {
+      // For Create New Record, create new request and go to detail form
+      const newRequest = {
+        id: `REQ-${Date.now()}`,
+        requestType: "Create",
+        requestTitle: "New Finished Goods Record",
+        stepOwner: "You - Production Manager",
+        currentSteps: "Waiting for Entry",
+        status: "Draft",
+        createdDate: new Date().toISOString(),
+        isNew: true, // Flag to indicate this is a new request
+        approvalTree: [
+          {
+            stepName: "Waiting for Entry",
+            owners: [
+              { name: "You", role: "Production Manager", status: "current" },
+            ],
+            status: "current",
+          },
+          {
+            stepName: "Quality Check",
+            owners: [
+              { name: "Anna", role: "QA Supervisor", status: "pending" },
+            ],
+            status: "pending",
+          },
+          {
+            stepName: "Final Approval",
+            owners: [
+              { name: "David", role: "Plant Manager", status: "pending" },
+            ],
+            status: "pending",
+          },
+        ],
+      };
+
+      // Add to requests list
+      setRequests((prev) => [newRequest, ...prev]);
+
+      // Also trigger onShowDetail if provided (for parent component)
+      if (onShowDetail) {
+        onShowDetail(
+          <FinishedGoodsDetailForm
+            requestData={newRequest}
+            onBack={() => {
+              onShowDetail(null);
+            }}
+            onSave={(updatedRequest) => {
+              // Update the request in the list
+              setRequests((prev) =>
+                prev.map((req) =>
+                  req.id === updatedRequest.id ? updatedRequest : req
+                )
+              );
+              onShowDetail(null);
+            }}
+          />
+        );
+      }
+    } else {
+      // For other types, show search modal to find existing records
+      setShowSearchModal(true);
+      setGoodsSearchTerm("");
+      setSearchResults([]);
+      setSelectedGoods(null);
+    }
+  };
+
+  const handleSearch = (term) => {
+    setGoodsSearchTerm(term);
+    if (term.trim()) {
+      const results = EXISTING_FINISHED_GOODS.filter(
+        (goods) =>
+          goods.name.toLowerCase().includes(term.toLowerCase()) ||
+          goods.code.toLowerCase().includes(term.toLowerCase())
+      );
+      setSearchResults(results);
+    } else {
+      setSearchResults([]);
+    }
+  };
+
+  const handleSelectGoods = (goods) => {
+    // Just set the selected goods, don't create request yet
+    setSelectedGoods(goods);
+  };
+
+  const handleSendRequest = () => {
+    if (!selectedGoods) return;
+
+    // Create request for selected goods
+    const newRequest = {
+      id: `REQ-${Date.now()}`,
+      requestType: selectedRequestType,
+      requestTitle: `${selectedRequestType} Finished Goods - ${selectedGoods.name}`,
+      stepOwner: "You - Production Manager",
+      currentSteps: "Waiting for Approval",
+      status: "Pending",
+      createdDate: new Date().toISOString(),
+      goodsId: selectedGoods.id,
+      goodsData: selectedGoods,
+      approvalTree: [
+        {
+          stepName: "Review Request",
+          owners: [{ name: "Anna", role: "QA Supervisor", status: "current" }],
+          status: "current",
+        },
+        {
+          stepName: "Final Approval",
+          owners: [{ name: "David", role: "Plant Manager", status: "pending" }],
+          status: "pending",
+        },
+      ],
+    };
+
+    // Add to requests list
+    setRequests((prev) => [newRequest, ...prev]);
+
+    // Close search modal and reset
+    setShowSearchModal(false);
+    setSelectedRequestType(null);
+    setSelectedGoods(null);
+    setGoodsSearchTerm("");
+    setSearchResults([]);
+
+    // Show success message (could be a toast notification)
+    console.log("Request sent successfully:", newRequest);
   };
 
   const handleApplyFilters = () => {
@@ -543,6 +714,142 @@ const FinishedGoodsRequestList = ({
           Showing {filteredRequests.length} of {requests.length} requests
         </Text>
       </div>
+
+      {/* Search Existing Records Modal */}
+      <Modal
+        isOpen={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+        title={`Search Finished Goods for ${selectedRequestType} Request`}
+      >
+        <div className="space-y-4">
+          <Text variant="body" color="muted">
+            Enter goods code or search name to find existing records:
+          </Text>
+
+          {/* Search Input */}
+          <div className="relative">
+            <Search
+              size={16}
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            />
+            <Input
+              placeholder="Enter goods code or search name..."
+              value={goodsSearchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          {/* Selected Goods */}
+          {selectedGoods && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <Text
+                variant="body"
+                weight="medium"
+                className="text-blue-800 mb-2"
+              >
+                Selected Finished Goods:
+              </Text>
+              <div className="flex justify-between items-start">
+                <div>
+                  <Text variant="body" weight="medium">
+                    {selectedGoods.name}
+                  </Text>
+                  <Text variant="caption" color="muted">
+                    Code: {selectedGoods.code} • Category:{" "}
+                    {selectedGoods.category}
+                  </Text>
+                </div>
+                <span
+                  className={`px-2 py-1 text-xs rounded ${
+                    selectedGoods.status === "Active"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-gray-100 text-gray-600"
+                  }`}
+                >
+                  {selectedGoods.status}
+                </span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedGoods(null)}
+                className="mt-2"
+              >
+                Change Selection
+              </Button>
+            </div>
+          )}
+
+          {/* Search Results */}
+          {!selectedGoods && searchResults.length > 0 && (
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              <Text variant="body" weight="medium" className="text-sm">
+                Found {searchResults.length} finished goods:
+              </Text>
+              {searchResults.map((goods) => (
+                <div
+                  key={goods.id}
+                  className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                  onClick={() => handleSelectGoods(goods)}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <Text variant="body" weight="medium">
+                        {goods.name}
+                      </Text>
+                      <Text variant="caption" color="muted">
+                        Code: {goods.code} • Category: {goods.category}
+                      </Text>
+                    </div>
+                    <span
+                      className={`px-2 py-1 text-xs rounded ${
+                        goods.status === "Active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {goods.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* No Results */}
+          {goodsSearchTerm && searchResults.length === 0 && (
+            <div className="text-center py-8">
+              <Text variant="body" color="muted">
+                No finished goods found matching "{goodsSearchTerm}"
+              </Text>
+            </div>
+          )}
+
+          {/* Instructions */}
+          {!goodsSearchTerm && !selectedGoods && (
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <Text variant="body" className="text-blue-800 text-sm">
+                Start typing to search for existing finished goods. You can
+                search by goods name or code. After selecting goods, click "Send
+                Request" to submit.
+              </Text>
+            </div>
+          )}
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button variant="outline" onClick={() => setShowSearchModal(false)}>
+              Cancel
+            </Button>
+            {selectedGoods && (
+              <Button variant="primary" onClick={handleSendRequest}>
+                Send Request
+              </Button>
+            )}
+          </div>
+        </div>
+      </Modal>
 
       {/* Approval Tree Slider */}
       <ApprovalTreeSlider
