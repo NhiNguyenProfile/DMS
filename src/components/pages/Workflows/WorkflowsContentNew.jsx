@@ -35,28 +35,35 @@ const WorkflowsContent = ({
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
-  // Load workflows when country/entity changes
+  // Load workflows when country changes
   useEffect(() => {
-    if (finalSelectedCountry && finalSelectedEntity) {
-      const filtered = SAMPLE_WORKFLOWS.filter(
-        (w) => w.entity === finalSelectedEntity
-      );
-      setWorkflows(filtered);
+    if (finalSelectedCountry) {
+      // Load all workflows for the country, filter by entity will be done in the filter effect
+      setWorkflows(SAMPLE_WORKFLOWS);
     } else {
       setWorkflows([]);
     }
-  }, [finalSelectedCountry, finalSelectedEntity]);
+  }, [finalSelectedCountry]);
 
-  // Filter workflows by search and status
+  // Filter workflows by entity, search and status
   useEffect(() => {
-    let filtered = workflows;
+    let filtered = [...workflows];
 
+    // Filter by entity
+    if (finalSelectedEntity) {
+      filtered = filtered.filter(
+        (workflow) => workflow.entity === finalSelectedEntity
+      );
+    }
+
+    // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter((workflow) =>
         workflow.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
+    // Filter by status
     if (statusFilter) {
       filtered = filtered.filter(
         (workflow) => workflow.status === statusFilter
@@ -64,7 +71,7 @@ const WorkflowsContent = ({
     }
 
     setFilteredWorkflows(filtered);
-  }, [workflows, searchTerm, statusFilter]);
+  }, [workflows, finalSelectedEntity, searchTerm, statusFilter]);
 
   // Calculate total SLA hours for a workflow
   const calculateTotalSLA = (steps) => {
@@ -74,7 +81,7 @@ const WorkflowsContent = ({
 
   const handleNewWorkflow = () => {
     // Navigate to edit page for new workflow
-    window.location.hash = `workflow-edit?country=${finalSelectedCountry}&entity=${finalSelectedEntity}`;
+    window.location.hash = `workflow-edit?country=${finalSelectedCountry}`;
     navigate("workflow-edit");
   };
 
@@ -160,7 +167,7 @@ const WorkflowsContent = ({
                 <Button
                   variant="primary"
                   onClick={handleNewWorkflow}
-                  disabled={!finalSelectedCountry || !finalSelectedEntity}
+                  disabled={!finalSelectedCountry}
                 >
                   <Plus size={16} className="mr-2" />
                   New Workflow
@@ -181,6 +188,21 @@ const WorkflowsContent = ({
                   className="pl-10 w-64"
                 />
               </div>
+
+              {/* Entity Filter */}
+              <Select
+                options={[
+                  { value: "", label: "All Entities" },
+                  ...ENTITIES.map((entity) => ({
+                    value: entity,
+                    label: entity,
+                  })),
+                ]}
+                value={finalSelectedEntity}
+                onChange={setSelectedEntity}
+                placeholder="All Entities"
+                className="w-40"
+              />
 
               {/* Status Filter */}
               <Select

@@ -18,7 +18,7 @@ import {
   Trash2,
 } from "lucide-react";
 import { useRouter } from "../../../hooks/useRouter.jsx";
-import { WORKFLOW_STATUS, ASSIGNED_TYPES } from "../../../constants";
+import { WORKFLOW_STATUS, ASSIGNED_TYPES, ENTITIES } from "../../../constants";
 import {
   FIELD_GROUPS,
   SAMPLE_WORKFLOWS,
@@ -123,12 +123,22 @@ const WorkflowEdit = () => {
   };
 
   const handleEditStep = (step) => {
+    console.log("handleEditStep called with:", step); // Debug log
+    console.log("Setting editingStep to:", step);
+    console.log("Opening modal...");
     setEditingStep(step);
     setShowAddStepModal(true);
+    console.log("Modal should be open now");
   };
 
   const handleSaveStep = (stepData) => {
+    console.log("handleSaveStep called with:", stepData);
+    console.log("editingStep:", editingStep);
+    console.log("editingStep.id:", editingStep?.id);
+    console.log("editingStep.parentId:", editingStep?.parentId);
+
     if (editingStep && editingStep.id) {
+      console.log("Updating existing step with ID:", editingStep.id);
       // Update existing step or sub-step
       setFormData((prev) => ({
         ...prev,
@@ -136,6 +146,7 @@ const WorkflowEdit = () => {
           if (step.id === editingStep.id) {
             return {
               ...stepData,
+              id: step.id, // Preserve the original id
               order: step.order,
               subSteps: step.subSteps || [],
             };
@@ -155,6 +166,7 @@ const WorkflowEdit = () => {
         }),
       }));
     } else if (editingStep && editingStep.parentId) {
+      console.log("Adding new sub-step with parentId:", editingStep.parentId);
       // Add new sub-step (could be nested)
       const newSubStep = {
         ...stepData,
@@ -173,6 +185,7 @@ const WorkflowEdit = () => {
         ),
       }));
     } else {
+      console.log("Adding new main step");
       // Add new main step
       const newStep = {
         ...stepData,
@@ -322,6 +335,10 @@ const WorkflowEdit = () => {
 
     if (!formData.name.trim()) {
       newErrors.name = "Workflow name is required";
+    }
+
+    if (!formData.entity) {
+      newErrors.entity = "Entity is required";
     }
 
     if (!formData.request_type) {
@@ -770,12 +787,30 @@ const WorkflowEdit = () => {
           </div>
 
           <div>
-            <Text variant="body" weight="medium" className="mb-2">
-              Entity
-            </Text>
-            <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-600">
-              {formData.entity || "Not specified"}
+            <div className="flex items-center space-x-2 mb-2">
+              <Text variant="body" weight="medium">
+                Entity *
+              </Text>
+              <Info
+                size={14}
+                className="text-gray-400"
+                title="Select the entity type this workflow applies to"
+              />
             </div>
+            <Select
+              options={ENTITIES.map((entity) => ({
+                value: entity,
+                label: entity,
+              }))}
+              value={formData.entity}
+              onChange={(value) => handleInputChange("entity", value)}
+              placeholder="Select Entity"
+            />
+            {errors.entity && (
+              <Text variant="caption" color="error" className="mt-1">
+                {errors.entity}
+              </Text>
+            )}
           </div>
 
           <div>

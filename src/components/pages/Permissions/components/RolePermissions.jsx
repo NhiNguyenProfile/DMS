@@ -121,7 +121,6 @@ const RolePermissions = () => {
     legalEntity: "",
     departments: ["all"], // Default to "All Departments"
     accessibleTabs: [],
-    status: "Active",
   });
   const [errors, setErrors] = useState({});
 
@@ -143,7 +142,6 @@ const RolePermissions = () => {
       legalEntity: "",
       departments: ["all"],
       accessibleTabs: [],
-      status: "Active",
     });
     setErrors({});
     setShowAddModal(true);
@@ -155,7 +153,6 @@ const RolePermissions = () => {
       legalEntity: role.legalEntity,
       departments: role.departments || ["all"],
       accessibleTabs: role.accessibleTabs,
-      status: role.status,
     });
     setErrors({});
     setShowAddModal(true);
@@ -241,20 +238,9 @@ const RolePermissions = () => {
         legalEntity: "",
         departments: ["all"],
         accessibleTabs: [],
-        status: "Active",
       });
       setErrors({});
     }
-  };
-
-  const getStatusBadge = (status) => {
-    const colors = {
-      Active: "bg-green-100 text-green-800",
-      Inactive: "bg-red-100 text-red-800",
-    };
-    return `px-2 py-1 text-xs font-medium rounded ${
-      colors[status] || "bg-gray-100 text-gray-800"
-    }`;
   };
 
   return (
@@ -305,23 +291,15 @@ const RolePermissions = () => {
         <Table>
           <Table.Header>
             <Table.Row>
-              <Table.HeaderCell>Role Name</Table.HeaderCell>
               <Table.HeaderCell>Legal Entity</Table.HeaderCell>
               <Table.HeaderCell>Departments</Table.HeaderCell>
               <Table.HeaderCell>Accessible Modules</Table.HeaderCell>
-              <Table.HeaderCell>Users</Table.HeaderCell>
-              <Table.HeaderCell>Status</Table.HeaderCell>
               <Table.HeaderCell>Actions</Table.HeaderCell>
             </Table.Row>
           </Table.Header>
           <Table.Body>
             {filteredPermissions.map((permission) => (
               <Table.Row key={permission.id} className="hover:bg-gray-50">
-                <Table.Cell>
-                  <Text variant="body" weight="medium">
-                    {permission.role}
-                  </Text>
-                </Table.Cell>
                 <Table.Cell>
                   <Text variant="body" weight="medium">
                     {permission.legalEntity}
@@ -369,16 +347,6 @@ const RolePermissions = () => {
                       </span>
                     )}
                   </div>
-                </Table.Cell>
-                <Table.Cell>
-                  <Text variant="body" weight="medium">
-                    {permission.userCount}
-                  </Text>
-                </Table.Cell>
-                <Table.Cell>
-                  <span className={getStatusBadge(permission.status)}>
-                    {permission.status}
-                  </span>
                 </Table.Cell>
                 <Table.Cell>
                   <div className="flex items-center gap-2">
@@ -499,21 +467,6 @@ const RolePermissions = () => {
             <Text variant="caption" color="muted" className="mt-1">
               Select which tabs this role can access
             </Text>
-          </div>
-
-          {/* Status */}
-          <div>
-            <Text variant="body" weight="medium" className="mb-2">
-              Status
-            </Text>
-            <Select
-              value={formData.status}
-              onChange={(value) => handleInputChange("status", value)}
-              options={[
-                { value: "Active", label: "Active" },
-                { value: "Inactive", label: "Inactive" },
-              ]}
-            />
           </div>
 
           {/* Actions */}

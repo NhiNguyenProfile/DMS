@@ -16,25 +16,21 @@ const SAMPLE_VALIDATION_CONFIG = [
     validationConfig: [
       {
         field_name: "CustomerType",
-        field_name_display: "Customer Type",
         validations:
           "[ { 'type': 'VALUE', 'operator': 'DEFAULT', 'message': '', 'value': 'A,B,C'}, { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'} ]",
       },
       {
         field_name: "Organizationname",
-        field_name_display: "Organization Name",
         validations:
           "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'},{ 'type': 'MAXLENGTH', 'operator': 'DEFAULT', 'message': 'tối đa 10 ký tự', 'value': '10'} ]",
       },
       {
         field_name: "Salary",
-        field_name_display: "Salary",
         validations:
           "[ {'type': 'MAX', 'operator': 'DEFAULT', 'message': 'MAX 10', 'value': '10'}, {'type': 'MIN', 'operator': 'DEFAULT', 'message': 'MIN 1', 'value': '1'}]",
       },
       {
         field_name: "Country",
-        field_name_display: "Country",
         validations:
           "[ {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DISPLAYMODE', 'operator': 'DEFAULT', 'message': '', 'value': 'DISABLE'}]",
       },
@@ -48,19 +44,16 @@ const SAMPLE_VALIDATION_CONFIG = [
     validationConfig: [
       {
         field_name: "FullName",
-        field_name_display: "Full Name",
         validations:
           "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'Họ tên là bắt buộc', 'value': 'true'}, { 'type': 'MINLENGTH', 'operator': 'DEFAULT', 'message': 'Họ tên phải có ít nhất 2 ký tự', 'value': '2'}, { 'type': 'MAXLENGTH', 'operator': 'DEFAULT', 'message': 'Họ tên không được quá 50 ký tự', 'value': '50'} ]",
       },
       {
         field_name: "IdNumber",
-        field_name_display: "ID Number",
         validations:
           "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'Số CMND/CCCD là bắt buộc', 'value': 'true'}, { 'type': 'REGEX', 'operator': 'DEFAULT', 'message': 'Số CMND/CCCD không hợp lệ', 'value': '^[0-9]{9,12}$'} ]",
       },
       {
         field_name: "Address",
-        field_name_display: "Address",
         validations:
           "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'Địa chỉ là bắt buộc', 'value': 'true'}, { 'type': 'MINLENGTH', 'operator': 'DEFAULT', 'message': 'Địa chỉ phải có ít nhất 10 ký tự', 'value': '10'} ]",
       },
@@ -74,19 +67,16 @@ const SAMPLE_VALIDATION_CONFIG = [
     validationConfig: [
       {
         field_name: "CompanyName",
-        field_name_display: "Company Name",
         validations:
           "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'Tên công ty là bắt buộc', 'value': 'true'}, { 'type': 'MINLENGTH', 'operator': 'DEFAULT', 'message': 'Tên công ty phải có ít nhất 5 ký tự', 'value': '5'} ]",
       },
       {
         field_name: "BusinessLicense",
-        field_name_display: "Business License",
         validations:
           "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'Giấy phép kinh doanh là bắt buộc', 'value': 'true'}, { 'type': 'REGEX', 'operator': 'DEFAULT', 'message': 'Số giấy phép không hợp lệ', 'value': '^[0-9]{10,13}$'} ]",
       },
       {
         field_name: "RegisteredCapital",
-        field_name_display: "Registered Capital",
         validations:
           "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'Vốn điều lệ là bắt buộc', 'value': 'true'}, { 'type': 'MIN', 'operator': 'DEFAULT', 'message': 'Vốn điều lệ tối thiểu 15 triệu VND', 'value': '15000000'} ]",
       },
@@ -100,19 +90,16 @@ const SAMPLE_VALIDATION_CONFIG = [
     validationConfig: [
       {
         field_name: "AccountNumber",
-        field_name_display: "Account Number",
         validations:
           "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'Số tài khoản là bắt buộc', 'value': 'true'}, { 'type': 'REGEX', 'operator': 'DEFAULT', 'message': 'Số tài khoản không hợp lệ', 'value': '^[0-9]{8,16}$'} ]",
       },
       {
         field_name: "Amount",
-        field_name_display: "Amount",
         validations:
           "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'Số tiền là bắt buộc', 'value': 'true'}, { 'type': 'MIN', 'operator': 'DEFAULT', 'message': 'Số tiền tối thiểu 10,000 VND', 'value': '10000'}, { 'type': 'MAX', 'operator': 'DEFAULT', 'message': 'Số tiền tối đa 500,000,000 VND', 'value': '500000000'} ]",
       },
       {
         field_name: "TransferNote",
-        field_name_display: "Transfer Note",
         validations:
           "[ { 'type': 'MAXLENGTH', 'operator': 'DEFAULT', 'message': 'Ghi chú không được quá 200 ký tự', 'value': '200'} ]",
       },

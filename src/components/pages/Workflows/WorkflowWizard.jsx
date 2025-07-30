@@ -3,9 +3,10 @@ import Text from "../../atoms/Text";
 import Button from "../../atoms/Button";
 import EntityCard from "../../atoms/EntityCard";
 import Tabs from "../../atoms/Tabs";
-import { ArrowLeft } from "lucide-react";
-import { COUNTRIES, ENTITIES } from "../../../constants";
+import { ArrowLeft, Workflow, Users } from "lucide-react";
+import { COUNTRIES } from "../../../constants";
 import WorkflowsContent from "./WorkflowsContentNew";
+import GroupConfig from "./components/GroupConfig";
 
 const WorkflowWizard = () => {
   const [selectedCountry, setSelectedCountry] = useState("");
@@ -14,10 +15,6 @@ const WorkflowWizard = () => {
   const handleCountryClick = (country) => {
     setSelectedCountry(country.value);
     setSelectedEntity(""); // Reset entity when country changes
-  };
-
-  const handleEntityTabChange = (entityValue) => {
-    setSelectedEntity(entityValue);
   };
 
   // Show workflow management if country is selected
@@ -40,20 +37,32 @@ const WorkflowWizard = () => {
           </div>
         </div>
 
-        {/* Entity Tabs */}
+        {/* Configuration Tabs */}
         <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <Tabs activeTab={selectedEntity} onTabChange={handleEntityTabChange}>
-            {ENTITIES.map((entity) => (
-              <Tabs.Panel key={entity} tabId={entity} label={entity}>
-                <div className="mt-4">
-                  <WorkflowsContent
-                    selectedCountry={selectedCountry}
-                    selectedEntity={entity}
-                    hideFilters={true}
-                  />
-                </div>
-              </Tabs.Panel>
-            ))}
+          <Tabs defaultTab="workflow-config" variant="default">
+            <Tabs.Panel
+              tabId="workflow-config"
+              label="Workflow Config"
+              icon={<Workflow size={16} />}
+            >
+              <div className="mt-4">
+                <WorkflowsContent
+                  selectedCountry={selectedCountry}
+                  selectedEntity={selectedEntity}
+                  hideFilters={true}
+                />
+              </div>
+            </Tabs.Panel>
+
+            <Tabs.Panel
+              tabId="group-config"
+              label="Group Config"
+              icon={<Users size={16} />}
+            >
+              <div className="mt-4">
+                <GroupConfig />
+              </div>
+            </Tabs.Panel>
           </Tabs>
         </div>
       </div>

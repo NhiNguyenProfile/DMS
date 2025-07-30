@@ -22,22 +22,18 @@ const ValidationConfigPanel = ({
     validationConfigJson: `[
   {
     "field_name": "CustomerType",
-    "field_name_display": "Customer Type",
     "validations": "[ { 'type': 'VALUE', 'operator': 'DEFAULT', 'message': '', 'value': 'A,B,C'}, { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'} ]"
   },
   {
     "field_name": "Organizationname",
-    "field_name_display": "Organization Name",
     "validations": "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'},{ 'type': 'MAXLENGTH', 'operator': 'DEFAULT', 'message': 'tối đa 10 ký tự', 'value': '10'} ]"
   },
   {
     "field_name": "Salary",
-    "field_name_display": "Salary",
     "validations": "[ {'type': 'MAX', 'operator': 'DEFAULT', 'message': 'MAX 10', 'value': '10'}, {'type': 'MIN', 'operator': 'DEFAULT', 'message': 'MIN 1', 'value': '1'}]"
   },
   {
     "field_name": "Country",
-    "field_name_display": "Country",
     "validations": "[ {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DISPLAYMODE', 'operator': 'DEFAULT', 'message': '', 'value': 'DISABLE'}]"
   }
 ]`,
@@ -63,7 +59,7 @@ const ValidationConfigPanel = ({
       if (config.field_name) {
         // New format - single field config
         setFormData({
-          ruleName: config.field_name_display || "",
+          ruleName: config.field_name || "",
           ruleDescription: `Configuration for ${config.field_name}`,
           status: "Active",
           legalEntities: [],
@@ -205,8 +201,7 @@ const ValidationConfigPanel = ({
                 className="text-gray-400 hover:text-gray-600 cursor-help"
               />
               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                New format: field_name, field_name_display, validations (JSON
-                string)
+                New format: field_name, validations (JSON string)
                 <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
               </div>
             </div>
@@ -221,25 +216,21 @@ const ValidationConfigPanel = ({
                   [
                     {
                       field_name: "CustomerType",
-                      field_name_display: "Customer Type",
                       validations:
                         "[ { 'type': 'VALUE', 'operator': 'DEFAULT', 'message': '', 'value': 'A,B,C'}, { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'} ]",
                     },
                     {
                       field_name: "Organizationname",
-                      field_name_display: "Organization Name",
                       validations:
                         "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'},{ 'type': 'MAXLENGTH', 'operator': 'DEFAULT', 'message': 'tối đa 10 ký tự', 'value': '10'} ]",
                     },
                     {
                       field_name: "Salary",
-                      field_name_display: "Salary",
                       validations:
                         "[ {'type': 'MAX', 'operator': 'DEFAULT', 'message': 'MAX 10', 'value': '10'}, {'type': 'MIN', 'operator': 'DEFAULT', 'message': 'MIN 1', 'value': '1'}]",
                     },
                     {
                       field_name: "Country",
-                      field_name_display: "Country",
                       validations:
                         "[ {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DISPLAYMODE', 'operator': 'DEFAULT', 'message': '', 'value': 'DISABLE'}]",
                     },
@@ -262,22 +253,18 @@ const ValidationConfigPanel = ({
           placeholder={`[
   {
     "field_name": "CustomerType",
-    "field_name_display": "Customer Type",
     "validations": "[ { 'type': 'VALUE', 'operator': 'DEFAULT', 'message': '', 'value': 'A,B,C'}, { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'} ]"
   },
   {
     "field_name": "Organizationname",
-    "field_name_display": "Organization Name",
     "validations": "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'},{ 'type': 'MAXLENGTH', 'operator': 'DEFAULT', 'message': 'tối đa 10 ký tự', 'value': '10'} ]"
   },
   {
     "field_name": "Salary",
-    "field_name_display": "Salary",
     "validations": "[ {'type': 'MAX', 'operator': 'DEFAULT', 'message': 'MAX 10', 'value': '10'}, {'type': 'MIN', 'operator': 'DEFAULT', 'message': 'MIN 1', 'value': '1'}]"
   },
   {
     "field_name": "Country",
-    "field_name_display": "Country",
     "validations": "[ {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DISPLAYMODE', 'operator': 'DEFAULT', 'message': '', 'value': 'DISABLE'}]"
   }
 ]`}

@@ -1,15 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Text from "../../atoms/Text";
 import Select from "../../atoms/Select";
 import Button from "../../atoms/Button";
 import Tabs from "../../atoms/Tabs";
-import FieldOverview from "./components/FieldOverview";
 import FieldConfig from "./components/FieldConfig";
 import ValidationConfig from "./components/ValidationConfig";
 import AutoFieldConfig from "./components/AutoFieldConfig";
-import SectionConfig from "./components/SectionConfig";
-import { ENTITIES, REQUEST_TYPES, COUNTRIES } from "../../../constants";
-import { ENTITY_CONFIGS } from "../../../data/mockData";
+import { ENTITIES, COUNTRIES } from "../../../constants";
 import { FileText, Shield, Layout } from "lucide-react";
 
 const RuleFieldConfigContent = ({
@@ -107,30 +104,6 @@ const RuleFieldConfigContent = ({
             icon={<FileText size={16} />}
           >
             <FieldConfig
-              selectedEntity={finalSelectedEntity}
-              selectedRequestType="Create"
-              disabled={!finalSelectedEntity || !finalSelectedCountry}
-            />
-          </Tabs.Panel>
-
-          <Tabs.Panel
-            tabId="field-groups"
-            label="Field Groups"
-            icon={<FileText size={16} />}
-          >
-            <FieldOverview
-              selectedEntity={finalSelectedEntity}
-              selectedRequestType="Create"
-              disabled={!finalSelectedEntity || !finalSelectedCountry}
-            />
-          </Tabs.Panel>
-
-          <Tabs.Panel
-            tabId="sections"
-            label="Section Config"
-            icon={<Layout size={16} />}
-          >
-            <SectionConfig
               selectedEntity={finalSelectedEntity}
               selectedRequestType="Create"
               disabled={!finalSelectedEntity || !finalSelectedCountry}

@@ -139,7 +139,6 @@ const AdminPermissions = () => {
     email: "",
     adminLevel: "admin",
     permissions: [],
-    status: "Active",
   });
   const [errors, setErrors] = useState({});
 
@@ -260,24 +259,6 @@ const AdminPermissions = () => {
     }
   };
 
-  const getAdminLevelBadge = (level) => {
-    const colors = {
-      super_admin: "bg-purple-100 text-purple-800",
-      admin: "bg-blue-100 text-blue-800",
-    };
-    const icons = {
-      super_admin: <Crown size={12} className="mr-1" />,
-      admin: <Shield size={12} className="mr-1" />,
-    };
-    return {
-      className: `px-2 py-1 text-xs font-medium rounded flex items-center ${
-        colors[level] || "bg-gray-100 text-gray-800"
-      }`,
-      icon: icons[level],
-      label: level === "super_admin" ? "Super Admin" : "Admin",
-    };
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -330,7 +311,6 @@ const AdminPermissions = () => {
           </Table.Header>
           <Table.Body>
             {filteredAdmins.map((admin) => {
-              const levelBadge = getAdminLevelBadge(admin.adminLevel);
               return (
                 <Table.Row key={admin.id} className="hover:bg-gray-50">
                   <Table.Cell>
@@ -344,10 +324,11 @@ const AdminPermissions = () => {
                     </div>
                   </Table.Cell>
                   <Table.Cell>
-                    <span className={levelBadge.className}>
-                      {levelBadge.icon}
-                      {levelBadge.label}
-                    </span>
+                    <Text variant="body" weight="medium">
+                      {ADMIN_LEVELS.find(
+                        (level) => level.value === admin.adminLevel
+                      )?.label || admin.adminLevel}
+                    </Text>
                   </Table.Cell>
                   <Table.Cell>
                     <div className="flex items-center gap-2">
@@ -452,21 +433,6 @@ const AdminPermissions = () => {
               value={formData.adminLevel}
               onChange={(value) => handleInputChange("adminLevel", value)}
               options={ADMIN_LEVELS}
-            />
-          </div>
-
-          {/* Status */}
-          <div>
-            <Text variant="body" weight="medium" className="mb-2">
-              Status
-            </Text>
-            <Select
-              value={formData.status}
-              onChange={(value) => handleInputChange("status", value)}
-              options={[
-                { value: "Active", label: "Active" },
-                { value: "Inactive", label: "Inactive" },
-              ]}
             />
           </div>
 

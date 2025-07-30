@@ -78,11 +78,22 @@ const AddStepModal = ({ visible, onCancel, onOk, editingStep = null }) => {
 
   // Load step data when editing
   useEffect(() => {
+    if (!visible) return; // Only run when modal is visible
+
     // Reset activeTab when modal opens
     setActiveTab("basic");
 
-    if (editingStep && editingStep.id) {
-      setStepData({
+    console.log("AddStepModal useEffect - editingStep:", editingStep); // Debug log
+    console.log("Modal visible:", visible);
+    console.log("editingStep.id:", editingStep?.id);
+    console.log(
+      "editingStep keys:",
+      editingStep ? Object.keys(editingStep) : "no editingStep"
+    );
+
+    if (editingStep && (editingStep.id || editingStep.step_name)) {
+      console.log("Loading existing step data:", editingStep);
+      const stepDataToLoad = {
         step_name: editingStep.step_name || "",
         type: editingStep.type || "Entry Data",
         selected_sections: editingStep.selected_sections || [],
@@ -99,18 +110,44 @@ const AddStepModal = ({ visible, onCancel, onOk, editingStep = null }) => {
         has_comment: editingStep.has_comment || false,
         request_update: editingStep.request_update || false,
         criteria: editingStep.criteria || "",
-      });
+      };
+
+      setStepData(stepDataToLoad);
       form.setFieldsValue({
-        step_name: editingStep.step_name || "",
-        type: editingStep.type || "Entry Data",
-        assigned_type: editingStep.assigned_type || "User",
-        assignee: editingStep.assignee || "",
-        sla_hours: editingStep.sla_hours || 24,
-        mail_cc: editingStep.mail_cc || [],
-        stepback: editingStep.stepback || "",
-        step_resubmit: editingStep.step_resubmit || "",
-        criteria: editingStep.criteria || "",
+        step_name: stepDataToLoad.step_name,
+        type: stepDataToLoad.type,
+        assigned_type: stepDataToLoad.assigned_type,
+        assignee: stepDataToLoad.assignee,
+        sla_hours: stepDataToLoad.sla_hours,
+        mail_cc: stepDataToLoad.mail_cc,
+        stepback: stepDataToLoad.stepback,
+        step_resubmit: stepDataToLoad.step_resubmit,
+        criteria: stepDataToLoad.criteria,
       });
+    } else {
+      console.log("Resetting form for new step");
+      // Reset form for new step
+      const defaultData = {
+        step_name: "",
+        type: "Entry Data",
+        selected_sections: [],
+        section_field_groups: [],
+        assigned_type: "User",
+        assignee: "",
+        sla_hours: 24,
+        mail_cc: [],
+        stepback: "",
+        step_resubmit: "",
+        is_parallel: false,
+        approve: false,
+        reject: false,
+        has_comment: false,
+        request_update: false,
+        criteria: "",
+      };
+
+      setStepData(defaultData);
+      form.resetFields();
     }
   }, [editingStep, form, visible]);
 
@@ -238,7 +275,30 @@ const AddStepModal = ({ visible, onCancel, onOk, editingStep = null }) => {
     form
       .validateFields()
       .then(() => {
+        console.log("Saving step data:", stepData);
         onOk(stepData);
+
+        // Reset form after successful save
+        form.resetFields();
+        setStepData({
+          step_name: "",
+          type: "Entry Data",
+          selected_sections: [],
+          section_field_groups: [],
+          assigned_type: "User",
+          assignee: "",
+          sla_hours: 24,
+          mail_cc: [],
+          stepback: "",
+          step_resubmit: "",
+          is_parallel: false,
+          approve: false,
+          reject: false,
+          has_comment: false,
+          request_update: false,
+          criteria: "",
+        });
+        setActiveTab("basic");
       })
       .catch((info) => {
         console.log("Validate Failed:", info);
@@ -719,7 +779,9 @@ const AddStepModal = ({ visible, onCancel, onOk, editingStep = null }) => {
           {/* Only show Criteria tab for sub-steps */}
           {editingStep &&
             (editingStep.parentId ||
-              (editingStep.order && editingStep.order.includes("."))) && (
+              (editingStep.order &&
+                typeof editingStep.order === "string" &&
+                editingStep.order.includes("."))) && (
               <Tabs.Panel tabId="criteria" label="Criteria">
                 {renderCriteriaTab()}
               </Tabs.Panel>
