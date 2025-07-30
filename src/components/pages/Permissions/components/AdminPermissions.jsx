@@ -3,6 +3,7 @@ import Text from "../../../atoms/Text";
 import Button from "../../../atoms/Button";
 import Input from "../../../atoms/Input";
 import Select from "../../../atoms/Select";
+import MultiSelect from "../../../atoms/MultiSelect";
 import Table from "../../../atoms/Table";
 import Modal from "../../../atoms/Modal";
 import {
@@ -31,6 +32,40 @@ const LEGAL_ENTITIES = [
   { value: "ALL", label: "All Legal Entities" },
 ];
 
+// Available users for admin selection
+const AVAILABLE_USERS = [
+  {
+    email: "john.doe@company.com",
+    username: "john.doe",
+    fullName: "John Doe",
+    label: "John Doe (john.doe@company.com)",
+  },
+  {
+    email: "jane.smith@company.com",
+    username: "jane.smith",
+    fullName: "Jane Smith",
+    label: "Jane Smith (jane.smith@company.com)",
+  },
+  {
+    email: "mike.wilson@company.com",
+    username: "mike.wilson",
+    fullName: "Mike Wilson",
+    label: "Mike Wilson (mike.wilson@company.com)",
+  },
+  {
+    email: "sarah.johnson@company.com",
+    username: "sarah.johnson",
+    fullName: "Sarah Johnson",
+    label: "Sarah Johnson (sarah.johnson@company.com)",
+  },
+  {
+    email: "david.brown@company.com",
+    username: "david.brown",
+    fullName: "David Brown",
+    label: "David Brown (david.brown@company.com)",
+  },
+];
+
 // Admin permissions
 const ADMIN_PERMISSIONS = [
   "user_management",
@@ -41,6 +76,18 @@ const ADMIN_PERMISSIONS = [
   "workflow_management",
   "permission_management",
   "master_data_sync",
+];
+
+// Admin permissions options for MultiSelect
+const ADMIN_PERMISSIONS_OPTIONS = [
+  { value: "user_management", label: "User Management" },
+  { value: "role_management", label: "Role Management" },
+  { value: "system_configuration", label: "System Configuration" },
+  { value: "audit_logs", label: "Audit Logs" },
+  { value: "data_export", label: "Data Export" },
+  { value: "workflow_management", label: "Workflow Management" },
+  { value: "permission_management", label: "Permission Management" },
+  { value: "master_data_sync", label: "Master Data Sync" },
 ];
 
 // Sample admin users data
@@ -86,6 +133,15 @@ const AdminPermissions = () => {
   const [adminUsers, setAdminUsers] = useState(SAMPLE_ADMIN_USERS);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState(null);
+  const [formData, setFormData] = useState({
+    username: "",
+    fullName: "",
+    email: "",
+    adminLevel: "admin",
+    permissions: [],
+    status: "Active",
+  });
+  const [errors, setErrors] = useState({});
 
   // Filter admin users based on search and admin level
   const filteredAdmins = adminUsers.filter((admin) => {
@@ -102,16 +158,110 @@ const AdminPermissions = () => {
 
   const handleAddAdmin = () => {
     setEditingAdmin(null);
+    setFormData({
+      username: "",
+      fullName: "",
+      email: "",
+      adminLevel: "admin",
+      status: "Active",
+    });
+    setErrors({});
     setShowAddModal(true);
   };
 
   const handleEditAdmin = (admin) => {
     setEditingAdmin(admin);
+    setFormData({
+      username: admin.username,
+      fullName: admin.fullName,
+      email: admin.email,
+      adminLevel: admin.adminLevel,
+      legalEntity: admin.legalEntity,
+      permissions: admin.permissions,
+      status: admin.status,
+    });
+    setErrors({});
     setShowAddModal(true);
   };
 
   const handleDeleteAdmin = (adminId) => {
     setAdminUsers((prev) => prev.filter((admin) => admin.id !== adminId));
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: "",
+      }));
+    }
+  };
+
+  const handleEmailSelect = (email) => {
+    const selectedUser = AVAILABLE_USERS.find((user) => user.email === email);
+    if (selectedUser) {
+      setFormData((prev) => ({
+        ...prev,
+        email: selectedUser.email,
+        username: selectedUser.username,
+        fullName: selectedUser.fullName,
+      }));
+      // Clear email error
+      if (errors.email) {
+        setErrors((prev) => ({
+          ...prev,
+          email: "",
+        }));
+      }
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Please select a user";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSaveAdmin = () => {
+    if (validateForm()) {
+      if (editingAdmin) {
+        // Update existing admin
+        setAdminUsers((prev) =>
+          prev.map((admin) =>
+            admin.id === editingAdmin.id ? { ...admin, ...formData } : admin
+          )
+        );
+      } else {
+        // Add new admin
+        const newAdmin = {
+          id: Date.now(),
+          ...formData,
+        };
+        setAdminUsers((prev) => [...prev, newAdmin]);
+      }
+      setShowAddModal(false);
+      setEditingAdmin(null);
+      setFormData({
+        username: "",
+        fullName: "",
+        email: "",
+        adminLevel: "admin",
+        legalEntity: "",
+        permissions: [],
+        status: "Active",
+      });
+      setErrors({});
+    }
   };
 
   const getAdminLevelBadge = (level) => {
@@ -242,18 +392,94 @@ const AdminPermissions = () => {
         onClose={() => setShowAddModal(false)}
         title={editingAdmin ? "Edit Administrator" : "Add Administrator"}
       >
-        <div className="space-y-4">
+        <div className="space-y-6">
           <Text variant="body" color="muted">
             {editingAdmin
               ? "Update administrator account and role"
               : "Configure administrator account and role"}
           </Text>
-          {/* Modal content will be implemented later */}
-          <div className="flex justify-end gap-3 pt-4">
+
+          {/* Select User */}
+          <div>
+            <Text variant="body" weight="medium" className="mb-2">
+              Select User *
+            </Text>
+            <Select
+              value={formData.email}
+              onChange={handleEmailSelect}
+              options={AVAILABLE_USERS.map((user) => ({
+                value: user.email,
+                label: user.label,
+              }))}
+              placeholder="Select user to make administrator"
+              error={!!errors.email}
+            />
+            {errors.email && (
+              <Text variant="caption" color="error" className="mt-1">
+                {errors.email}
+              </Text>
+            )}
+          </div>
+
+          {/* Auto-filled User Info */}
+          {formData.email && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Text variant="body" weight="medium" className="mb-2">
+                  Username
+                </Text>
+                <Input
+                  value={formData.username}
+                  disabled
+                  className="bg-gray-50"
+                />
+              </div>
+              <div>
+                <Text variant="body" weight="medium" className="mb-2">
+                  Full Name
+                </Text>
+                <Input
+                  value={formData.fullName}
+                  disabled
+                  className="bg-gray-50"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Admin Level */}
+          <div>
+            <Text variant="body" weight="medium" className="mb-2">
+              Admin Level
+            </Text>
+            <Select
+              value={formData.adminLevel}
+              onChange={(value) => handleInputChange("adminLevel", value)}
+              options={ADMIN_LEVELS}
+            />
+          </div>
+
+          {/* Status */}
+          <div>
+            <Text variant="body" weight="medium" className="mb-2">
+              Status
+            </Text>
+            <Select
+              value={formData.status}
+              onChange={(value) => handleInputChange("status", value)}
+              options={[
+                { value: "Active", label: "Active" },
+                { value: "Inactive", label: "Inactive" },
+              ]}
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
             <Button variant="outline" onClick={() => setShowAddModal(false)}>
               Cancel
             </Button>
-            <Button variant="primary">
+            <Button variant="primary" onClick={handleSaveAdmin}>
               {editingAdmin ? "Update" : "Add"} Administrator
             </Button>
           </div>

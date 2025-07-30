@@ -3,6 +3,7 @@ import Text from "../../../atoms/Text";
 import Button from "../../../atoms/Button";
 import Input from "../../../atoms/Input";
 import Select from "../../../atoms/Select";
+import MultiSelect from "../../../atoms/MultiSelect";
 import Table from "../../../atoms/Table";
 import Modal from "../../../atoms/Modal";
 import { Search as SearchIcon, Plus, Edit, Trash2 } from "lucide-react";
@@ -18,12 +19,12 @@ const LEGAL_ENTITIES = [
   { value: "DHGD", label: "DHGD" },
 ];
 
-// Available tabs/modules
+// Available tabs for role permissions (matching sidebar tabs)
 const AVAILABLE_TABS = [
   { value: "my-request", label: "My Request" },
   { value: "approval", label: "Approval" },
   { value: "search", label: "Search" },
-  { value: "rule-field-config", label: "Form Configuration" },
+  { value: "rule-field-config", label: "Rule Field Config" },
   { value: "workflows", label: "Workflows" },
   { value: "permissions", label: "Permissions" },
   { value: "master-data", label: "Master Data" },
@@ -73,6 +74,13 @@ const RolePermissions = () => {
   );
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
+  const [formData, setFormData] = useState({
+    role: "",
+    legalEntity: "",
+    accessibleTabs: [],
+    status: "Active",
+  });
+  const [errors, setErrors] = useState({});
 
   // Filter permissions based on search and legal entity
   const filteredPermissions = rolePermissions.filter((permission) => {
@@ -88,16 +96,92 @@ const RolePermissions = () => {
 
   const handleAddRole = () => {
     setEditingRole(null);
+    setFormData({
+      role: "",
+      legalEntity: "",
+      accessibleTabs: [],
+      status: "Active",
+    });
+    setErrors({});
     setShowAddModal(true);
   };
 
   const handleEditRole = (role) => {
     setEditingRole(role);
+    setFormData({
+      role: role.role,
+      legalEntity: role.legalEntity,
+      accessibleTabs: role.accessibleTabs,
+      status: role.status,
+    });
+    setErrors({});
     setShowAddModal(true);
   };
 
   const handleDeleteRole = (roleId) => {
     setRolePermissions((prev) => prev.filter((role) => role.id !== roleId));
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: "",
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.role.trim()) {
+      newErrors.role = "Role is required";
+    }
+
+    if (!formData.legalEntity) {
+      newErrors.legalEntity = "Legal entity is required";
+    }
+
+    if (formData.accessibleTabs.length === 0) {
+      newErrors.accessibleTabs = "At least one tab must be selected";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSaveRole = () => {
+    if (validateForm()) {
+      if (editingRole) {
+        // Update existing role
+        setRolePermissions((prev) =>
+          prev.map((role) =>
+            role.id === editingRole.id ? { ...role, ...formData } : role
+          )
+        );
+      } else {
+        // Add new role
+        const newRole = {
+          id: Date.now(),
+          ...formData,
+        };
+        setRolePermissions((prev) => [...prev, newRole]);
+      }
+      setShowAddModal(false);
+      setEditingRole(null);
+      setFormData({
+        role: "",
+        legalEntity: "",
+        accessibleTabs: [],
+        status: "Active",
+      });
+      setErrors({});
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -245,18 +329,96 @@ const RolePermissions = () => {
         onClose={() => setShowAddModal(false)}
         title={editingRole ? "Edit Role Permissions" : "Add Role Permissions"}
       >
-        <div className="space-y-4">
+        <div className="space-y-6">
           <Text variant="body" color="muted">
             {editingRole
               ? "Update role permissions and access to tabs"
               : "Configure role-based permissions and access to tabs"}
           </Text>
-          {/* Modal content will be implemented later */}
-          <div className="flex justify-end gap-3 pt-4">
+
+          {/* Role Name */}
+          <div>
+            <Text variant="body" weight="medium" className="mb-2">
+              Role Name *
+            </Text>
+            <Input
+              value={formData.role}
+              onChange={(e) => handleInputChange("role", e.target.value)}
+              placeholder="Enter role name"
+              error={!!errors.role}
+            />
+            {errors.role && (
+              <Text variant="caption" color="error" className="mt-1">
+                {errors.role}
+              </Text>
+            )}
+          </div>
+
+          {/* Legal Entity */}
+          <div>
+            <Text variant="body" weight="medium" className="mb-2">
+              Legal Entity *
+            </Text>
+            <Select
+              value={formData.legalEntity}
+              onChange={(value) => handleInputChange("legalEntity", value)}
+              options={LEGAL_ENTITIES}
+              placeholder="Select legal entity"
+              error={!!errors.legalEntity}
+            />
+            {errors.legalEntity && (
+              <Text variant="caption" color="error" className="mt-1">
+                {errors.legalEntity}
+              </Text>
+            )}
+          </div>
+
+          {/* Accessible Tabs */}
+          <div>
+            <Text variant="body" weight="medium" className="mb-2">
+              Accessible Tabs *
+            </Text>
+            <MultiSelect
+              options={AVAILABLE_TABS}
+              value={formData.accessibleTabs}
+              onChange={(selectedValues) =>
+                handleInputChange("accessibleTabs", selectedValues)
+              }
+              placeholder="Select accessible tabs"
+              className="w-full"
+              error={!!errors.accessibleTabs}
+            />
+            {errors.accessibleTabs && (
+              <Text variant="caption" color="error" className="mt-1">
+                {errors.accessibleTabs}
+              </Text>
+            )}
+            <Text variant="caption" color="muted" className="mt-1">
+              Select which tabs this role can access
+            </Text>
+          </div>
+
+          {/* Status */}
+          <div>
+            <Text variant="body" weight="medium" className="mb-2">
+              Status
+            </Text>
+            <Select
+              value={formData.status}
+              onChange={(value) => handleInputChange("status", value)}
+              options={[
+                { value: "Active", label: "Active" },
+                { value: "Inactive", label: "Inactive" },
+              ]}
+            />
+          </div>
+
+          {/* Actions */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
             <Button variant="outline" onClick={() => setShowAddModal(false)}>
               Cancel
             </Button>
-            <Button variant="primary">
+            <Button variant="primary" onClick={handleSaveRole}>
               {editingRole ? "Update" : "Add"} Role
             </Button>
           </div>
