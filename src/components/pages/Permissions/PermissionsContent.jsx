@@ -13,7 +13,7 @@ const PermissionsContent = () => {
         <Tabs defaultTab="role-permissions" variant="default">
           <Tabs.Panel
             tabId="role-permissions"
-            label="Role Permissions"
+            label="Department Permissions"
             icon={<Shield size={16} />}
           >
             <RolePermissions />

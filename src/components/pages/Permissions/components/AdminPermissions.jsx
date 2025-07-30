@@ -176,8 +176,6 @@ const AdminPermissions = () => {
       fullName: admin.fullName,
       email: admin.email,
       adminLevel: admin.adminLevel,
-      legalEntity: admin.legalEntity,
-      permissions: admin.permissions,
       status: admin.status,
     });
     setErrors({});
@@ -256,8 +254,6 @@ const AdminPermissions = () => {
         fullName: "",
         email: "",
         adminLevel: "admin",
-        legalEntity: "",
-        permissions: [],
         status: "Active",
       });
       setErrors({});

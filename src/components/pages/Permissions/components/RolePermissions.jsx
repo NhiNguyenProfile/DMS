@@ -30,12 +30,52 @@ const AVAILABLE_TABS = [
   { value: "master-data", label: "Master Data" },
 ];
 
+// Roles by Legal Entity (mock data)
+const ROLES_BY_LEGAL_ENTITY = {
+  DHV: [
+    { value: "all", label: "All Departments" },
+    { value: "sales", label: "Sales Department" },
+    { value: "credit", label: "Credit Department" },
+    { value: "legal", label: "Legal Department" },
+    { value: "operations", label: "Operations Department" },
+  ],
+  DHBH: [
+    { value: "all", label: "All Departments" },
+    { value: "retail", label: "Retail Banking" },
+    { value: "corporate", label: "Corporate Banking" },
+    { value: "risk", label: "Risk Management" },
+  ],
+  DHHP: [
+    { value: "all", label: "All Departments" },
+    { value: "investment", label: "Investment Department" },
+    { value: "advisory", label: "Advisory Department" },
+    { value: "research", label: "Research Department" },
+  ],
+  DHHY: [
+    { value: "all", label: "All Departments" },
+    { value: "underwriting", label: "Underwriting" },
+    { value: "claims", label: "Claims Department" },
+    { value: "actuarial", label: "Actuarial Department" },
+  ],
+  DHGC: [
+    { value: "all", label: "All Departments" },
+    { value: "trading", label: "Trading Department" },
+    { value: "settlement", label: "Settlement Department" },
+  ],
+  DHGD: [
+    { value: "all", label: "All Departments" },
+    { value: "education", label: "Education Department" },
+    { value: "training", label: "Training Department" },
+  ],
+};
+
 // Sample role permissions data
 const SAMPLE_ROLE_PERMISSIONS = [
   {
     id: 1,
     role: "Sale Admin",
     legalEntity: "DHV",
+    departments: ["sales", "operations"],
     accessibleTabs: ["my-request", "approval", "search", "rule-field-config"],
     userCount: 5,
     status: "Active",
@@ -44,6 +84,7 @@ const SAMPLE_ROLE_PERMISSIONS = [
     id: 2,
     role: "Credit Officer",
     legalEntity: "DHBH",
+    departments: ["retail", "corporate"],
     accessibleTabs: ["my-request", "approval", "search"],
     userCount: 3,
     status: "Active",
@@ -52,6 +93,7 @@ const SAMPLE_ROLE_PERMISSIONS = [
     id: 3,
     role: "Manager",
     legalEntity: "DHHP",
+    departments: ["all"],
     accessibleTabs: ["my-request", "approval", "search", "workflows"],
     userCount: 2,
     status: "Active",
@@ -60,6 +102,7 @@ const SAMPLE_ROLE_PERMISSIONS = [
     id: 4,
     role: "Legal",
     legalEntity: "DHV",
+    departments: ["legal"],
     accessibleTabs: ["approval", "search"],
     userCount: 1,
     status: "Inactive",
@@ -75,8 +118,8 @@ const RolePermissions = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
   const [formData, setFormData] = useState({
-    role: "",
     legalEntity: "",
+    departments: ["all"], // Default to "All Departments"
     accessibleTabs: [],
     status: "Active",
   });
@@ -97,8 +140,8 @@ const RolePermissions = () => {
   const handleAddRole = () => {
     setEditingRole(null);
     setFormData({
-      role: "",
       legalEntity: "",
+      departments: ["all"],
       accessibleTabs: [],
       status: "Active",
     });
@@ -109,8 +152,8 @@ const RolePermissions = () => {
   const handleEditRole = (role) => {
     setEditingRole(role);
     setFormData({
-      role: role.role,
       legalEntity: role.legalEntity,
+      departments: role.departments || ["all"],
       accessibleTabs: role.accessibleTabs,
       status: role.status,
     });
@@ -136,15 +179,35 @@ const RolePermissions = () => {
     }
   };
 
+  const handleLegalEntityChange = (legalEntity) => {
+    setFormData((prev) => ({
+      ...prev,
+      legalEntity: legalEntity,
+      departments: ["all"], // Reset to "All" when legal entity changes
+    }));
+    // Clear error
+    if (errors.legalEntity) {
+      setErrors((prev) => ({
+        ...prev,
+        legalEntity: "",
+      }));
+    }
+  };
+
+  const getAvailableDepartments = () => {
+    if (!formData.legalEntity) return [];
+    return ROLES_BY_LEGAL_ENTITY[formData.legalEntity] || [];
+  };
+
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.role.trim()) {
-      newErrors.role = "Role is required";
-    }
-
     if (!formData.legalEntity) {
       newErrors.legalEntity = "Legal entity is required";
+    }
+
+    if (formData.departments.length === 0) {
+      newErrors.departments = "At least one department must be selected";
     }
 
     if (formData.accessibleTabs.length === 0) {
@@ -175,8 +238,8 @@ const RolePermissions = () => {
       setShowAddModal(false);
       setEditingRole(null);
       setFormData({
-        role: "",
         legalEntity: "",
+        departments: ["all"],
         accessibleTabs: [],
         status: "Active",
       });
@@ -200,10 +263,10 @@ const RolePermissions = () => {
       <div className="flex items-center justify-between">
         <div>
           <Text variant="heading" size="lg" weight="semibold">
-            Role Permissions
+            Department Permissions
           </Text>
           <Text variant="body" color="muted" className="mt-1">
-            Configure role-based access to tabs and legal entities
+            Configure department-based access to tabs and legal entities
           </Text>
         </div>
         <Button onClick={handleAddRole}>
@@ -242,9 +305,10 @@ const RolePermissions = () => {
         <Table>
           <Table.Header>
             <Table.Row>
-              <Table.HeaderCell>Role</Table.HeaderCell>
+              <Table.HeaderCell>Role Name</Table.HeaderCell>
               <Table.HeaderCell>Legal Entity</Table.HeaderCell>
-              <Table.HeaderCell>Accessible Tabs</Table.HeaderCell>
+              <Table.HeaderCell>Departments</Table.HeaderCell>
+              <Table.HeaderCell>Accessible Modules</Table.HeaderCell>
               <Table.HeaderCell>Users</Table.HeaderCell>
               <Table.HeaderCell>Status</Table.HeaderCell>
               <Table.HeaderCell>Actions</Table.HeaderCell>
@@ -262,6 +326,31 @@ const RolePermissions = () => {
                   <Text variant="body" weight="medium">
                     {permission.legalEntity}
                   </Text>
+                </Table.Cell>
+                <Table.Cell>
+                  <div className="flex flex-wrap gap-1">
+                    {(permission.departments || ["all"])
+                      .slice(0, 2)
+                      .map((dept) => {
+                        const deptLabel =
+                          ROLES_BY_LEGAL_ENTITY[permission.legalEntity]?.find(
+                            (d) => d.value === dept
+                          )?.label || dept;
+                        return (
+                          <span
+                            key={dept}
+                            className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded"
+                          >
+                            {deptLabel}
+                          </span>
+                        );
+                      })}
+                    {(permission.departments || ["all"]).length > 2 && (
+                      <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded">
+                        +{(permission.departments || ["all"]).length - 2} more
+                      </span>
+                    )}
+                  </div>
                 </Table.Cell>
                 <Table.Cell>
                   <div className="flex flex-wrap gap-1">
@@ -327,7 +416,11 @@ const RolePermissions = () => {
       <Modal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
-        title={editingRole ? "Edit Role Permissions" : "Add Role Permissions"}
+        title={
+          editingRole
+            ? "Edit Department Permissions"
+            : "Add Department Permissions"
+        }
       >
         <div className="space-y-6">
           <Text variant="body" color="muted">
@@ -336,24 +429,6 @@ const RolePermissions = () => {
               : "Configure role-based permissions and access to tabs"}
           </Text>
 
-          {/* Role Name */}
-          <div>
-            <Text variant="body" weight="medium" className="mb-2">
-              Role Name *
-            </Text>
-            <Input
-              value={formData.role}
-              onChange={(e) => handleInputChange("role", e.target.value)}
-              placeholder="Enter role name"
-              error={!!errors.role}
-            />
-            {errors.role && (
-              <Text variant="caption" color="error" className="mt-1">
-                {errors.role}
-              </Text>
-            )}
-          </div>
-
           {/* Legal Entity */}
           <div>
             <Text variant="body" weight="medium" className="mb-2">
@@ -361,7 +436,7 @@ const RolePermissions = () => {
             </Text>
             <Select
               value={formData.legalEntity}
-              onChange={(value) => handleInputChange("legalEntity", value)}
+              onChange={handleLegalEntityChange}
               options={LEGAL_ENTITIES}
               placeholder="Select legal entity"
               error={!!errors.legalEntity}
@@ -372,6 +447,34 @@ const RolePermissions = () => {
               </Text>
             )}
           </div>
+
+          {/* Departments */}
+          {formData.legalEntity && (
+            <div>
+              <Text variant="body" weight="medium" className="mb-2">
+                Departments *
+              </Text>
+              <MultiSelect
+                options={getAvailableDepartments()}
+                value={formData.departments}
+                onChange={(selectedValues) =>
+                  handleInputChange("departments", selectedValues)
+                }
+                placeholder="Select departments"
+                className="w-full"
+                error={!!errors.departments}
+              />
+              {errors.departments && (
+                <Text variant="caption" color="error" className="mt-1">
+                  {errors.departments}
+                </Text>
+              )}
+              <Text variant="caption" color="muted" className="mt-1">
+                Select departments for this role. "All Departments" is selected
+                by default.
+              </Text>
+            </div>
+          )}
 
           {/* Accessible Tabs */}
           <div>
