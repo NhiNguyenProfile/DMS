@@ -5,7 +5,7 @@ import Input from "../../../atoms/Input";
 import Table from "../../../atoms/Table";
 import IconButton from "../../../atoms/IconButton";
 import Modal from "../../../atoms/Modal";
-import Select from "../../../atoms/Select";
+import MultiSelect from "../../../atoms/MultiSelect";
 import { Plus, Edit, Trash2, Users, X } from "lucide-react";
 
 // Sample workflow groups data
@@ -15,34 +15,109 @@ const SAMPLE_WORKFLOW_GROUPS = [
     name: "Sales Team",
     description: "Sales department workflow group for customer management",
     users: [
-      { id: 1, name: "John Doe", email: "john.doe@company.com", role: "Sales Manager" },
-      { id: 2, name: "Jane Smith", email: "jane.smith@company.com", role: "Sales Executive" },
-      { id: 3, name: "Mike Johnson", email: "mike.johnson@company.com", role: "Sales Representative" },
+      {
+        id: 1,
+        name: "John Doe",
+        email: "john.doe@company.com",
+        role: "Sales Manager",
+      },
+      {
+        id: 2,
+        name: "Jane Smith",
+        email: "jane.smith@company.com",
+        role: "Sales Executive",
+      },
+      {
+        id: 3,
+        name: "Mike Johnson",
+        email: "mike.johnson@company.com",
+        role: "Sales Representative",
+      },
     ],
   },
   {
     id: 2,
-    name: "Finance Team", 
+    name: "Finance Team",
     description: "Finance department for approval processes",
     users: [
-      { id: 4, name: "Sarah Wilson", email: "sarah.wilson@company.com", role: "Finance Manager" },
-      { id: 5, name: "David Brown", email: "david.brown@company.com", role: "Accountant" },
+      {
+        id: 4,
+        name: "Sarah Wilson",
+        email: "sarah.wilson@company.com",
+        role: "Finance Manager",
+      },
+      {
+        id: 5,
+        name: "David Brown",
+        email: "david.brown@company.com",
+        role: "Accountant",
+      },
     ],
   },
 ];
 
 // Sample available users
 const AVAILABLE_USERS = [
-  { id: 1, name: "John Doe", email: "john.doe@company.com", role: "Sales Manager" },
-  { id: 2, name: "Jane Smith", email: "jane.smith@company.com", role: "Sales Executive" },
-  { id: 3, name: "Mike Johnson", email: "mike.johnson@company.com", role: "Sales Representative" },
-  { id: 4, name: "Sarah Wilson", email: "sarah.wilson@company.com", role: "Finance Manager" },
-  { id: 5, name: "David Brown", email: "david.brown@company.com", role: "Accountant" },
-  { id: 6, name: "Lisa Chen", email: "lisa.chen@company.com", role: "Operations Manager" },
-  { id: 7, name: "Tom Anderson", email: "tom.anderson@company.com", role: "Operations Specialist" },
-  { id: 8, name: "Anna Garcia", email: "anna.garcia@company.com", role: "Process Coordinator" },
-  { id: 9, name: "Robert Lee", email: "robert.lee@company.com", role: "Technical Lead" },
-  { id: 10, name: "Emily Davis", email: "emily.davis@company.com", role: "QA Supervisor" },
+  {
+    id: 1,
+    name: "John Doe",
+    email: "john.doe@company.com",
+    role: "Sales Manager",
+  },
+  {
+    id: 2,
+    name: "Jane Smith",
+    email: "jane.smith@company.com",
+    role: "Sales Executive",
+  },
+  {
+    id: 3,
+    name: "Mike Johnson",
+    email: "mike.johnson@company.com",
+    role: "Sales Representative",
+  },
+  {
+    id: 4,
+    name: "Sarah Wilson",
+    email: "sarah.wilson@company.com",
+    role: "Finance Manager",
+  },
+  {
+    id: 5,
+    name: "David Brown",
+    email: "david.brown@company.com",
+    role: "Accountant",
+  },
+  {
+    id: 6,
+    name: "Lisa Chen",
+    email: "lisa.chen@company.com",
+    role: "Operations Manager",
+  },
+  {
+    id: 7,
+    name: "Tom Anderson",
+    email: "tom.anderson@company.com",
+    role: "Operations Specialist",
+  },
+  {
+    id: 8,
+    name: "Anna Garcia",
+    email: "anna.garcia@company.com",
+    role: "Process Coordinator",
+  },
+  {
+    id: 9,
+    name: "Robert Lee",
+    email: "robert.lee@company.com",
+    role: "Technical Lead",
+  },
+  {
+    id: 10,
+    name: "Emily Davis",
+    email: "emily.davis@company.com",
+    role: "QA Supervisor",
+  },
 ];
 
 const GroupConfig = () => {
@@ -70,12 +145,14 @@ const GroupConfig = () => {
       description: group.description,
       users: group.users,
     });
-    setSelectedUsers(group.users.map(u => u.id));
+    setSelectedUsers(group.users.map((u) => u.id));
     setShowModal(true);
   };
 
   const handleDeleteGroup = (groupId) => {
-    if (window.confirm("Are you sure you want to delete this workflow group?")) {
+    if (
+      window.confirm("Are you sure you want to delete this workflow group?")
+    ) {
       setGroups(groups.filter((g) => g.id !== groupId));
     }
   };
@@ -87,7 +164,7 @@ const GroupConfig = () => {
     }
 
     // Get selected user objects
-    const selectedUserObjects = AVAILABLE_USERS.filter(user => 
+    const selectedUserObjects = AVAILABLE_USERS.filter((user) =>
       selectedUsers.includes(user.id)
     );
 
@@ -122,20 +199,23 @@ const GroupConfig = () => {
   };
 
   const handleAddUsers = (userIds) => {
-    const newUserIds = userIds.filter(id => !selectedUsers.includes(id));
-    setSelectedUsers([...selectedUsers, ...newUserIds]);
+    console.log("handleAddUsers called with:", userIds);
+    console.log("Current selectedUsers:", selectedUsers);
+
+    // userIds is the complete array of selected values from MultiSelect
+    setSelectedUsers(userIds);
   };
 
   const handleRemoveUser = (userId) => {
-    setSelectedUsers(selectedUsers.filter(id => id !== userId));
+    setSelectedUsers(selectedUsers.filter((id) => id !== userId));
   };
 
   const getAvailableUsers = () => {
-    return AVAILABLE_USERS.filter(user => !selectedUsers.includes(user.id));
+    return AVAILABLE_USERS.filter((user) => !selectedUsers.includes(user.id));
   };
 
   const getSelectedUserObjects = () => {
-    return AVAILABLE_USERS.filter(user => selectedUsers.includes(user.id));
+    return AVAILABLE_USERS.filter((user) => selectedUsers.includes(user.id));
   };
 
   return (
@@ -262,18 +342,17 @@ const GroupConfig = () => {
             <Text variant="body" weight="medium" className="mb-3">
               Group Members
             </Text>
-            
+
             {/* Add Users */}
             <div className="mb-4">
-              <Select
-                mode="multiple"
+              <MultiSelect
                 placeholder="Select users to add to group"
-                options={getAvailableUsers().map(user => ({
+                options={AVAILABLE_USERS.map((user) => ({
                   value: user.id,
-                  label: `${user.name} (${user.role})`
+                  label: `${user.name} (${user.role})`,
                 }))}
                 onChange={(values) => handleAddUsers(values)}
-                value={[]}
+                value={selectedUsers}
               />
             </div>
 
@@ -303,9 +382,7 @@ const GroupConfig = () => {
                           </Text>
                         </Table.Cell>
                         <Table.Cell>
-                          <Text variant="body">
-                            {user.role}
-                          </Text>
+                          <Text variant="body">{user.role}</Text>
                         </Table.Cell>
                         <Table.Cell>
                           <IconButton
@@ -329,7 +406,8 @@ const GroupConfig = () => {
               <div className="text-center py-8 border border-dashed border-gray-300 rounded-lg">
                 <Users size={32} className="mx-auto text-gray-400 mb-2" />
                 <Text variant="body" color="muted">
-                  No users selected. Use the dropdown above to add users to this group.
+                  No users selected. Use the multi-select above to add users to
+                  this group.
                 </Text>
               </div>
             )}
