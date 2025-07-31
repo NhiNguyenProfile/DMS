@@ -212,9 +212,9 @@ export const MAIL_RECIPIENTS = [
 
 // Groups (will be configured in another tab later)
 export const GROUPS = [
-  { value: "sales-team", label: "Sales Team" },
-  { value: "credit-team", label: "Credit Team" },
-  { value: "legal-team", label: "Legal Team" },
-  { value: "finance-team", label: "Finance Team" },
-  { value: "management", label: "Management" },
+  { value: "Sales Team", label: "Sales Team" },
+  { value: "Finance Team", label: "Finance Team" },
+  { value: "Operations Team", label: "Operations Team" },
+  { value: "Technical Team", label: "Technical Team" },
+  { value: "Management Team", label: "Management Team" },
 ];

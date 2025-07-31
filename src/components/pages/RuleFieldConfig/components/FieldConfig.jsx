@@ -2,31 +2,68 @@ import { useState, useEffect } from "react";
 import Text from "../../../atoms/Text";
 import Button from "../../../atoms/Button";
 import Input from "../../../atoms/Input";
+import Toggle from "../../../atoms/Toggle";
 import Table from "../../../atoms/Table";
 import { Search } from "lucide-react";
 
 // Sample field data
 const SAMPLE_FIELD_DATA = [
-  { fieldKey: "taxCode", fieldName: "Mã số thuế" },
-  { fieldKey: "email", fieldName: "Email" },
-  { fieldKey: "phoneNumber", fieldName: "Số điện thoại" },
-  { fieldKey: "fullName", fieldName: "Họ và tên" },
-  { fieldKey: "idNumber", fieldName: "Số CMND/CCCD" },
-  { fieldKey: "address", fieldName: "Địa chỉ" },
-  { fieldKey: "companyName", fieldName: "Tên công ty" },
-  { fieldKey: "businessLicense", fieldName: "Giấy phép kinh doanh" },
-  { fieldKey: "registeredCapital", fieldName: "Vốn điều lệ" },
-  { fieldKey: "accountNumber", fieldName: "Số tài khoản" },
-  { fieldKey: "amount", fieldName: "Số tiền" },
-  { fieldKey: "currency", fieldName: "Tỷ giá" },
-  { fieldKey: "transferNote", fieldName: "Ghi chú chuyển khoản" },
-  { fieldKey: "birthDate", fieldName: "Ngày sinh" },
-  { fieldKey: "gender", fieldName: "Giới tính" },
-  { fieldKey: "nationality", fieldName: "Quốc tịch" },
-  { fieldKey: "occupation", fieldName: "Nghề nghiệp" },
-  { fieldKey: "income", fieldName: "Thu nhập" },
-  { fieldKey: "bankName", fieldName: "Tên ngân hàng" },
-  { fieldKey: "branchName", fieldName: "Chi nhánh" },
+  { fieldKey: "taxCode", fieldName: "Mã số thuế", isApprovalRequired: true },
+  { fieldKey: "email", fieldName: "Email", isApprovalRequired: false },
+  {
+    fieldKey: "phoneNumber",
+    fieldName: "Số điện thoại",
+    isApprovalRequired: false,
+  },
+  { fieldKey: "fullName", fieldName: "Họ và tên", isApprovalRequired: true },
+  { fieldKey: "idNumber", fieldName: "Số CMND/CCCD", isApprovalRequired: true },
+  { fieldKey: "address", fieldName: "Địa chỉ", isApprovalRequired: false },
+  {
+    fieldKey: "companyName",
+    fieldName: "Tên công ty",
+    isApprovalRequired: true,
+  },
+  {
+    fieldKey: "businessLicense",
+    fieldName: "Giấy phép kinh doanh",
+    isApprovalRequired: true,
+  },
+  {
+    fieldKey: "registeredCapital",
+    fieldName: "Vốn điều lệ",
+    isApprovalRequired: true,
+  },
+  {
+    fieldKey: "accountNumber",
+    fieldName: "Số tài khoản",
+    isApprovalRequired: true,
+  },
+  { fieldKey: "amount", fieldName: "Số tiền", isApprovalRequired: true },
+  { fieldKey: "currency", fieldName: "Tỷ giá", isApprovalRequired: false },
+  {
+    fieldKey: "transferNote",
+    fieldName: "Ghi chú chuyển khoản",
+    isApprovalRequired: false,
+  },
+  { fieldKey: "birthDate", fieldName: "Ngày sinh", isApprovalRequired: false },
+  { fieldKey: "gender", fieldName: "Giới tính", isApprovalRequired: false },
+  {
+    fieldKey: "nationality",
+    fieldName: "Quốc tịch",
+    isApprovalRequired: false,
+  },
+  {
+    fieldKey: "occupation",
+    fieldName: "Nghề nghiệp",
+    isApprovalRequired: false,
+  },
+  { fieldKey: "income", fieldName: "Thu nhập", isApprovalRequired: true },
+  {
+    fieldKey: "bankName",
+    fieldName: "Tên ngân hàng",
+    isApprovalRequired: false,
+  },
+  { fieldKey: "branchName", fieldName: "Chi nhánh", isApprovalRequired: false },
 ];
 
 const FieldConfig = ({ selectedEntity, selectedRequestType, disabled }) => {
@@ -48,15 +85,22 @@ const FieldConfig = ({ selectedEntity, selectedRequestType, disabled }) => {
       setFieldData((prev) =>
         prev.map((field) => ({
           ...field,
-          fieldName: editValues[field.fieldKey] || field.fieldName,
+          fieldName: editValues[field.fieldKey]?.fieldName || field.fieldName,
+          isApprovalRequired:
+            editValues[field.fieldKey]?.isApprovalRequired !== undefined
+              ? editValues[field.fieldKey].isApprovalRequired
+              : field.isApprovalRequired,
         }))
       );
       setEditValues({});
     } else {
-      // Initialize edit values with current field names
+      // Initialize edit values with current field data
       const initialValues = {};
       fieldData.forEach((field) => {
-        initialValues[field.fieldKey] = field.fieldName;
+        initialValues[field.fieldKey] = {
+          fieldName: field.fieldName,
+          isApprovalRequired: field.isApprovalRequired,
+        };
       });
       setEditValues(initialValues);
     }
@@ -66,7 +110,20 @@ const FieldConfig = ({ selectedEntity, selectedRequestType, disabled }) => {
   const handleFieldNameChange = (fieldKey, value) => {
     setEditValues((prev) => ({
       ...prev,
-      [fieldKey]: value,
+      [fieldKey]: {
+        ...prev[fieldKey],
+        fieldName: value,
+      },
+    }));
+  };
+
+  const handleApprovalRequiredChange = (fieldKey, checked) => {
+    setEditValues((prev) => ({
+      ...prev,
+      [fieldKey]: {
+        ...prev[fieldKey],
+        isApprovalRequired: checked,
+      },
     }));
   };
 
@@ -134,6 +191,7 @@ const FieldConfig = ({ selectedEntity, selectedRequestType, disabled }) => {
             <Table.Row>
               <Table.HeaderCell>Field Key</Table.HeaderCell>
               <Table.HeaderCell>Field Name</Table.HeaderCell>
+              <Table.HeaderCell>Approval Required</Table.HeaderCell>
             </Table.Row>
           </Table.Header>
           <Table.Body>
@@ -151,7 +209,9 @@ const FieldConfig = ({ selectedEntity, selectedRequestType, disabled }) => {
                 <Table.Cell>
                   {isEditMode ? (
                     <Input
-                      value={editValues[field.fieldKey] || field.fieldName}
+                      value={
+                        editValues[field.fieldKey]?.fieldName || field.fieldName
+                      }
                       onChange={(e) =>
                         handleFieldNameChange(field.fieldKey, e.target.value)
                       }
@@ -159,6 +219,27 @@ const FieldConfig = ({ selectedEntity, selectedRequestType, disabled }) => {
                     />
                   ) : (
                     <Text variant="body">{field.fieldName}</Text>
+                  )}
+                </Table.Cell>
+                <Table.Cell>
+                  {isEditMode ? (
+                    <Toggle
+                      checked={
+                        editValues[field.fieldKey]?.isApprovalRequired !==
+                        undefined
+                          ? editValues[field.fieldKey].isApprovalRequired
+                          : field.isApprovalRequired
+                      }
+                      onChange={(checked) =>
+                        handleApprovalRequiredChange(field.fieldKey, checked)
+                      }
+                      size="small"
+                    />
+                  ) : (
+                    <Toggle
+                      checked={field.isApprovalRequired}
+                      disabled={true}
+                    />
                   )}
                 </Table.Cell>
               </Table.Row>

@@ -11,14 +11,14 @@ const PermissionsContent = () => {
       {/* Tab Navigation */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <Tabs defaultTab="role-permissions" variant="default">
-          <Tabs.Panel
+          {/* TO-DO */}
+          {/* <Tabs.Panel
             tabId="role-permissions"
             label="Department Permissions"
             icon={<Shield size={16} />}
           >
             <RolePermissions />
-          </Tabs.Panel>
-
+          </Tabs.Panel> */}
           <Tabs.Panel
             tabId="admin-permissions"
             label="Admin Permissions"

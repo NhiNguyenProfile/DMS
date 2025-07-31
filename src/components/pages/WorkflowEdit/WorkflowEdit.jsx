@@ -53,7 +53,7 @@ const WorkflowEdit = () => {
     status: "Active",
     entity: entity || "",
     legalEntities: [],
-    request_type: "",
+    request_type: ["Create", "Edit", "Disable", "Unlock"],
     steps: [],
   });
 
@@ -90,7 +90,12 @@ const WorkflowEdit = () => {
         status: workflow.status || "Active",
         entity: workflow.entity || "",
         legalEntities: workflow.legalEntities || [],
-        request_type: workflow.request_type || "",
+        request_type: workflow.request_type || [
+          "Create",
+          "Edit",
+          "Disable",
+          "Unlock",
+        ],
         steps:
           workflow.steps?.map((step) => ({
             ...step,
@@ -136,6 +141,8 @@ const WorkflowEdit = () => {
     console.log("editingStep:", editingStep);
     console.log("editingStep.id:", editingStep?.id);
     console.log("editingStep.parentId:", editingStep?.parentId);
+    console.log("editingStep.isSubStep:", editingStep?.isSubStep);
+    console.log("editingStep.order:", editingStep?.order);
 
     if (editingStep && editingStep.id) {
       console.log("Updating existing step with ID:", editingStep.id);
@@ -833,9 +840,9 @@ const WorkflowEdit = () => {
 
           <div>
             <Text variant="body" weight="medium" className="mb-2">
-              Request Type *
+              Request Types *
             </Text>
-            <Select
+            <MultiSelect
               options={
                 availableRequestTypes.length > 0
                   ? availableRequestTypes
@@ -846,9 +853,14 @@ const WorkflowEdit = () => {
                       { value: "Unlock", label: "Unlock" },
                     ]
               }
-              value={formData.request_type}
-              onChange={(value) => handleInputChange("request_type", value)}
-              placeholder="Select Request Type"
+              value={
+                formData.request_type ||
+                (availableRequestTypes.length > 0
+                  ? availableRequestTypes.map((option) => option.value)
+                  : ["Create", "Edit", "Disable", "Unlock"])
+              }
+              onChange={(values) => handleInputChange("request_type", values)}
+              placeholder="Select Request Types"
               error={!!errors.request_type}
             />
             {errors.request_type && (
@@ -902,6 +914,7 @@ const WorkflowEdit = () => {
         onCancel={handleCancelStep}
         onOk={handleSaveStep}
         editingStep={editingStep}
+        allSteps={formData.steps}
       />
     </div>
   );

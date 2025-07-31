@@ -13,6 +13,7 @@ import {
 import { Plus, Trash2, Info } from "lucide-react";
 import Text from "../../../atoms/Text";
 import Tabs from "../../../atoms/Tabs";
+import ApprovalTreePreview from "./ApprovalTreePreview";
 import {
   STEP_TYPES,
   ASSIGNED_TYPES,
@@ -22,6 +23,33 @@ import {
 } from "../../../../constants";
 
 const { Option } = Select;
+
+// Sample team members data
+const TEAM_MEMBERS = {
+  "Sales Team": [
+    { name: "John Doe", title: "Sales Manager", avatarUrl: null },
+    { name: "Jane Smith", title: "Sales Executive", avatarUrl: null },
+    { name: "Mike Johnson", title: "Sales Representative", avatarUrl: null },
+  ],
+  "Finance Team": [
+    { name: "Sarah Wilson", title: "Finance Manager", avatarUrl: null },
+    { name: "David Brown", title: "Accountant", avatarUrl: null },
+  ],
+  "Operations Team": [
+    { name: "Lisa Chen", title: "Operations Manager", avatarUrl: null },
+    { name: "Tom Anderson", title: "Operations Specialist", avatarUrl: null },
+    { name: "Anna Garcia", title: "Process Coordinator", avatarUrl: null },
+  ],
+  "Technical Team": [
+    { name: "Robert Lee", title: "Technical Lead", avatarUrl: null },
+    { name: "Emily Davis", title: "Senior Developer", avatarUrl: null },
+    { name: "Alex Kim", title: "QA Engineer", avatarUrl: null },
+  ],
+  "Management Team": [
+    { name: "Tony Wilson", title: "Head of Division", avatarUrl: null },
+    { name: "Linda Chen", title: "Deputy Director", avatarUrl: null },
+  ],
+};
 
 // Mock data for available sections (will be moved to constants later)
 const AVAILABLE_SECTIONS = [
@@ -54,9 +82,17 @@ const AVAILABLE_SECTIONS = [
   },
 ];
 
-const AddStepModal = ({ visible, onCancel, onOk, editingStep = null }) => {
+const AddStepModal = ({
+  visible,
+  onCancel,
+  onOk,
+  editingStep = null,
+  allSteps = [],
+}) => {
   const [form] = Form.useForm();
   const [activeTab, setActiveTab] = useState("basic");
+  const [showApprovalTree, setShowApprovalTree] = useState(false);
+  const [approvalTreeKey, setApprovalTreeKey] = useState(0); // Force re-render
   const [stepData, setStepData] = useState({
     step_name: "",
     type: "Entry Data",
@@ -151,11 +187,26 @@ const AddStepModal = ({ visible, onCancel, onOk, editingStep = null }) => {
     }
   }, [editingStep, form, visible]);
 
+  // Force approval tree re-render when stepData changes
+  useEffect(() => {
+    setApprovalTreeKey((prev) => prev + 1);
+  }, [
+    stepData.step_name,
+    stepData.assignee,
+    stepData.assigned_type,
+    stepData.is_parallel,
+  ]);
+
   const handleFieldChange = (field, value) => {
-    setStepData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    console.log("handleFieldChange:", field, "=", value);
+    setStepData((prev) => {
+      const newData = {
+        ...prev,
+        [field]: value,
+      };
+      console.log("Updated stepData:", newData);
+      return newData;
+    });
   };
 
   const handleToggleChange = (field, checked) => {
@@ -327,6 +378,394 @@ const AddStepModal = ({ visible, onCancel, onOk, editingStep = null }) => {
     });
     setActiveTab("basic");
     onCancel();
+  };
+
+  // Generate approval tree data from workflow steps
+  const generateApprovalTreeData = () => {
+    console.log("generateApprovalTreeData - allSteps:", allSteps);
+    console.log("generateApprovalTreeData - editingStep:", editingStep);
+    console.log("generateApprovalTreeData - stepData:", stepData);
+
+    // Include current step being edited/added
+    const stepsToShow = [...allSteps];
+
+    if (editingStep && !editingStep.isSubStep) {
+      // Update existing step with form data (could be main step or substep)
+      const updateStepInArray = (steps) => {
+        return steps.map((step) => {
+          if (step.id === editingStep.id) {
+            // Found the editing step, update it
+            return {
+              ...step,
+              ...stepData,
+            };
+          } else if (step.subSteps && step.subSteps.length > 0) {
+            // Check substeps recursively
+            return {
+              ...step,
+              subSteps: updateStepInArray(step.subSteps),
+            };
+          }
+          return step;
+        });
+      };
+
+      const updatedSteps = updateStepInArray(stepsToShow);
+      stepsToShow.splice(0, stepsToShow.length, ...updatedSteps);
+    } else if (editingStep && editingStep.isSubStep) {
+      // Adding new substep - add it to the structure
+      console.log("Adding new substep with editingStep:", editingStep);
+      const newSubStep = {
+        id: Date.now(),
+        ...stepData,
+        order: editingStep.order,
+        parentId: editingStep.parentId,
+        subSteps: [],
+      };
+      console.log("New substep created:", newSubStep);
+
+      // Add substep to parent in stepsToShow
+      const addSubStepToParent = (steps, parentId, newSubStep) => {
+        return steps.map((step) => {
+          if (step.id === parentId) {
+            return {
+              ...step,
+              subSteps: [...(step.subSteps || []), newSubStep],
+            };
+          } else if (step.subSteps && step.subSteps.length > 0) {
+            return {
+              ...step,
+              subSteps: addSubStepToParent(step.subSteps, parentId, newSubStep),
+            };
+          }
+          return step;
+        });
+      };
+
+      const updatedSteps = addSubStepToParent(
+        stepsToShow,
+        editingStep.parentId,
+        newSubStep
+      );
+      stepsToShow.splice(0, stepsToShow.length, ...updatedSteps);
+    } else {
+      // Add new step
+      console.log("Adding new step with stepData:", stepData);
+      const newStep = {
+        id: Date.now(),
+        order: stepData.order || stepsToShow.length + 1,
+        ...stepData,
+      };
+      console.log("New step created:", newStep);
+      stepsToShow.push(newStep);
+    }
+
+    // Build single workflow path (not all possible paths)
+    const buildWorkflowPath = () => {
+      const workflowPath = [];
+
+      // Helper function to find which substep path to follow
+      const findSubstepPath = (step) => {
+        if (!step.subSteps || step.subSteps.length === 0) {
+          return null;
+        }
+
+        // If editing a direct substep of this step
+        if (editingStep) {
+          const directSubstep = step.subSteps.find(
+            (sub) => sub.id === editingStep.id
+          );
+          if (directSubstep) {
+            return directSubstep;
+          }
+
+          // Check if editing step is nested deeper in any substep
+          for (const substep of step.subSteps) {
+            const hasNestedEditingStep = checkIfContainsEditingStep(substep);
+            if (hasNestedEditingStep) {
+              return substep;
+            }
+          }
+        }
+
+        // Default: return first substep
+        return step.subSteps[0];
+      };
+
+      // Helper function to check if a step contains the editing step in its hierarchy
+      const checkIfContainsEditingStep = (step) => {
+        if (!editingStep) return false;
+        if (step.id === editingStep.id) return true;
+
+        if (step.subSteps && step.subSteps.length > 0) {
+          return step.subSteps.some((substep) =>
+            checkIfContainsEditingStep(substep)
+          );
+        }
+
+        return false;
+      };
+
+      // Helper function to find the complete path to editing step
+      const findPathToEditingStep = (steps, currentPath = []) => {
+        for (const step of steps) {
+          const newPath = [...currentPath, step];
+
+          if (step.id === editingStep?.id) {
+            return newPath;
+          }
+
+          if (step.subSteps && step.subSteps.length > 0) {
+            const foundPath = findPathToEditingStep(step.subSteps, newPath);
+            if (foundPath) {
+              return foundPath;
+            }
+          }
+        }
+        return null;
+      };
+
+      // Build path - if editing a specific step, show path to that step
+      if (editingStep && !editingStep.isSubStep) {
+        // Editing existing step
+        const pathToEditingStep = findPathToEditingStep(stepsToShow);
+        if (pathToEditingStep) {
+          workflowPath.push(...pathToEditingStep);
+
+          // Continue with remaining steps after the editing step's parent
+          const continueFromStep = (steps, afterStepId) => {
+            let foundAfterStep = false;
+
+            for (const step of steps) {
+              if (foundAfterStep) {
+                workflowPath.push(step);
+                // For subsequent steps, follow default path (first substep)
+                const substepToFollow = findSubstepPath(step);
+                if (substepToFollow) {
+                  continueFromStep([substepToFollow], null);
+                }
+              } else if (step.id === afterStepId) {
+                foundAfterStep = true;
+              } else if (step.subSteps && step.subSteps.length > 0) {
+                continueFromStep(step.subSteps, afterStepId);
+              }
+            }
+          };
+
+          // Find the top-level parent of editing step to continue from
+          const findTopLevelParent = (steps, targetId) => {
+            for (const step of steps) {
+              if (step.id === targetId) return step;
+              if (step.subSteps && checkIfContainsEditingStep(step)) {
+                return step;
+              }
+            }
+            return null;
+          };
+
+          const topLevelParent = findTopLevelParent(
+            stepsToShow,
+            editingStep.id
+          );
+          if (topLevelParent) {
+            continueFromStep(stepsToShow, topLevelParent.id);
+          }
+        }
+      } else if (editingStep && editingStep.isSubStep) {
+        // Adding new substep - show path including the new substep
+        const findParentAndShowPath = (steps, parentId, newSubstepOrder) => {
+          for (const step of steps) {
+            if (step.id === parentId) {
+              // Found parent, build path to parent + new substep
+              const findPathToParent = (steps, currentPath = []) => {
+                for (const step of steps) {
+                  const newPath = [...currentPath, step];
+
+                  if (step.id === parentId) {
+                    return newPath;
+                  }
+
+                  if (step.subSteps && step.subSteps.length > 0) {
+                    const foundPath = findPathToParent(step.subSteps, newPath);
+                    if (foundPath) {
+                      return foundPath;
+                    }
+                  }
+                }
+                return null;
+              };
+
+              const pathToParent = findPathToParent(stepsToShow);
+              if (pathToParent) {
+                workflowPath.push(...pathToParent);
+                // Add the new substep being created
+                const newSubstepInPath = {
+                  id: Date.now(),
+                  order: newSubstepOrder,
+                  step_name: stepData.step_name || "New Sub-step",
+                  ...stepData,
+                };
+                workflowPath.push(newSubstepInPath);
+              }
+              return true;
+            }
+            if (step.subSteps && step.subSteps.length > 0) {
+              if (
+                findParentAndShowPath(step.subSteps, parentId, newSubstepOrder)
+              ) {
+                return true;
+              }
+            }
+          }
+          return false;
+        };
+
+        findParentAndShowPath(
+          stepsToShow,
+          editingStep.parentId,
+          editingStep.order
+        );
+
+        // Continue with remaining steps after parent
+        const continueAfterParent = (steps, parentId) => {
+          let foundParent = false;
+          for (const step of steps) {
+            if (foundParent) {
+              workflowPath.push(step);
+              const substepToFollow = findSubstepPath(step);
+              if (substepToFollow) {
+                continueAfterParent([substepToFollow], null);
+              }
+            } else if (step.id === parentId) {
+              foundParent = true;
+            }
+          }
+        };
+
+        continueAfterParent(stepsToShow, editingStep.parentId);
+      } else {
+        // Default path for new steps
+        const buildDefaultPath = (steps) => {
+          steps.forEach((step) => {
+            workflowPath.push(step);
+            const substepToFollow = findSubstepPath(step);
+            if (substepToFollow) {
+              buildDefaultPath([substepToFollow]);
+            }
+          });
+        };
+
+        buildDefaultPath(stepsToShow);
+      }
+
+      console.log("buildWorkflowPath - single path:", workflowPath);
+      return workflowPath;
+    };
+
+    const workflowPath = buildWorkflowPath();
+    console.log("workflowPath:", workflowPath);
+
+    // Convert workflow path to approval tree format
+    const approvalTree = workflowPath.map((step, index) => {
+      let owners = [];
+
+      // Determine if this step is the current editing step
+      const isCurrentStep = editingStep
+        ? step.id === editingStep.id
+        : index === workflowPath.length - 1;
+      const isBeforeCurrentStep = editingStep
+        ? workflowPath.findIndex((s) => s.id === editingStep.id) > index
+        : index < workflowPath.length - 1;
+
+      if (
+        step.assigned_type === "Group" &&
+        step.assignee &&
+        TEAM_MEMBERS[step.assignee]
+      ) {
+        // If it's a group/team, show all team members
+        owners = TEAM_MEMBERS[step.assignee].map((member) => ({
+          name: member.name,
+          title: member.title,
+          avatarUrl: member.avatarUrl,
+          status: isBeforeCurrentStep
+            ? "Approved"
+            : isCurrentStep
+            ? "In Progress"
+            : "Waiting",
+          approvedAt: isBeforeCurrentStep ? new Date().toISOString() : null,
+        }));
+      } else if (step.assigned_type === "Request Owner") {
+        // Request Owner - special assignee type
+        owners = [
+          {
+            name: "Request Owner",
+            title: "Request Submitter",
+            avatarUrl: null,
+            status: isBeforeCurrentStep
+              ? "Approved"
+              : isCurrentStep
+              ? "In Progress"
+              : "Waiting",
+            approvedAt: isBeforeCurrentStep ? new Date().toISOString() : null,
+          },
+        ];
+      } else if (step.assigned_type === "Head of Department") {
+        // Head of Department - special assignee type
+        owners = [
+          {
+            name: "Head of Department",
+            title: "Department Manager",
+            avatarUrl: null,
+            status: isBeforeCurrentStep
+              ? "Approved"
+              : isCurrentStep
+              ? "In Progress"
+              : "Waiting",
+            approvedAt: isBeforeCurrentStep ? new Date().toISOString() : null,
+          },
+        ];
+      } else {
+        // If it's a single user or unassigned
+        owners = [
+          {
+            name: step.assignee || "Unassigned",
+            title: step.assigned_type === "Group" ? "Group" : "User",
+            avatarUrl: null,
+            status: isBeforeCurrentStep
+              ? "Approved"
+              : isCurrentStep
+              ? "In Progress"
+              : "Waiting",
+            approvedAt: isBeforeCurrentStep ? new Date().toISOString() : null,
+          },
+        ];
+      }
+
+      // Format step name with order - keep original order format
+      let stepName;
+      if (step.step_name) {
+        stepName = `${step.order}. ${step.step_name}`;
+      } else {
+        // Default names based on order
+        if (typeof step.order === "string" && step.order.includes(".")) {
+          stepName = `${step.order}. Sub-step`;
+        } else {
+          stepName = `${step.order}. Main Step`;
+        }
+      }
+
+      return {
+        stepName,
+        parallel: step.is_parallel || false,
+        owners,
+        isCurrentStep, // Add flag for highlighting
+      };
+    });
+
+    return {
+      requestId: "WORKFLOW-PREVIEW",
+      approvalTree,
+    };
   };
 
   const renderBasicInfoTab = () => (
@@ -758,36 +1197,66 @@ const AddStepModal = ({ visible, onCancel, onOk, editingStep = null }) => {
       open={visible}
       onOk={handleOk}
       onCancel={handleCancel}
-      width={800}
+      width={1400}
       okText="Save Step"
       cancelText="Cancel"
     >
-      <Form form={form} layout="vertical" initialValues={stepData}>
-        <Tabs activeTab={activeTab} onTabChange={setActiveTab}>
-          <Tabs.Panel tabId="basic" label="Basic Info">
-            {renderBasicInfoTab()}
-          </Tabs.Panel>
-          <Tabs.Panel tabId="fields" label="Field Groups">
-            {renderFieldGroupsTab()}
-          </Tabs.Panel>
-          <Tabs.Panel tabId="assignment" label="Assignment">
-            {renderAssignmentTab()}
-          </Tabs.Panel>
-          <Tabs.Panel tabId="advanced" label="Advanced">
-            {renderAdvancedTab()}
-          </Tabs.Panel>
-          {/* Only show Criteria tab for sub-steps */}
-          {editingStep &&
-            (editingStep.parentId ||
-              (editingStep.order &&
-                typeof editingStep.order === "string" &&
-                editingStep.order.includes("."))) && (
-              <Tabs.Panel tabId="criteria" label="Criteria">
-                {renderCriteriaTab()}
+      <div className="flex gap-6">
+        {/* Left Column - Form */}
+        <div className="flex-1">
+          <Form form={form} layout="vertical" initialValues={stepData}>
+            <Tabs activeTab={activeTab} onTabChange={setActiveTab}>
+              <Tabs.Panel tabId="basic" label="Basic Info">
+                {renderBasicInfoTab()}
               </Tabs.Panel>
-            )}
-        </Tabs>
-      </Form>
+              <Tabs.Panel tabId="fields" label="Field Groups">
+                {renderFieldGroupsTab()}
+              </Tabs.Panel>
+              <Tabs.Panel tabId="assignment" label="Assignment">
+                {renderAssignmentTab()}
+              </Tabs.Panel>
+              <Tabs.Panel tabId="advanced" label="Advanced">
+                {renderAdvancedTab()}
+              </Tabs.Panel>
+              {/* Only show Criteria tab for sub-steps */}
+              {editingStep &&
+                (editingStep.parentId ||
+                  (editingStep.order &&
+                    typeof editingStep.order === "string" &&
+                    editingStep.order.includes("."))) && (
+                  <Tabs.Panel tabId="criteria" label="Criteria">
+                    {renderCriteriaTab()}
+                  </Tabs.Panel>
+                )}
+            </Tabs>
+          </Form>
+        </div>
+
+        {/* Right Column - Approval Tree Preview */}
+        <div className="w-96 border-l border-gray-200 pl-6">
+          <div className="mb-4">
+            <Text
+              variant="heading"
+              size="md"
+              weight="semibold"
+              className="mb-2"
+            >
+              Workflow Preview
+            </Text>
+            <Text variant="body" color="muted" className="text-sm">
+              Preview how this step fits in the overall workflow
+            </Text>
+          </div>
+
+          {/* Approval Tree Container */}
+          <div className="bg-gray-50 rounded-lg p-4 h-96 overflow-y-auto">
+            <ApprovalTreePreview
+              key={approvalTreeKey}
+              requestData={generateApprovalTreeData()}
+            />
+          </div>
+        </div>
+      </div>
     </Modal>
   );
 };
