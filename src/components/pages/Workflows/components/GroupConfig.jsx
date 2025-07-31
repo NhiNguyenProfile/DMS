@@ -6,7 +6,15 @@ import Table from "../../../atoms/Table";
 import IconButton from "../../../atoms/IconButton";
 import Modal from "../../../atoms/Modal";
 import MultiSelect from "../../../atoms/MultiSelect";
-import { Plus, Edit, Trash2, Users, X } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Users,
+  X,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
 
 // Sample workflow groups data
 const SAMPLE_WORKFLOW_GROUPS = [
@@ -210,12 +218,41 @@ const GroupConfig = () => {
     setSelectedUsers(selectedUsers.filter((id) => id !== userId));
   };
 
+  const handleMoveUser = (userId, direction) => {
+    const currentIndex = selectedUsers.indexOf(userId);
+    if (currentIndex === -1) return;
+
+    const newSelectedUsers = [...selectedUsers];
+
+    if (direction === "up" && currentIndex > 0) {
+      // Swap with previous user
+      [newSelectedUsers[currentIndex], newSelectedUsers[currentIndex - 1]] = [
+        newSelectedUsers[currentIndex - 1],
+        newSelectedUsers[currentIndex],
+      ];
+    } else if (
+      direction === "down" &&
+      currentIndex < selectedUsers.length - 1
+    ) {
+      // Swap with next user
+      [newSelectedUsers[currentIndex], newSelectedUsers[currentIndex + 1]] = [
+        newSelectedUsers[currentIndex + 1],
+        newSelectedUsers[currentIndex],
+      ];
+    }
+
+    setSelectedUsers(newSelectedUsers);
+  };
+
   const getAvailableUsers = () => {
     return AVAILABLE_USERS.filter((user) => !selectedUsers.includes(user.id));
   };
 
   const getSelectedUserObjects = () => {
-    return AVAILABLE_USERS.filter((user) => selectedUsers.includes(user.id));
+    // Preserve order from selectedUsers array
+    return selectedUsers
+      .map((userId) => AVAILABLE_USERS.find((user) => user.id === userId))
+      .filter(Boolean); // Remove any undefined users
   };
 
   return (
@@ -362,6 +399,7 @@ const GroupConfig = () => {
                 <Table>
                   <Table.Header>
                     <Table.Row>
+                      <Table.HeaderCell>Order</Table.HeaderCell>
                       <Table.HeaderCell>Name</Table.HeaderCell>
                       <Table.HeaderCell>Email</Table.HeaderCell>
                       <Table.HeaderCell>Role</Table.HeaderCell>
@@ -369,8 +407,43 @@ const GroupConfig = () => {
                     </Table.Row>
                   </Table.Header>
                   <Table.Body>
-                    {getSelectedUserObjects().map((user) => (
+                    {getSelectedUserObjects().map((user, index) => (
                       <Table.Row key={user.id}>
+                        <Table.Cell>
+                          <div className="flex items-center gap-2">
+                            <Text
+                              variant="body"
+                              weight="medium"
+                              className="min-w-[20px]"
+                            >
+                              {index + 1}
+                            </Text>
+                            <div className="flex flex-col gap-1">
+                              <IconButton
+                                variant="icon"
+                                color="gray"
+                                size="small"
+                                tooltip="Move up"
+                                onClick={() => handleMoveUser(user.id, "up")}
+                                disabled={index === 0}
+                              >
+                                <ChevronUp size={12} />
+                              </IconButton>
+                              <IconButton
+                                variant="icon"
+                                color="gray"
+                                size="small"
+                                tooltip="Move down"
+                                onClick={() => handleMoveUser(user.id, "down")}
+                                disabled={
+                                  index === getSelectedUserObjects().length - 1
+                                }
+                              >
+                                <ChevronDown size={12} />
+                              </IconButton>
+                            </div>
+                          </div>
+                        </Table.Cell>
                         <Table.Cell>
                           <Text variant="body" weight="medium">
                             {user.name}
