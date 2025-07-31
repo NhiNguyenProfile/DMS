@@ -1078,60 +1078,56 @@ const AddStepModal = ({
         </Col>
       </Row>
 
-      <div className="space-y-4">
-        <Text variant="body" weight="medium">
-          Step Options
-        </Text>
+      {/* Step Options - Only show for Approval types */}
+      {(stepData.type === "Approval" ||
+        stepData.type === "Entry Data + Approval") && (
+        <div className="space-y-4">
+          <Text variant="body" weight="medium">
+            Step Options
+          </Text>
 
-        <div className="grid grid-cols-2 gap-4">
-          {/* Parallel Processing - Only show if Assigned Type is Group */}
-          {stepData.assigned_type === "Group" && (
+          <div className="grid grid-cols-2 gap-4">
+            {/* Parallel Processing - Only show if Assigned Type is Group */}
+            {stepData.assigned_type === "Group" && (
+              <div className="flex items-center space-x-3">
+                <Switch
+                  checked={stepData.is_parallel}
+                  onChange={(checked) =>
+                    handleToggleChange("is_parallel", checked)
+                  }
+                />
+                <Text variant="body">Parallel Processing</Text>
+              </div>
+            )}
+
             <div className="flex items-center space-x-3">
               <Switch
-                checked={stepData.is_parallel}
+                checked={stepData.approve}
+                onChange={(checked) => handleToggleChange("approve", checked)}
+              />
+              <Text variant="body">Approve</Text>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <Switch
+                checked={stepData.reject}
+                onChange={(checked) => handleToggleChange("reject", checked)}
+              />
+              <Text variant="body">Reject</Text>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <Switch
+                checked={stepData.request_update}
                 onChange={(checked) =>
-                  handleToggleChange("is_parallel", checked)
+                  handleToggleChange("request_update", checked)
                 }
               />
-              <Text variant="body">Parallel Processing</Text>
+              <Text variant="body">Request Update</Text>
             </div>
-          )}
-
-          <div className="flex items-center space-x-3">
-            <Switch
-              checked={stepData.approve}
-              onChange={(checked) => handleToggleChange("approve", checked)}
-            />
-            <Text variant="body">Approve</Text>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <Switch
-              checked={stepData.reject}
-              onChange={(checked) => handleToggleChange("reject", checked)}
-            />
-            <Text variant="body">Reject</Text>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <Switch
-              checked={stepData.has_comment}
-              onChange={(checked) => handleToggleChange("has_comment", checked)}
-            />
-            <Text variant="body">Has Comment</Text>
-          </div>
-
-          <div className="flex items-center space-x-3">
-            <Switch
-              checked={stepData.request_update}
-              onChange={(checked) =>
-                handleToggleChange("request_update", checked)
-              }
-            />
-            <Text variant="body">Request Update</Text>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 
