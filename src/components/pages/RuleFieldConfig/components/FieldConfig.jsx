@@ -233,7 +233,6 @@ const FieldConfig = ({ selectedEntity, selectedRequestType, disabled }) => {
                       onChange={(checked) =>
                         handleApprovalRequiredChange(field.fieldKey, checked)
                       }
-                      size="small"
                     />
                   ) : (
                     <Toggle
