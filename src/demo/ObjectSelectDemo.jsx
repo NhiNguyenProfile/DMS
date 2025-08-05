@@ -146,6 +146,9 @@ const ObjectSelectDemo = () => {
           <li>33. Click "Send Bulk Request" when done</li>
           <li>34. Try "Final Customer" tab to see Address Table</li>
           <li>35. Add/Edit/Delete addresses in the table format</li>
+          <li>36. Notice "Finished Goods" card is disabled (grayed out)</li>
+          <li>37. Only Cards mode is available (Direct mode removed)</li>
+          <li>38. Same changes applied to Approval page</li>
         </ul>
       </div>
       <CustomerDetailForm
