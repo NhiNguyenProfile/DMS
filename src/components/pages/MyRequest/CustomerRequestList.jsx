@@ -152,11 +152,12 @@ const APPROVAL_TREES = {
 
 const REQUEST_TYPES = [
   { value: "Create", label: "Create New Record" },
-  { value: "BulkCreate", label: "Bulk Create Records" },
+  { value: "MassCreate", label: "Mass Create Records" },
+  { value: "MassEdit", label: "Mass Edit Records" },
   { value: "Copy", label: "Copy Existing Record" },
   { value: "Edit", label: "Edit Existing Record" },
-  { value: "Disable", label: "Disable Existing Record" },
-  { value: "Reactivate", label: "Reactivate Existing Record" },
+  // { value: "Disable", label: "Disable Existing Record" },
+  // { value: "Reactivate", label: "Reactivate Existing Record" },
 ];
 
 // Sample existing customers for search
@@ -169,7 +170,7 @@ const EXISTING_CUSTOMERS = [
     type: "Organization",
     status: "Active",
     company: "DHV",
-    customerAccount: "ACC-001",
+    customerAccount: "FE300001",
     classificationGroup: "External",
     group: "LOC_EXT",
     searchName: "ABC Company Limited",
@@ -205,7 +206,7 @@ const EXISTING_CUSTOMERS = [
     type: "Organization",
     status: "Active",
     company: "PBH",
-    customerAccount: "ACC-002",
+    customerAccount: "FE300002",
     classificationGroup: "Dealer",
     group: "AQTP",
     searchName: "XYZ Corp",
@@ -241,7 +242,7 @@ const EXISTING_CUSTOMERS = [
     type: "Organization",
     status: "Active",
     company: "PHP",
-    customerAccount: "",
+    customerAccount: "FE300003",
     classificationGroup: "Internal",
     group: "LSTP",
     searchName: "DEF Industries Ltd",
@@ -277,7 +278,7 @@ const EXISTING_CUSTOMERS = [
     type: "Person",
     status: "Inactive",
     company: "PHY",
-    customerAccount: "ACC-004",
+    customerAccount: "FE300004",
     classificationGroup: "External",
     group: "LOC_EXT",
     searchName: "GHI Trading",
@@ -313,7 +314,7 @@ const EXISTING_CUSTOMERS = [
     type: "Organization",
     status: "Active",
     company: "DGC",
-    customerAccount: "ACC-005",
+    customerAccount: "FE300005",
     classificationGroup: "Dealer",
     group: "AQTP",
     searchName: "JKL Mfg",
@@ -393,21 +394,43 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
     setShowAddModal(false);
     setSelectedRequestType(requestType);
 
-    if (requestType === "BulkCreate") {
-      // For Bulk Create, show bulk create page
+    if (requestType === "MassCreate") {
+      // For Mass Create, show mass create page
       setShowBulkCreatePage(true);
 
       // Also trigger onShowDetail if provided (for parent component)
       if (onShowDetail) {
         onShowDetail(
           <BulkCreatePage
+            mode="create"
             onBack={() => {
               setShowBulkCreatePage(false);
               setSelectedRequestType(null);
               onShowDetail(null);
             }}
-            onSendBulkRequest={(bulkRequest) => {
-              handleSendBulkRequest(bulkRequest);
+            onSendBulkRequest={(massRequest) => {
+              handleSendMassRequest(massRequest);
+              onShowDetail(null);
+            }}
+          />
+        );
+      }
+    } else if (requestType === "MassEdit") {
+      // For Mass Edit, show mass edit page
+      setShowBulkCreatePage(true);
+
+      // Also trigger onShowDetail if provided (for parent component)
+      if (onShowDetail) {
+        onShowDetail(
+          <BulkCreatePage
+            mode="edit"
+            onBack={() => {
+              setShowBulkCreatePage(false);
+              setSelectedRequestType(null);
+              onShowDetail(null);
+            }}
+            onSendBulkRequest={(massRequest) => {
+              handleSendMassRequest(massRequest);
               onShowDetail(null);
             }}
           />
@@ -491,16 +514,16 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
     }
   };
 
-  const handleSendBulkRequest = (bulkRequest) => {
-    // Add bulk request to requests list
-    setRequests((prev) => [bulkRequest, ...prev]);
+  const handleSendMassRequest = (massRequest) => {
+    // Add mass request to requests list
+    setRequests((prev) => [massRequest, ...prev]);
 
-    // Close bulk create page
+    // Close mass create page
     setShowBulkCreatePage(false);
     setSelectedRequestType(null);
 
     // Show success message or redirect
-    console.log("Bulk request created:", bulkRequest);
+    console.log("Mass request created:", massRequest);
   };
 
   const handleSearch = (term) => {
@@ -841,22 +864,23 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
             setSelectedRequestType(null);
             onShowDetail(null);
           }}
-          onSendBulkRequest={(bulkRequest) => {
-            handleSendBulkRequest(bulkRequest);
+          onSendBulkRequest={(massRequest) => {
+            handleSendMassRequest(massRequest);
             onShowDetail(null);
           }}
         />
       );
       return null;
     } else {
-      // Cards mode - show bulk create page locally
+      // Cards mode - show mass create/edit page locally
       return (
         <BulkCreatePage
+          mode={selectedRequestType === "MassEdit" ? "edit" : "create"}
           onBack={() => {
             setShowBulkCreatePage(false);
             setSelectedRequestType(null);
           }}
-          onSendBulkRequest={handleSendBulkRequest}
+          onSendBulkRequest={handleSendMassRequest}
         />
       );
     }

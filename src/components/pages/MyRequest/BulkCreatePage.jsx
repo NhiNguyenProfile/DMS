@@ -4,24 +4,44 @@ import Button from "../../atoms/Button";
 import Table from "../../atoms/Table";
 import Modal from "../../atoms/Modal";
 import Input from "../../atoms/Input";
+import ObjectSelectModal from "../../atoms/ObjectSelectModal";
 import { ArrowLeft, Upload, Download, Plus, Edit, Trash2 } from "lucide-react";
 import CustomerDetailForm from "./CustomerDetailForm";
 
-const BulkCreatePage = ({ onBack, onSendBulkRequest }) => {
+const BulkCreatePage = ({ mode = "create", onBack, onSendBulkRequest }) => {
   const [customers, setCustomers] = useState([]);
   const [showDetailForm, setShowDetailForm] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importFile, setImportFile] = useState(null);
+  const [showSearchModal, setShowSearchModal] = useState(false);
 
   const handleAddManually = () => {
-    setEditingCustomer(null);
-    setShowDetailForm(true);
+    if (mode === "edit") {
+      // For edit mode, show search modal to select existing customers
+      setShowSearchModal(true);
+    } else {
+      // For create mode, show detail form to create new customer
+      setEditingCustomer(null);
+      setShowDetailForm(true);
+    }
   };
 
   const handleEditCustomer = (customer) => {
     setEditingCustomer(customer);
     setShowDetailForm(true);
+  };
+
+  const handleSelectExistingCustomer = (selectedCustomer) => {
+    // Add selected customer to the list for editing
+    const customerForEdit = {
+      ...selectedCustomer,
+      id: `MASS-EDIT-${Date.now()}-${customers.length + 1}`,
+      status: "Draft",
+    };
+
+    setCustomers((prev) => [...prev, customerForEdit]);
+    setShowSearchModal(false);
   };
 
   const handleSaveCustomer = (customerData) => {
@@ -82,11 +102,10 @@ const BulkCreatePage = ({ onBack, onSendBulkRequest }) => {
     // Mock import logic - in real app, parse Excel/CSV file
     const mockImportedData = [
       {
-        id: `BULK-${Date.now()}-1`,
-        customerAccount: "IMP001", // Customer Code
-        mainCustomerCode: "IMP001",
+        id: `MASS-${Date.now()}-1`,
+        customerAccount: "FE200001", // Customer Code
         mainCustomerName: "Imported Customer 1",
-        mainCustomer: "NUSANTARA FARM", // Main Customer
+        mainCustomer: "FE001234M", // Main Customer
         company: "DHV",
         address: "123 Import Street",
         nikNpwp: "01.111.111.1-111.000",
@@ -98,11 +117,10 @@ const BulkCreatePage = ({ onBack, onSendBulkRequest }) => {
         status: "Draft",
       },
       {
-        id: `BULK-${Date.now()}-2`,
-        customerAccount: "IMP002", // Customer Code
-        mainCustomerCode: "IMP002",
+        id: `MASS-${Date.now()}-2`,
+        customerAccount: "FE200002", // Customer Code
         mainCustomerName: "Imported Customer 2",
-        mainCustomer: "PT. INDONUSA YP S1", // Main Customer
+        mainCustomer: "FE005678M", // Main Customer
         company: "", // Empty company to test red highlight
         address: "456 Import Avenue",
         nikNpwp: "02.222.222.2-222.000",
@@ -120,28 +138,32 @@ const BulkCreatePage = ({ onBack, onSendBulkRequest }) => {
     setImportFile(null);
   };
 
-  const handleSendBulkRequest = () => {
+  const handleSendMassRequest = () => {
     if (customers.length === 0) return;
 
-    const bulkRequest = {
-      id: `BULK-REQ-${Date.now()}`,
-      requestType: "Bulk Create",
-      requestTitle: `Bulk Create ${customers.length} Customers`,
+    const massRequest = {
+      id: `MASS-REQ-${Date.now()}`,
+      requestType: mode === "edit" ? "Mass Edit" : "Mass Create",
+      requestTitle:
+        mode === "edit"
+          ? `Mass Edit ${customers.length} Customers`
+          : `Mass Create ${customers.length} Customers`,
       stepOwner: "You - Sale Admin",
       currentSteps: "Waiting for Approval",
       status: "Pending",
       createdDate: new Date().toISOString(),
       customers: customers,
       totalCount: customers.length,
+      mode: mode,
     };
 
     if (onSendBulkRequest) {
-      onSendBulkRequest(bulkRequest);
+      onSendBulkRequest(massRequest);
     }
   };
 
   const mockRequestData = {
-    id: "BULK-NEW",
+    id: "MASS-NEW",
     requestType: "Create",
     requestTitle: "New Customer Record",
     stepOwner: "You - Sale Admin",
@@ -149,7 +171,7 @@ const BulkCreatePage = ({ onBack, onSendBulkRequest }) => {
     status: "Draft",
     createdDate: new Date().toISOString(),
     isNew: true,
-    isBulkCreate: true, // Flag to indicate this is from bulk create
+    isMassCreate: true, // Flag to indicate this is from mass create
   };
 
   if (showDetailForm) {
@@ -181,10 +203,14 @@ const BulkCreatePage = ({ onBack, onSendBulkRequest }) => {
             </Button>
             <div>
               <Text variant="heading" size="xl" weight="bold">
-                Bulk Create Customers
+                {mode === "edit"
+                  ? "Mass Edit Customers"
+                  : "Mass Create Customers"}
               </Text>
               <Text variant="caption" color="muted">
-                Create multiple customers at once
+                {mode === "edit"
+                  ? "Edit multiple existing customers at once"
+                  : "Create multiple customers at once"}
               </Text>
             </div>
           </div>
@@ -232,8 +258,14 @@ const BulkCreatePage = ({ onBack, onSendBulkRequest }) => {
             >
               <Plus size={24} />
               <div className="text-center">
-                <div className="font-medium">Add Manually</div>
-                <div className="text-xs text-white/80">Create one by one</div>
+                <div className="font-medium">
+                  {mode === "edit" ? "Select Customer" : "Add Manually"}
+                </div>
+                <div className="text-xs text-white/80">
+                  {mode === "edit"
+                    ? "Choose existing customer"
+                    : "Create one by one"}
+                </div>
               </div>
             </Button>
           </div>
@@ -335,10 +367,12 @@ const BulkCreatePage = ({ onBack, onSendBulkRequest }) => {
             <div className="p-6 border-t border-gray-200 flex justify-end">
               <Button
                 variant="primary"
-                onClick={handleSendBulkRequest}
+                onClick={handleSendMassRequest}
                 disabled={customers.length === 0}
               >
-                Send Bulk Request ({customers.length} customers)
+                {mode === "edit"
+                  ? `Send Mass Edit Request (${customers.length} customers)`
+                  : `Send Mass Request (${customers.length} customers)`}
               </Button>
             </div>
           </div>
@@ -382,6 +416,54 @@ const BulkCreatePage = ({ onBack, onSendBulkRequest }) => {
           </div>
         </div>
       </Modal>
+
+      {/* Customer Search Modal for Edit Mode */}
+      <ObjectSelectModal
+        isOpen={showSearchModal}
+        onClose={() => setShowSearchModal(false)}
+        title="Select Customer to Edit"
+        data={[
+          {
+            customerAccount: "FE100001",
+            organizationName: "ABC Company Ltd.",
+            mainCustomer: "FE001234M",
+            company: "DHV",
+            address: "123 Business Street, Jakarta",
+            nikNpwp: "01.234.567.8-901.000",
+            customerGroup: "LOC_EXT",
+            customerType: "Organization",
+          },
+          {
+            customerAccount: "FE100002",
+            organizationName: "XYZ Corporation",
+            mainCustomer: "FE005678M",
+            company: "PBH",
+            address: "456 Corporate Ave, Surabaya",
+            nikNpwp: "02.345.678.9-012.000",
+            customerGroup: "AQTP",
+            customerType: "Organization",
+          },
+          {
+            customerAccount: "FE100003",
+            organizationName: "DEF Industries",
+            mainCustomer: "FE009012M",
+            company: "PHP",
+            address: "789 Industrial Blvd, Bandung",
+            nikNpwp: "03.456.789.0-123.000",
+            customerGroup: "LSTP",
+            customerType: "Organization",
+          },
+        ]}
+        columns={[
+          { key: "customerAccount", label: "Customer Code" },
+          { key: "organizationName", label: "Customer Name" },
+          { key: "mainCustomer", label: "Main Customer" },
+          { key: "company", label: "Company" },
+          { key: "customerGroup", label: "Customer Group" },
+        ]}
+        onSelect={handleSelectExistingCustomer}
+        searchPlaceholder="Search customers..."
+      />
     </div>
   );
 };

@@ -122,10 +122,10 @@ const ObjectSelectDemo = () => {
           </li>
 
           <li className="mt-3">
-            <strong>Test 4 - Bulk Create Functionality:</strong>
+            <strong>Test 4 - Mass Create Functionality:</strong>
           </li>
           <li>23. Go back to request list and click "Add New"</li>
-          <li>24. Select "Bulk Create Records"</li>
+          <li>24. Select "Mass Create Records"</li>
           <li>25. Try "Download Template" to get CSV template</li>
           <li>
             26. Try "Import Excel" to upload file (mock data will be added)
@@ -143,12 +143,24 @@ const ObjectSelectDemo = () => {
             red
           </li>
           <li>32. Edit/Delete records in the table</li>
-          <li>33. Click "Send Bulk Request" when done</li>
+          <li>33. Click "Send Mass Request" when done</li>
           <li>34. Try "Final Customer" tab to see Address Table</li>
           <li>35. Add/Edit/Delete addresses in the table format</li>
           <li>36. Notice "Finished Goods" card is disabled (grayed out)</li>
           <li>37. Only Cards mode is available (Direct mode removed)</li>
           <li>38. Same changes applied to Approval page</li>
+          <li className="mt-3">
+            <strong>Test 5 - Mass Edit Functionality:</strong>
+          </li>
+          <li>39. Try "Mass Edit Records" option</li>
+          <li>40. Click "Select Customer" to choose existing customers</li>
+          <li>41. Search and select customers from the modal</li>
+          <li>42. Edit selected customers in the table</li>
+          <li>43. Click "Send Mass Edit Request" when done</li>
+          <li>
+            44. Notice code formats: Customer Code FEXXXXXX (e.g., FE100001),
+            Main Customer FEXXXXXXM (e.g., FE001234M)
+          </li>
         </ul>
       </div>
       <CustomerDetailForm

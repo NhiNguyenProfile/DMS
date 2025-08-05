@@ -181,42 +181,42 @@ const FINAL_CUSTOMER_GENERAL = [
       ],
       data: [
         {
-          mainCustomer: "NUSANTARA FARM",
+          mainCustomer: "FE001234M",
           mainCustomerName: "PT. Nusantara Farm Indonesia",
           company: "DHV",
           address: "Jl. Raya Jakarta No. 123, Jakarta Selatan",
           nikNpwp: "01.234.567.8-901.000",
         },
         {
-          mainCustomer: "PT. INDONUSA YP S1",
+          mainCustomer: "FE005678M",
           mainCustomerName: "PT. Indonusa Yudha Perkasa Sejahtera 1",
           company: "PBH",
           address: "Jl. Industri Raya No. 45, Bekasi",
           nikNpwp: "02.345.678.9-012.000",
         },
         {
-          mainCustomer: "CHAROEN POKPHAND",
+          mainCustomer: "FE009012M",
           mainCustomerName: "PT. Charoen Pokphand Indonesia",
           company: "PHP",
           address: "Jl. Industri Selatan No. 78, Surabaya",
           nikNpwp: "03.456.789.0-123.000",
         },
         {
-          mainCustomer: "JAPFA COMFEED",
+          mainCustomer: "FE003456M",
           mainCustomerName: "PT. Japfa Comfeed Indonesia",
           company: "PHY",
           address: "Jl. Raya Bogor No. 99, Bogor",
           nikNpwp: "04.567.890.1-234.000",
         },
         {
-          mainCustomer: "GOLD COIN",
+          mainCustomer: "FE007890M",
           mainCustomerName: "PT. Gold Coin Indonesia",
           company: "DGC",
           address: "Jl. Industri Utara No. 56, Medan",
           nikNpwp: "05.678.901.2-345.000",
         },
         {
-          mainCustomer: "DIAMOND FEED",
+          mainCustomer: "FE002468M",
           mainCustomerName: "PT. Diamond Feed Indonesia",
           company: "DGD",
           address: "Jl. Raya Semarang No. 34, Semarang",
@@ -794,8 +794,8 @@ const CustomerDetailForm = ({
       action: "cancel",
     });
 
-    // Different button text and behavior for bulk create
-    if (requestData.isBulkCreate) {
+    // Different button text and behavior for mass create
+    if (requestData.isMassCreate) {
       actions.push({
         label: "Save",
         variant: "primary",
@@ -816,8 +816,8 @@ const CustomerDetailForm = ({
   const handleAction = (action) => {
     switch (action) {
       case "cancel":
-        if (requestData?.isBulkCreate) {
-          // For bulk create, cancel directly without confirmation
+        if (requestData?.isMassCreate) {
+          // For mass create, cancel directly without confirmation
           if (onBack) {
             onBack();
           }
@@ -827,7 +827,7 @@ const CustomerDetailForm = ({
         }
         break;
       case "save":
-        // For bulk create, save directly without confirmation
+        // For mass create, save directly without confirmation
         if (onSave) {
           onSave({ ...requestData, ...formData, addresses });
         }
