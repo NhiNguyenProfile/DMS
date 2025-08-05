@@ -8,6 +8,7 @@ import Select from "../../atoms/Select";
 import { Search, Filter, Plus, Calendar, ArrowLeft } from "lucide-react";
 import ApprovalTreeSlider from "./ApprovalTreeSlider";
 import CustomerDetailForm from "./CustomerDetailForm";
+import BulkCreatePage from "./BulkCreatePage";
 
 // Sample customer requests data
 const CUSTOMER_REQUESTS = [
@@ -151,6 +152,8 @@ const APPROVAL_TREES = {
 
 const REQUEST_TYPES = [
   { value: "Create", label: "Create New Record" },
+  { value: "BulkCreate", label: "Bulk Create Records" },
+  { value: "Copy", label: "Copy Existing Record" },
   { value: "Edit", label: "Edit Existing Record" },
   { value: "Disable", label: "Disable Existing Record" },
   { value: "Reactivate", label: "Reactivate Existing Record" },
@@ -160,38 +163,183 @@ const REQUEST_TYPES = [
 const EXISTING_CUSTOMERS = [
   {
     id: "CUST-001",
+    partyId: "PARTY-001",
     name: "ABC Company Ltd.",
     code: "ABC001",
-    type: "Corporate",
+    type: "Organization",
     status: "Active",
+    company: "DHV",
+    customerAccount: "ACC-001",
+    classificationGroup: "External",
+    group: "LOC_EXT",
+    searchName: "ABC Company Limited",
+    // Additional fields for pre-fill
+    address: "123 Business Street, Jakarta",
+    nikNpwp: "01.234.567.8-901.000",
+    city: "Jakarta",
+    district: "Central Jakarta",
+    street: "123 Business Street",
+    country: "IDN",
+    countryISO: "ID",
+    email: "contact@abc.com",
+    phone: "+62-21-1234567",
+    currency: "IDR",
+    lineOfBusiness: "Farm",
+    segment: "Corporate",
+    subsegment: "Large Enterprise",
+    creditLimit: "1000000000",
+    creditManagementGroup: "External",
+    priceGroup: "CORP",
+    termsOfPayment: "30 Days",
+    methodOfPayment: "Bank",
+    deliveryTerms: "Franco",
+    modeOfDelivery: "Truck",
+    salesTaxGroup: "VAT",
+    taxExemptNumber: "01.234.567.8-901.000",
   },
   {
     id: "CUST-002",
+    partyId: "PARTY-002",
     name: "XYZ Corporation",
     code: "XYZ002",
-    type: "Corporate",
+    type: "Organization",
     status: "Active",
+    company: "PBH",
+    customerAccount: "ACC-002",
+    classificationGroup: "Dealer",
+    group: "AQTP",
+    searchName: "XYZ Corp",
+    // Additional fields for pre-fill
+    address: "456 Trade Avenue, Surabaya",
+    nikNpwp: "02.345.678.9-012.000",
+    city: "Surabaya",
+    district: "East Surabaya",
+    street: "456 Trade Avenue",
+    country: "IDN",
+    countryISO: "ID",
+    email: "info@xyz.com",
+    phone: "+62-31-2345678",
+    currency: "IDR",
+    lineOfBusiness: "POULTRY",
+    segment: "Dealer",
+    subsegment: "Regional Dealer",
+    creditLimit: "500000000",
+    creditManagementGroup: "AFF",
+    priceGroup: "DEAL",
+    termsOfPayment: "90DAI",
+    methodOfPayment: "Bank",
+    deliveryTerms: "Collect",
+    modeOfDelivery: "Ship",
+    salesTaxGroup: "PPN OUT EX 11",
+    taxExemptNumber: "02.345.678.9-012.000",
   },
   {
     id: "CUST-003",
+    partyId: "PARTY-003",
     name: "DEF Industries",
     code: "DEF003",
-    type: "SME",
+    type: "Organization",
     status: "Active",
+    company: "PHP",
+    customerAccount: "",
+    classificationGroup: "Internal",
+    group: "LSTP",
+    searchName: "DEF Industries Ltd",
+    // Additional fields for pre-fill
+    address: "789 Industrial Park, Bandung",
+    nikNpwp: "03.456.789.0-123.000",
+    city: "Bandung",
+    district: "West Bandung",
+    street: "789 Industrial Park",
+    country: "IDN",
+    countryISO: "ID",
+    email: "contact@def.com",
+    phone: "+62-22-3456789",
+    currency: "IDR",
+    lineOfBusiness: "SHRIMP",
+    segment: "Industrial",
+    subsegment: "Manufacturing",
+    creditLimit: "750000000",
+    creditManagementGroup: "Internal",
+    priceGroup: "IND",
+    termsOfPayment: "Immediate",
+    methodOfPayment: "Cash",
+    deliveryTerms: "Franco",
+    modeOfDelivery: "Air",
+    salesTaxGroup: "VAT",
+    taxExemptNumber: "03.456.789.0-123.000",
   },
   {
     id: "CUST-004",
+    partyId: "PARTY-004",
     name: "GHI Trading Co.",
     code: "GHI004",
-    type: "Individual",
+    type: "Person",
     status: "Inactive",
+    company: "PHY",
+    customerAccount: "ACC-004",
+    classificationGroup: "External",
+    group: "LOC_EXT",
+    searchName: "GHI Trading",
+    // Additional fields for pre-fill
+    address: "321 Market Street, Medan",
+    nikNpwp: "04.567.890.1-234.000",
+    city: "Medan",
+    district: "North Medan",
+    street: "321 Market Street",
+    country: "IDN",
+    countryISO: "ID",
+    email: "ghi@trading.com",
+    phone: "+62-61-4567890",
+    currency: "IDR",
+    lineOfBusiness: "FISH",
+    segment: "SME",
+    subsegment: "Small Business",
+    creditLimit: "100000000",
+    creditManagementGroup: "External",
+    priceGroup: "SME",
+    termsOfPayment: "30 Days",
+    methodOfPayment: "Bank",
+    deliveryTerms: "Collect",
+    modeOfDelivery: "Truck",
+    salesTaxGroup: "VAT",
+    taxExemptNumber: "04.567.890.1-234.000",
   },
   {
     id: "CUST-005",
+    partyId: "PARTY-005",
     name: "JKL Manufacturing",
     code: "JKL005",
-    type: "Corporate",
+    type: "Organization",
     status: "Active",
+    company: "DGC",
+    customerAccount: "ACC-005",
+    classificationGroup: "Dealer",
+    group: "AQTP",
+    searchName: "JKL Mfg",
+    // Additional fields for pre-fill
+    address: "654 Factory Road, Semarang",
+    nikNpwp: "05.678.901.2-345.000",
+    city: "Semarang",
+    district: "Central Semarang",
+    street: "654 Factory Road",
+    country: "IDN",
+    countryISO: "ID",
+    email: "info@jkl.com",
+    phone: "+62-24-5678901",
+    currency: "IDR",
+    lineOfBusiness: "Farm",
+    segment: "Manufacturing",
+    subsegment: "Medium Enterprise",
+    creditLimit: "300000000",
+    creditManagementGroup: "AFF",
+    priceGroup: "MFG",
+    termsOfPayment: "30 Days",
+    methodOfPayment: "Bank",
+    deliveryTerms: "Franco",
+    modeOfDelivery: "Truck",
+    salesTaxGroup: "PPN OUT EX 11",
+    taxExemptNumber: "05.678.901.2-345.000",
   },
 ];
 
@@ -211,6 +359,7 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
   const [showApprovalSlider, setShowApprovalSlider] = useState(false);
   const [selectedRequestData, setSelectedRequestData] = useState(null);
   const [showDetailForm, setShowDetailForm] = useState(false);
+  const [showBulkCreatePage, setShowBulkCreatePage] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [selectedRequestType, setSelectedRequestType] = useState(null);
   const [searchResults, setSearchResults] = useState([]);
@@ -244,7 +393,27 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
     setShowAddModal(false);
     setSelectedRequestType(requestType);
 
-    if (requestType === "Create") {
+    if (requestType === "BulkCreate") {
+      // For Bulk Create, show bulk create page
+      setShowBulkCreatePage(true);
+
+      // Also trigger onShowDetail if provided (for parent component)
+      if (onShowDetail) {
+        onShowDetail(
+          <BulkCreatePage
+            onBack={() => {
+              setShowBulkCreatePage(false);
+              setSelectedRequestType(null);
+              onShowDetail(null);
+            }}
+            onSendBulkRequest={(bulkRequest) => {
+              handleSendBulkRequest(bulkRequest);
+              onShowDetail(null);
+            }}
+          />
+        );
+      }
+    } else if (requestType === "Create") {
       // For Create New Record, create new request and go to detail form
       const newRequest = {
         id: `REQ-${Date.now()}`,
@@ -307,6 +476,12 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
           />
         );
       }
+    } else if (requestType === "Copy") {
+      // For Copy, show search modal to find existing record to copy from
+      setShowSearchModal(true);
+      setCustomerSearchTerm("");
+      setSearchResults([]);
+      setSelectedCustomer(null);
     } else {
       // For other types, show search modal to find existing records
       setShowSearchModal(true);
@@ -316,13 +491,33 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
     }
   };
 
+  const handleSendBulkRequest = (bulkRequest) => {
+    // Add bulk request to requests list
+    setRequests((prev) => [bulkRequest, ...prev]);
+
+    // Close bulk create page
+    setShowBulkCreatePage(false);
+    setSelectedRequestType(null);
+
+    // Show success message or redirect
+    console.log("Bulk request created:", bulkRequest);
+  };
+
   const handleSearch = (term) => {
     setCustomerSearchTerm(term);
     if (term.trim()) {
       const results = EXISTING_CUSTOMERS.filter(
         (customer) =>
           customer.name.toLowerCase().includes(term.toLowerCase()) ||
-          customer.code.toLowerCase().includes(term.toLowerCase())
+          customer.code.toLowerCase().includes(term.toLowerCase()) ||
+          customer.partyId.toLowerCase().includes(term.toLowerCase()) ||
+          customer.company.toLowerCase().includes(term.toLowerCase()) ||
+          customer.customerAccount.toLowerCase().includes(term.toLowerCase()) ||
+          customer.classificationGroup
+            .toLowerCase()
+            .includes(term.toLowerCase()) ||
+          customer.group.toLowerCase().includes(term.toLowerCase()) ||
+          customer.searchName.toLowerCase().includes(term.toLowerCase())
       );
       setSearchResults(results);
     } else {
@@ -338,47 +533,191 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
   const handleSendRequest = () => {
     if (!selectedCustomer) return;
 
-    // Create request for selected customer
-    const newRequest = {
-      id: `REQ-${Date.now()}`,
-      requestType: selectedRequestType,
-      requestTitle: `${selectedRequestType} Customer - ${selectedCustomer.name}`,
-      stepOwner: "You - Sale Admin",
-      currentSteps: "Waiting for Approval",
-      status: "Pending",
-      createdDate: new Date().toISOString(),
-      customerId: selectedCustomer.id,
-      customerData: selectedCustomer,
-      approvalTree: [
-        {
-          stepName: "Review Request",
-          owners: [
-            { name: "Alicia", role: "Credit Officer", status: "current" },
-          ],
-          status: "current",
-        },
-        {
-          stepName: "Final Approval",
-          owners: [
-            { name: "James", role: "Credit Supervisor", status: "pending" },
-          ],
-          status: "pending",
-        },
-      ],
-    };
+    if (selectedRequestType === "Copy") {
+      // For Copy, create new request with copied data and go to detail form
+      const newRequest = {
+        id: `REQ-${Date.now()}`,
+        requestType: "Create", // Copy becomes Create with pre-filled data
+        requestTitle: `Copy of Customer - ${selectedCustomer.name}`,
+        stepOwner: "You - Sale Admin",
+        currentSteps: "Waiting for Entry",
+        status: "Draft",
+        createdDate: new Date().toISOString(),
+        isNew: true,
+        isCopy: true, // Flag to indicate this is copied from existing
+        sourceCustomerId: selectedCustomer.id,
+        sourceCustomerData: selectedCustomer, // Store original data for pre-filling
+        approvalTree: [
+          {
+            stepName: "Waiting for Entry",
+            owners: [{ name: "You", role: "Sale Admin", status: "current" }],
+            status: "current",
+          },
+          {
+            stepName: "Credit Check",
+            owners: [
+              { name: "Alicia", role: "Credit Officer", status: "pending" },
+            ],
+            status: "pending",
+          },
+          {
+            stepName: "Final Approval",
+            owners: [
+              { name: "James", role: "Credit Supervisor", status: "pending" },
+            ],
+            status: "pending",
+          },
+        ],
+      };
 
-    // Add to requests list
-    setRequests((prev) => [newRequest, ...prev]);
+      // Add to requests list
+      setRequests((prev) => [newRequest, ...prev]);
 
-    // Close search modal and reset
-    setShowSearchModal(false);
-    setSelectedRequestType(null);
-    setSelectedCustomer(null);
-    setCustomerSearchTerm("");
-    setSearchResults([]);
+      // Close search modal and reset
+      setShowSearchModal(false);
+      setSelectedRequestType(null);
+      setSelectedCustomer(null);
+      setCustomerSearchTerm("");
+      setSearchResults([]);
 
-    // Show success message (could be a toast notification)
-    console.log("Request sent successfully:", newRequest);
+      // Set as selected request and show detail form
+      setSelectedRequestData(newRequest);
+      setShowDetailForm(true);
+
+      // Also trigger onShowDetail if provided (for parent component)
+      if (onShowDetail) {
+        onShowDetail(
+          <CustomerDetailForm
+            requestData={newRequest}
+            onBack={() => {
+              setShowDetailForm(false);
+              onShowDetail(null);
+            }}
+            onSave={(updatedRequest) => {
+              // Update the request in the list
+              setRequests((prev) =>
+                prev.map((req) =>
+                  req.id === updatedRequest.id ? updatedRequest : req
+                )
+              );
+              setShowDetailForm(false);
+              onShowDetail(null);
+            }}
+          />
+        );
+      }
+    } else if (selectedRequestType === "Edit") {
+      // For Edit, create request with full data and go to detail form
+      const newRequest = {
+        id: `REQ-${Date.now()}`,
+        requestType: "Edit",
+        requestTitle: `Edit Customer - ${selectedCustomer.name}`,
+        stepOwner: "You - Sale Admin",
+        currentSteps: "Waiting for Entry",
+        status: "Draft",
+        createdDate: new Date().toISOString(),
+        isEdit: true, // Flag to indicate this is edit request
+        sourceCustomerId: selectedCustomer.id,
+        sourceCustomerData: selectedCustomer, // Store original data for pre-filling
+        approvalTree: [
+          {
+            stepName: "Waiting for Entry",
+            owners: [{ name: "You", role: "Sale Admin", status: "current" }],
+            status: "current",
+          },
+          {
+            stepName: "Review Changes",
+            owners: [
+              { name: "Alicia", role: "Credit Officer", status: "pending" },
+            ],
+            status: "pending",
+          },
+          {
+            stepName: "Final Approval",
+            owners: [
+              { name: "James", role: "Credit Supervisor", status: "pending" },
+            ],
+            status: "pending",
+          },
+        ],
+      };
+
+      // Add to requests list
+      setRequests((prev) => [newRequest, ...prev]);
+
+      // Close search modal and reset
+      setShowSearchModal(false);
+      setSelectedRequestType(null);
+      setSelectedCustomer(null);
+      setCustomerSearchTerm("");
+      setSearchResults([]);
+
+      // Set as selected request and show detail form
+      setSelectedRequestData(newRequest);
+      setShowDetailForm(true);
+
+      // Also trigger onShowDetail if provided (for parent component)
+      if (onShowDetail) {
+        onShowDetail(
+          <CustomerDetailForm
+            requestData={newRequest}
+            onBack={() => {
+              setShowDetailForm(false);
+              onShowDetail(null);
+            }}
+            onSave={(updatedRequest) => {
+              // Update the request in the list
+              setRequests((prev) =>
+                prev.map((req) =>
+                  req.id === updatedRequest.id ? updatedRequest : req
+                )
+              );
+              setShowDetailForm(false);
+              onShowDetail(null);
+            }}
+          />
+        );
+      }
+    } else {
+      // For other types (Disable, Reactivate), create regular request
+      const newRequest = {
+        id: `REQ-${Date.now()}`,
+        requestType: selectedRequestType,
+        requestTitle: `${selectedRequestType} Customer - ${selectedCustomer.name}`,
+        stepOwner: "You - Sale Admin",
+        currentSteps: "Waiting for Approval",
+        status: "Pending",
+        createdDate: new Date().toISOString(),
+        customerId: selectedCustomer.id,
+        customerData: selectedCustomer,
+        approvalTree: [
+          {
+            stepName: "Review Request",
+            owners: [
+              { name: "Alicia", role: "Credit Officer", status: "current" },
+            ],
+            status: "current",
+          },
+          {
+            stepName: "Final Approval",
+            owners: [
+              { name: "James", role: "Credit Supervisor", status: "pending" },
+            ],
+            status: "pending",
+          },
+        ],
+      };
+
+      // Add to requests list
+      setRequests((prev) => [newRequest, ...prev]);
+
+      // Close search modal and reset
+      setShowSearchModal(false);
+      setSelectedRequestType(null);
+      setSelectedCustomer(null);
+      setCustomerSearchTerm("");
+      setSearchResults([]);
+    }
   };
 
   const handleApplyFilters = () => {
@@ -490,6 +829,38 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
       minute: "2-digit",
     });
   };
+
+  // Show bulk create page if selected
+  if (showBulkCreatePage) {
+    if (onShowDetail) {
+      // Direct mode - pass bulk create component to parent
+      onShowDetail(
+        <BulkCreatePage
+          onBack={() => {
+            setShowBulkCreatePage(false);
+            setSelectedRequestType(null);
+            onShowDetail(null);
+          }}
+          onSendBulkRequest={(bulkRequest) => {
+            handleSendBulkRequest(bulkRequest);
+            onShowDetail(null);
+          }}
+        />
+      );
+      return null;
+    } else {
+      // Cards mode - show bulk create page locally
+      return (
+        <BulkCreatePage
+          onBack={() => {
+            setShowBulkCreatePage(false);
+            setSelectedRequestType(null);
+          }}
+          onSendBulkRequest={handleSendBulkRequest}
+        />
+      );
+    }
+  }
 
   // Show detail form if selected
   if (showDetailForm && selectedRequestData) {
@@ -809,39 +1180,129 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
             </div>
           )}
 
-          {/* Search Results */}
+          {/* Search Results Table */}
           {!selectedCustomer && searchResults.length > 0 && (
-            <div className="space-y-2 max-h-60 overflow-y-auto">
+            <div className="space-y-3">
               <Text variant="body" weight="medium" className="text-sm">
                 Found {searchResults.length} customer(s):
               </Text>
-              {searchResults.map((customer) => (
-                <div
-                  key={customer.id}
-                  className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
-                  onClick={() => handleSelectCustomer(customer)}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <Text variant="body" weight="medium">
-                        {customer.name}
-                      </Text>
-                      <Text variant="caption" color="muted">
-                        Code: {customer.code} • Type: {customer.type}
-                      </Text>
-                    </div>
-                    <span
-                      className={`px-2 py-1 text-xs rounded ${
-                        customer.status === "Active"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {customer.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
+              <div className="border border-gray-200 rounded-lg overflow-x-auto max-h-96 overflow-y-auto">
+                <table className="w-full min-w-max">
+                  <thead className="bg-gray-50 sticky top-0">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Party ID
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Company
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Customer Account
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Customer Classification Group
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Customer Group
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Customer Type
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Organization Name
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+                        Search Name
+                      </th>
+                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap w-24">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {searchResults.map((customer) => (
+                      <tr
+                        key={customer.id}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                          <div
+                            className="truncate max-w-xs"
+                            title={customer.partyId}
+                          >
+                            {customer.partyId}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                          <div
+                            className="truncate max-w-xs"
+                            title={customer.company}
+                          >
+                            {customer.company}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                          <div
+                            className="truncate max-w-xs"
+                            title={customer.customerAccount}
+                          >
+                            {customer.customerAccount || "-"}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                          <div
+                            className="truncate max-w-xs"
+                            title={customer.classificationGroup}
+                          >
+                            {customer.classificationGroup}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                          <div
+                            className="truncate max-w-xs"
+                            title={customer.group}
+                          >
+                            {customer.group}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                          <div
+                            className="truncate max-w-xs"
+                            title={customer.type}
+                          >
+                            {customer.type}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                          <div
+                            className="truncate max-w-xs"
+                            title={customer.name}
+                          >
+                            {customer.name}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                          <div
+                            className="truncate max-w-xs"
+                            title={customer.searchName}
+                          >
+                            {customer.searchName || customer.name}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 whitespace-nowrap text-center">
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => handleSelectCustomer(customer)}
+                          >
+                            Select
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 

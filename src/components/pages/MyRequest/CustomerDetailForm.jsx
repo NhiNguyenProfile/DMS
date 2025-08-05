@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Text from "../../atoms/Text";
 import Button from "../../atoms/Button";
 import Input from "../../atoms/Input";
 import Select from "../../atoms/Select";
+import ObjectSelectModal from "../../atoms/ObjectSelectModal";
+import AddressTable from "../../atoms/AddressTable";
 import { ArrowLeft, Eye } from "lucide-react";
 import ApprovalTreeSlider from "./ApprovalTreeSlider";
 import ConfirmationModal from "../../atoms/ConfirmationModal";
@@ -10,10 +12,10 @@ import ConfirmationModal from "../../atoms/ConfirmationModal";
 // Form data structure
 const MAIN_CUSTOMER_FIELDS = [
   {
-    label: "Customer Account",
+    label: "Main Customer",
     type: "text",
     required: true,
-    key: "customerAccount",
+    key: "mainCustomerCode",
   },
   {
     label: "Main Customer Name",
@@ -24,7 +26,7 @@ const MAIN_CUSTOMER_FIELDS = [
   {
     label: "Company",
     type: "select",
-    options: ["uab", "wel", "wir"],
+    options: ["DHV", "PBH", "PHP", "PHY", "DGC", "DGD"],
     required: true,
     key: "company",
   },
@@ -44,24 +46,10 @@ const MAIN_CUSTOMER_FIELDS = [
 
 const TAX_FIELDS = [
   {
-    label: "Country/Region",
-    type: "select",
-    options: ["IDN", "VNM"],
-    required: true,
-    key: "countryRegion",
-  },
-  {
     label: "Tax Exempt Number",
     type: "text",
     required: true,
     key: "taxExemptNumber",
-  },
-  {
-    label: "Company",
-    type: "select",
-    options: ["uab", "wel", "wir"],
-    required: true,
-    key: "taxCompany",
   },
   {
     label: "Company Name",
@@ -86,6 +74,16 @@ const TAX_FIELDS = [
 // Final Customer Fields - General
 const FINAL_CUSTOMER_GENERAL = [
   {
+    label: "Customer Account",
+    type: "text",
+    required: false,
+    key: "customerAccount",
+    conditionalDisable: {
+      dependsOn: "customerGroup",
+      disableWhen: "LOC_EXT",
+    },
+  },
+  {
     label: "Customer Classification Group",
     type: "select",
     options: ["Dealer", "Internal", "External"],
@@ -94,10 +92,22 @@ const FINAL_CUSTOMER_GENERAL = [
   },
   {
     label: "Customer Group",
-    type: "select",
-    options: ["LOC_EXT", "AQTP", "LSTP"],
+    type: "object-select",
     required: true,
     key: "customerGroup",
+    objectConfig: {
+      displayField: "customerGroup", // Field to show in input
+      searchFields: ["customerGroup", "description"], // Fields to search in
+      columns: [
+        { key: "customerGroup", label: "Customer Group" },
+        { key: "description", label: "Description" },
+      ],
+      data: [
+        { customerGroup: "LOC_EXT", description: "Local External Customer" },
+        { customerGroup: "AQTP", description: "Aquaculture Trading Partner" },
+        { customerGroup: "LSTP", description: "Livestock Trading Partner" },
+      ],
+    },
   },
   {
     label: "Customer Type",
@@ -105,6 +115,48 @@ const FINAL_CUSTOMER_GENERAL = [
     options: ["Person", "Organization"],
     required: true,
     key: "customerType",
+  },
+  // Conditional fields for Person
+  {
+    label: "First Name",
+    type: "text",
+    required: true,
+    key: "firstName",
+    conditional: {
+      dependsOn: "customerType",
+      showWhen: "Person",
+    },
+  },
+  {
+    label: "Middle Name",
+    type: "text",
+    required: false,
+    key: "middleName",
+    conditional: {
+      dependsOn: "customerType",
+      showWhen: "Person",
+    },
+  },
+  {
+    label: "Last Name Prefix",
+    type: "text",
+    required: true,
+    key: "lastNamePrefix",
+    conditional: {
+      dependsOn: "customerType",
+      showWhen: "Person",
+    },
+  },
+  // Conditional field for Organization
+  {
+    label: "Name",
+    type: "text",
+    required: true,
+    key: "organizationName",
+    conditional: {
+      dependsOn: "customerType",
+      showWhen: "Organization",
+    },
   },
   {
     label: "Generate Virtual Account",
@@ -114,16 +166,71 @@ const FINAL_CUSTOMER_GENERAL = [
   },
   {
     label: "Main Customer",
-    type: "select",
-    options: ["NUSANTARA FARM", "PT. INDONUSA YP S1", "Others..."],
+    type: "object-select",
     required: true,
     key: "mainCustomer",
-  },
-  {
-    label: "Organization Name",
-    type: "text",
-    required: true,
-    key: "organizationName",
+    objectConfig: {
+      displayField: "mainCustomer", // Field to show in input
+      searchFields: ["mainCustomer", "mainCustomerName", "company", "address"], // Fields to search in
+      columns: [
+        { key: "mainCustomer", label: "Main Customer" },
+        { key: "mainCustomerName", label: "Main Customer Name" },
+        { key: "company", label: "Company" },
+        { key: "address", label: "Address" },
+        { key: "nikNpwp", label: "NIK/NPWP" },
+      ],
+      data: [
+        {
+          mainCustomer: "NUSANTARA FARM",
+          mainCustomerName: "PT. Nusantara Farm Indonesia",
+          company: "DHV",
+          address: "Jl. Raya Jakarta No. 123, Jakarta Selatan",
+          nikNpwp: "01.234.567.8-901.000",
+        },
+        {
+          mainCustomer: "PT. INDONUSA YP S1",
+          mainCustomerName: "PT. Indonusa Yudha Perkasa Sejahtera 1",
+          company: "PBH",
+          address: "Jl. Industri Raya No. 45, Bekasi",
+          nikNpwp: "02.345.678.9-012.000",
+        },
+        {
+          mainCustomer: "CHAROEN POKPHAND",
+          mainCustomerName: "PT. Charoen Pokphand Indonesia",
+          company: "PHP",
+          address: "Jl. Industri Selatan No. 78, Surabaya",
+          nikNpwp: "03.456.789.0-123.000",
+        },
+        {
+          mainCustomer: "JAPFA COMFEED",
+          mainCustomerName: "PT. Japfa Comfeed Indonesia",
+          company: "PHY",
+          address: "Jl. Raya Bogor No. 99, Bogor",
+          nikNpwp: "04.567.890.1-234.000",
+        },
+        {
+          mainCustomer: "GOLD COIN",
+          mainCustomerName: "PT. Gold Coin Indonesia",
+          company: "DGC",
+          address: "Jl. Industri Utara No. 56, Medan",
+          nikNpwp: "05.678.901.2-345.000",
+        },
+        {
+          mainCustomer: "DIAMOND FEED",
+          mainCustomerName: "PT. Diamond Feed Indonesia",
+          company: "DGD",
+          address: "Jl. Raya Semarang No. 34, Semarang",
+          nikNpwp: "06.789.012.3-456.000",
+        },
+        {
+          mainCustomer: "NEW CUSTOMER",
+          mainCustomerName: "",
+          company: "",
+          address: "",
+          nikNpwp: "",
+        },
+      ],
+    },
   },
   {
     label: "Search Name",
@@ -133,55 +240,7 @@ const FINAL_CUSTOMER_GENERAL = [
   },
 ];
 
-// Final Customer Fields - Address
-const FINAL_CUSTOMER_ADDRESS = [
-  {
-    label: "City",
-    type: "select",
-    options: ["T. Thái Nguyên", "Others..."],
-    required: true,
-    key: "city",
-  },
-  {
-    label: "District",
-    type: "select",
-    options: ["H. Đại Từ", "Others..."],
-    required: true,
-    key: "district",
-  },
-  {
-    label: "Street",
-    type: "text",
-    required: true,
-    key: "street",
-  },
-  {
-    label: "Country/Region",
-    type: "select",
-    options: ["VNM", "IDN"],
-    required: true,
-    key: "finalCountryRegion",
-  },
-  {
-    label: "Country/Region ISO",
-    type: "select",
-    options: ["VN", "ID"],
-    required: true,
-    key: "countryRegionISO",
-  },
-  {
-    label: "State",
-    type: "text",
-    required: false,
-    key: "state",
-  },
-  {
-    label: "Address Description",
-    type: "text",
-    required: true,
-    key: "addressDescription",
-  },
-];
+// Address data is now handled by AddressTable component
 
 // Final Customer Fields - Contact Information
 const FINAL_CUSTOMER_CONTACT = [
@@ -339,9 +398,114 @@ const CustomerDetailForm = ({
 }) => {
   const [activeTab, setActiveTab] = useState("main");
   const [formData, setFormData] = useState({});
+  const [addresses, setAddresses] = useState([]);
   const [showApprovalSlider, setShowApprovalSlider] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [objectSelectModal, setObjectSelectModal] = useState({
+    isOpen: false,
+    field: null,
+  });
+
+  // Pre-fill data for Copy and Edit requests
+  useEffect(() => {
+    if (requestData?.sourceCustomerData) {
+      const sourceData = requestData.sourceCustomerData;
+
+      if (requestData?.isCopy) {
+        // For Copy: Only pre-fill Main Customer + Final Customer General
+        const preFillData = {
+          // Main Customer section
+          mainCustomerCode: sourceData.code || "",
+          mainCustomerName: sourceData.name || "",
+          company: sourceData.company || "",
+          address: sourceData.address || "",
+          nikNpwp: sourceData.nikNpwp || "",
+
+          // Final Customer section - General only
+          customerAccount: "", // Usually empty for new copy
+          customerClassificationGroup: sourceData.classificationGroup || "",
+          customerGroup: sourceData.group || "",
+          customerType: sourceData.type || "Organization",
+          generateVirtualAccount: "no",
+          mainCustomer: sourceData.name || "",
+          organizationName: sourceData.name || "",
+          searchName: sourceData.searchName || sourceData.name || "",
+        };
+
+        setFormData(preFillData);
+      } else if (requestData?.requestType === "Edit") {
+        // For Edit: Pre-fill all sections with complete data
+        const preFillData = {
+          // Main Customer section
+          mainCustomerCode: sourceData.code || "",
+          mainCustomerName: sourceData.name || "",
+          company: sourceData.company || "",
+          address: sourceData.address || "",
+          nikNpwp: sourceData.nikNpwp || "",
+
+          // Final Customer section - General
+          customerAccount: sourceData.customerAccount || "",
+          customerClassificationGroup: sourceData.classificationGroup || "",
+          customerGroup: sourceData.group || "",
+          customerType: sourceData.type || "Organization",
+          generateVirtualAccount: "no",
+          mainCustomer: sourceData.name || "",
+          organizationName: sourceData.name || "",
+          searchName: sourceData.searchName || sourceData.name || "",
+
+          // Address data will be handled separately
+
+          // Final Customer section - Contact
+          primaryEmail: sourceData.email || "",
+          primaryPhone: sourceData.phone || "",
+          contactType: "Email",
+
+          // Final Customer section - Sales
+          currency: sourceData.currency || "VND",
+          lineOfBusiness: sourceData.lineOfBusiness || "Farm",
+          segment: sourceData.segment || "",
+          subsegment: sourceData.subsegment || "",
+
+          // Final Customer section - Credit
+          creditLimit: sourceData.creditLimit || "",
+          mandatoryCreditLimit: "no",
+          creditManagementGroup: sourceData.creditManagementGroup || "",
+          excludeFromCreditManagement: "no",
+          invoicingDeliveryOnHold: "No",
+
+          // Final Customer section - Payment
+          priceGroup: sourceData.priceGroup || "",
+          termsOfPayment: sourceData.termsOfPayment || "30 Days",
+          methodOfPayment: sourceData.methodOfPayment || "Bank",
+          deliveryTerms: sourceData.deliveryTerms || "Franco",
+          modeOfDelivery: sourceData.modeOfDelivery || "Truck",
+          salesTaxGroup: sourceData.salesTaxGroup || "VAT",
+          finalTaxExemptNumber: sourceData.taxExemptNumber || "",
+          vasEInvoice: "no",
+        };
+
+        setFormData(preFillData);
+
+        // Set sample addresses for Edit mode
+        if (requestData?.requestType === "Edit") {
+          setAddresses([
+            {
+              id: 1,
+              city: sourceData.city || "T. Thái Nguyên",
+              district: sourceData.district || "H. Đại Từ",
+              street: sourceData.street || "123 Main Street",
+              finalCountryRegion: "VNM",
+              countryRegionISO: "VN",
+              state: sourceData.state || "Thái Nguyên",
+              addressDescription:
+                sourceData.address || "Primary business address",
+            },
+          ]);
+        }
+      }
+    }
+  }, [requestData]);
 
   const tabs = [
     { id: "main", label: "Main Customer", fields: MAIN_CUSTOMER_FIELDS },
@@ -351,7 +515,7 @@ const CustomerDetailForm = ({
       label: "Final Customer",
       sections: [
         { title: "General", fields: FINAL_CUSTOMER_GENERAL },
-        { title: "Address", fields: FINAL_CUSTOMER_ADDRESS },
+        { title: "Address", isAddressTable: true },
         { title: "Contact Information", fields: FINAL_CUSTOMER_CONTACT },
         { title: "Sales Demographic", fields: FINAL_CUSTOMER_SALES },
         { title: "Credit and Collection", fields: FINAL_CUSTOMER_CREDIT },
@@ -361,15 +525,86 @@ const CustomerDetailForm = ({
   ];
 
   const handleInputChange = (key, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
+    setFormData((prev) => {
+      const newData = {
+        ...prev,
+        [key]: value,
+      };
+
+      // Handle conditional disable logic - clear disabled fields
+      if (key === "customerGroup") {
+        // If Customer Group is LOC_EXT, clear Customer Account
+        if (value === "LOC_EXT") {
+          newData.customerAccount = "";
+        }
+      }
+
+      return newData;
+    });
+  };
+
+  const handleObjectSelect = (field) => {
+    setObjectSelectModal({
+      isOpen: true,
+      field: field,
+    });
+  };
+
+  const handleObjectSelectConfirm = (selectedItem) => {
+    if (objectSelectModal.field) {
+      const displayValue =
+        selectedItem[objectSelectModal.field.objectConfig.displayField];
+
+      // Special handling for Main Customer selection - auto-fill Main Customer section
+      if (objectSelectModal.field.key === "mainCustomer") {
+        setFormData((prev) => ({
+          ...prev,
+          [objectSelectModal.field.key]: displayValue,
+          [`${objectSelectModal.field.key}_object`]: selectedItem,
+          // Fill Main Customer section fields
+          mainCustomerCode: selectedItem.mainCustomer || "", // Map mainCustomer to mainCustomerCode
+          mainCustomerName: selectedItem.mainCustomerName || "",
+          company: selectedItem.company || "",
+          address: selectedItem.address || "",
+          nikNpwp: selectedItem.nikNpwp || "",
+        }));
+      } else {
+        // Normal handling for other object-select fields
+        handleInputChange(objectSelectModal.field.key, displayValue);
+        // Store the full object for reference if needed
+        handleInputChange(
+          `${objectSelectModal.field.key}_object`,
+          selectedItem
+        );
+      }
+    }
+    setObjectSelectModal({ isOpen: false, field: null });
+  };
+
+  const handleObjectSelectClose = () => {
+    setObjectSelectModal({ isOpen: false, field: null });
   };
 
   const renderField = (field) => {
     const value = formData[field.key] || "";
     const isEditable = requestData?.currentSteps === "Waiting for Entry";
+
+    // Check if field should be conditionally rendered
+    if (field.conditional) {
+      const dependentValue = formData[field.conditional.dependsOn];
+      if (dependentValue !== field.conditional.showWhen) {
+        return null; // Don't render this field
+      }
+    }
+
+    // Check if field should be conditionally disabled
+    let isFieldDisabled = !isEditable;
+    if (field.conditionalDisable && isEditable) {
+      const dependentValue = formData[field.conditionalDisable.dependsOn];
+      if (dependentValue === field.conditionalDisable.disableWhen) {
+        isFieldDisabled = true;
+      }
+    }
 
     return (
       <div key={field.key} className="space-y-2">
@@ -380,6 +615,9 @@ const CustomerDetailForm = ({
           {field.required && <span className="text-red-500 text-sm">*</span>}
           {!isEditable && (
             <span className="text-xs text-gray-500 ml-2">(View Only)</span>
+          )}
+          {isFieldDisabled && isEditable && (
+            <span className="text-xs text-orange-500 ml-2">(Disabled)</span>
           )}
         </div>
 
@@ -393,14 +631,16 @@ const CustomerDetailForm = ({
           <Input
             value={value}
             onChange={
-              isEditable
+              !isFieldDisabled
                 ? (e) => handleInputChange(field.key, e.target.value)
                 : undefined
             }
-            placeholder={isEditable ? `Enter ${field.label.toLowerCase()}` : ""}
+            placeholder={
+              !isFieldDisabled ? `Enter ${field.label.toLowerCase()}` : ""
+            }
             required={field.required}
-            disabled={!isEditable}
-            className={!isEditable ? "bg-gray-50 cursor-not-allowed" : ""}
+            disabled={isFieldDisabled}
+            className={isFieldDisabled ? "bg-gray-50 cursor-not-allowed" : ""}
           />
         )}
 
@@ -409,14 +649,14 @@ const CustomerDetailForm = ({
             options={field.options.map((opt) => ({ value: opt, label: opt }))}
             value={value}
             onChange={
-              isEditable
+              !isFieldDisabled
                 ? (val) => handleInputChange(field.key, val)
                 : undefined
             }
             placeholder={
-              isEditable ? `Select ${field.label.toLowerCase()}` : ""
+              !isFieldDisabled ? `Select ${field.label.toLowerCase()}` : ""
             }
-            disabled={!isEditable}
+            disabled={isFieldDisabled}
           />
         )}
 
@@ -428,13 +668,49 @@ const CustomerDetailForm = ({
             ]}
             value={value}
             onChange={
-              isEditable
+              !isFieldDisabled
                 ? (val) => handleInputChange(field.key, val)
                 : undefined
             }
-            placeholder={isEditable ? "Select option" : ""}
-            disabled={!isEditable}
+            placeholder={!isFieldDisabled ? "Select option" : ""}
+            disabled={isFieldDisabled}
           />
+        )}
+
+        {field.type === "object-select" && (
+          <div className="relative">
+            <Input
+              value={value}
+              placeholder={
+                !isFieldDisabled ? `Select ${field.label.toLowerCase()}` : ""
+              }
+              readOnly
+              disabled={isFieldDisabled}
+              className={`cursor-pointer ${
+                isFieldDisabled ? "bg-gray-50 cursor-not-allowed" : ""
+              }`}
+              onClick={
+                !isFieldDisabled ? () => handleObjectSelect(field) : undefined
+              }
+            />
+            {!isFieldDisabled && (
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <svg
+                  className="w-4 h-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </div>
+            )}
+          </div>
         )}
       </div>
     );
@@ -448,21 +724,51 @@ const CustomerDetailForm = ({
     if (currentTab.sections) {
       return (
         <div className="space-y-8">
-          {currentTab.sections.map((section, index) => (
-            <div key={index} className="space-y-4">
-              <Text
-                variant="heading"
-                size="lg"
-                weight="semibold"
-                className="border-b border-gray-200 pb-2"
-              >
-                {section.title}
-              </Text>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {section.fields.map((field) => renderField(field))}
+          {currentTab.sections.map((section, index) => {
+            // Handle Address Table section
+            if (section.isAddressTable) {
+              return (
+                <div key={index} className="space-y-4">
+                  <Text
+                    variant="heading"
+                    size="lg"
+                    weight="semibold"
+                    className="border-b border-gray-200 pb-2"
+                  >
+                    {section.title}
+                  </Text>
+                  <AddressTable
+                    addresses={addresses}
+                    onChange={setAddresses}
+                    disabled={requestData?.currentSteps !== "Waiting for Entry"}
+                  />
+                </div>
+              );
+            }
+
+            // Filter fields that should be rendered (including conditional logic)
+            const visibleFields = section.fields.filter((field) => {
+              if (!field.conditional) return true;
+              const dependentValue = formData[field.conditional.dependsOn];
+              return dependentValue === field.conditional.showWhen;
+            });
+
+            return (
+              <div key={index} className="space-y-4">
+                <Text
+                  variant="heading"
+                  size="lg"
+                  weight="semibold"
+                  className="border-b border-gray-200 pb-2"
+                >
+                  {section.title}
+                </Text>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {visibleFields.map((field) => renderField(field))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       );
     }
@@ -488,8 +794,15 @@ const CustomerDetailForm = ({
       action: "cancel",
     });
 
-    // Submit button only for "Waiting for Entry" status
-    if (requestData.currentSteps === "Waiting for Entry") {
+    // Different button text and behavior for bulk create
+    if (requestData.isBulkCreate) {
+      actions.push({
+        label: "Save",
+        variant: "primary",
+        action: "save",
+      });
+    } else if (requestData.currentSteps === "Waiting for Entry") {
+      // Submit button only for "Waiting for Entry" status
       actions.push({
         label: "Submit Request",
         variant: "primary",
@@ -503,7 +816,21 @@ const CustomerDetailForm = ({
   const handleAction = (action) => {
     switch (action) {
       case "cancel":
-        setShowCancelModal(true);
+        if (requestData?.isBulkCreate) {
+          // For bulk create, cancel directly without confirmation
+          if (onBack) {
+            onBack();
+          }
+        } else {
+          // For regular requests, show confirmation modal
+          setShowCancelModal(true);
+        }
+        break;
+      case "save":
+        // For bulk create, save directly without confirmation
+        if (onSave) {
+          onSave({ ...requestData, ...formData, addresses });
+        }
         break;
       case "submit":
         setShowSubmitModal(true);
@@ -524,7 +851,7 @@ const CustomerDetailForm = ({
     setShowSubmitModal(false);
     // Handle submit logic
     if (onSave) {
-      onSave({ ...requestData, ...formData });
+      onSave({ ...requestData, ...formData, addresses });
     }
   };
 
@@ -660,6 +987,20 @@ const CustomerDetailForm = ({
         confirmText="Submit Request"
         showCommentInput={false}
       />
+
+      {/* Object Select Modal */}
+      {objectSelectModal.field && (
+        <ObjectSelectModal
+          isOpen={objectSelectModal.isOpen}
+          onClose={handleObjectSelectClose}
+          onSelect={handleObjectSelectConfirm}
+          title={`Select ${objectSelectModal.field.label}`}
+          columns={objectSelectModal.field.objectConfig.columns}
+          data={objectSelectModal.field.objectConfig.data}
+          searchFields={objectSelectModal.field.objectConfig.searchFields}
+          selectedValue={formData[objectSelectModal.field.key]}
+        />
+      )}
     </div>
   );
 };
