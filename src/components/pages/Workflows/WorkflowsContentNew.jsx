@@ -19,7 +19,7 @@ const WorkflowsContent = ({
 
   // Header Controls State
   const [selectedCountry, setSelectedCountry] = useState(
-    propSelectedCountry || ""
+    propSelectedCountry || "Vietnam"
   );
   const [selectedEntity, setSelectedEntity] = useState(
     propSelectedEntity || ""
@@ -81,7 +81,13 @@ const WorkflowsContent = ({
 
   const handleNewWorkflow = () => {
     // Navigate to edit page for new workflow
-    window.location.hash = `workflow-edit?country=${finalSelectedCountry}`;
+    console.log(
+      "Creating new workflow for country:",
+      finalSelectedCountry,
+      "entity:",
+      finalSelectedEntity
+    );
+    window.location.hash = `workflow-edit?country=${finalSelectedCountry}&entity=${finalSelectedEntity}`;
     navigate("workflow-edit");
   };
 

@@ -45,6 +45,7 @@ const WorkflowWizard = () => {
             >
               <div className="mt-4">
                 <WorkflowsContent
+                  selectedCountry="Vietnam"
                   selectedEntity={selectedEntity}
                   hideFilters={true}
                 />
