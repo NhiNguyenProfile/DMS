@@ -4,6 +4,7 @@ import Button from "../../atoms/Button";
 import Input from "../../atoms/Input";
 import Table from "../../atoms/Table";
 import Modal from "../../atoms/Modal";
+import ColumnVisibilityFilter from "../../atoms/ColumnVisibilityFilter";
 import { Search as SearchIcon, ArrowLeft, Loader2 } from "lucide-react";
 
 // Sample customer records data
@@ -70,6 +71,40 @@ const CUSTOMER_RECORDS = [
   },
 ];
 
+// Define all available columns for customers
+const ALL_CUSTOMER_COLUMNS = [
+  {
+    key: "customerAccount",
+    label: "Customer Account",
+    description: "Customer account number",
+  },
+  {
+    key: "customerName",
+    label: "Customer Name",
+    description: "Full customer name",
+  },
+  {
+    key: "classification",
+    label: "Classification",
+    description: "Customer classification",
+  },
+  { key: "group", label: "Group", description: "Customer group" },
+  { key: "type", label: "Type", description: "Customer type" },
+  {
+    key: "mainCustomer",
+    label: "Main Customer",
+    description: "Main customer reference",
+  },
+  { key: "city", label: "City", description: "Customer city" },
+  { key: "currency", label: "Currency", description: "Customer currency" },
+  { key: "segment", label: "Segment", description: "Customer segment" },
+  {
+    key: "emailAddress",
+    label: "Email Address",
+    description: "Customer email",
+  },
+];
+
 const CustomerSearchResults = ({ onBack, country }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchWithDynamic365, setSearchWithDynamic365] = useState(false);
@@ -81,6 +116,16 @@ const CustomerSearchResults = ({ onBack, country }) => {
   const [dynamic365SearchCompleted, setDynamic365SearchCompleted] =
     useState(false);
 
+  // Default visible columns (first 6 columns)
+  const [visibleColumns, setVisibleColumns] = useState([
+    "customerAccount",
+    "customerName",
+    "classification",
+    "group",
+    "type",
+    "mainCustomer",
+  ]);
+
   // Filter records based on search term
   const filteredRecords = CUSTOMER_RECORDS.filter(
     (record) =>
@@ -91,6 +136,47 @@ const CustomerSearchResults = ({ onBack, country }) => {
       record.segment.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.emailAddress.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Get visible column definitions
+  const visibleColumnDefs = ALL_CUSTOMER_COLUMNS.filter((col) =>
+    visibleColumns.includes(col.key)
+  );
+
+  // Function to render cell content based on column type
+  const renderCellContent = (record, columnKey) => {
+    const value = record[columnKey];
+
+    switch (columnKey) {
+      case "customerAccount":
+        return (
+          <Text variant="body" weight="medium" className="font-mono text-sm">
+            {value}
+          </Text>
+        );
+      case "customerName":
+        return (
+          <Text variant="body" weight="medium">
+            {value}
+          </Text>
+        );
+      case "classification":
+        return <span className={getClassificationBadge(value)}>{value}</span>;
+      case "type":
+        return <span className={getTypeBadge(value)}>{value}</span>;
+      case "emailAddress":
+        return (
+          <Text variant="body" className="text-sm">
+            {value}
+          </Text>
+        );
+      default:
+        return (
+          <Text variant="body" className="text-sm">
+            {value}
+          </Text>
+        );
+    }
+  };
 
   // Check if search has no results and should show Dynamic 365 modal
   const shouldShowDynamic365Suggestion =
@@ -161,8 +247,8 @@ const CustomerSearchResults = ({ onBack, country }) => {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="flex items-center gap-4">
+      {/* Search and Controls */}
+      <div className="flex items-center justify-between gap-4">
         <div className="relative max-w-md">
           <SearchIcon
             size={20}
@@ -175,86 +261,42 @@ const CustomerSearchResults = ({ onBack, country }) => {
             className="pl-10"
           />
         </div>
+
+        <ColumnVisibilityFilter
+          columns={ALL_CUSTOMER_COLUMNS}
+          visibleColumns={visibleColumns}
+          onVisibilityChange={setVisibleColumns}
+          buttonText="Columns"
+        />
       </div>
 
       {/* Results Table */}
       <div className="w-full bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="w-full overflow-x-auto">
-          <div className="min-w-[1200px]">
+          <div
+            className={`min-w-[${Math.max(
+              800,
+              visibleColumnDefs.length * 150
+            )}px]`}
+          >
             <Table>
               <Table.Header>
                 <Table.Row>
-                  <Table.HeaderCell>Customer Account</Table.HeaderCell>
-                  <Table.HeaderCell>Customer Name</Table.HeaderCell>
-                  <Table.HeaderCell>Classification</Table.HeaderCell>
-                  <Table.HeaderCell>Group</Table.HeaderCell>
-                  <Table.HeaderCell>Type</Table.HeaderCell>
-                  <Table.HeaderCell>Main Customer</Table.HeaderCell>
-                  <Table.HeaderCell>City</Table.HeaderCell>
-                  <Table.HeaderCell>Currency</Table.HeaderCell>
-                  <Table.HeaderCell>Segment</Table.HeaderCell>
-                  <Table.HeaderCell>Email Address</Table.HeaderCell>
+                  {visibleColumnDefs.map((column) => (
+                    <Table.HeaderCell key={column.key}>
+                      {column.label}
+                    </Table.HeaderCell>
+                  ))}
                 </Table.Row>
               </Table.Header>
               <Table.Body>
                 {filteredRecords.map((record, index) => (
                   <Table.Row key={index} className="hover:bg-gray-50">
-                    <Table.Cell>
-                      <Text
-                        variant="body"
-                        weight="medium"
-                        className="font-mono text-sm"
-                      >
-                        {record.customerAccount}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text variant="body" weight="medium">
-                        {record.customerName}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span
-                        className={getClassificationBadge(
-                          record.classification
-                        )}
-                      >
-                        {record.classification}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text variant="body" className="font-mono text-sm">
-                        {record.group}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className={getTypeBadge(record.type)}>
-                        {record.type}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text variant="body" className="font-mono text-sm">
-                        {record.mainCustomer}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text variant="body">{record.city}</Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text variant="body" weight="medium">
-                        {record.currency}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text variant="body" className="text-sm">
-                        {record.segment}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text variant="body" className="text-sm text-blue-600">
-                        {record.emailAddress}
-                      </Text>
-                    </Table.Cell>
+                    {visibleColumnDefs.map((column) => (
+                      <Table.Cell key={column.key}>
+                        {renderCellContent(record, column.key)}
+                      </Table.Cell>
+                    ))}
                   </Table.Row>
                 ))}
               </Table.Body>

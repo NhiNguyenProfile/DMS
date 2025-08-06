@@ -4,6 +4,7 @@ import Button from "../../atoms/Button";
 import Input from "../../atoms/Input";
 import Table from "../../atoms/Table";
 import Modal from "../../atoms/Modal";
+import ColumnVisibilityFilter from "../../atoms/ColumnVisibilityFilter";
 import { Search as SearchIcon, ArrowLeft, Loader2 } from "lucide-react";
 
 // Sample spare parts records data
@@ -70,6 +71,36 @@ const SPARE_PARTS_RECORDS = [
   },
 ];
 
+// Define all available columns for spare parts
+const ALL_SPARE_PARTS_COLUMNS = [
+  {
+    key: "itemNumber",
+    label: "Item Number",
+    description: "Spare part item number",
+  },
+  { key: "productName", label: "Product Name", description: "Product name" },
+  { key: "productType", label: "Product Type", description: "Type of product" },
+  { key: "purchaseUnit", label: "Purchase Unit", description: "Purchase unit" },
+  {
+    key: "vendorCheck",
+    label: "Vendor Check",
+    description: "Vendor check status",
+  },
+  { key: "salesTaxGroup", label: "Sales Tax Group", description: "Tax group" },
+  {
+    key: "inventoryUnit",
+    label: "Inventory Unit",
+    description: "Inventory unit",
+  },
+  { key: "bagItem", label: "Bag Item", description: "Bag item status" },
+  { key: "cwProduct", label: "CW Product", description: "CW product status" },
+  {
+    key: "businessSector",
+    label: "Business Sector",
+    description: "Business sector",
+  },
+];
+
 const SparePartsSearchResults = ({ onBack, country }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchWithDynamic365, setSearchWithDynamic365] = useState(false);
@@ -81,6 +112,16 @@ const SparePartsSearchResults = ({ onBack, country }) => {
   const [dynamic365SearchCompleted, setDynamic365SearchCompleted] =
     useState(false);
 
+  // Default visible columns (first 6 columns)
+  const [visibleColumns, setVisibleColumns] = useState([
+    "itemNumber",
+    "productName",
+    "productType",
+    "purchaseUnit",
+    "vendorCheck",
+    "salesTaxGroup",
+  ]);
+
   // Filter records based on search term
   const filteredRecords = SPARE_PARTS_RECORDS.filter(
     (record) =>
@@ -90,6 +131,63 @@ const SparePartsSearchResults = ({ onBack, country }) => {
       record.businessSector.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.purchaseUnit.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Get visible column definitions
+  const visibleColumnDefs = ALL_SPARE_PARTS_COLUMNS.filter((col) =>
+    visibleColumns.includes(col.key)
+  );
+
+  // Function to render cell content based on column type
+  const renderCellContent = (record, columnKey) => {
+    const value = record[columnKey];
+
+    switch (columnKey) {
+      case "itemNumber":
+        return (
+          <Text variant="body" weight="medium" className="font-mono text-sm">
+            {value}
+          </Text>
+        );
+      case "productName":
+        return (
+          <Text variant="body" weight="medium">
+            {value}
+          </Text>
+        );
+      case "productType":
+        return <span className={getProductTypeBadge(value)}>{value}</span>;
+      case "vendorCheck":
+        return <span className={getVendorCheckBadge(value)}>{value}</span>;
+      case "businessSector":
+        return <span className={getBusinessSectorBadge(value)}>{value}</span>;
+      case "purchaseUnit":
+      case "inventoryUnit":
+        return (
+          <Text variant="body" weight="medium" className="font-mono">
+            {value}
+          </Text>
+        );
+      case "bagItem":
+      case "cwProduct":
+        return (
+          <span
+            className={`px-2 py-1 text-xs font-medium rounded ${
+              value === "Yes"
+                ? "bg-blue-100 text-blue-800"
+                : "bg-gray-100 text-gray-800"
+            }`}
+          >
+            {value}
+          </span>
+        );
+      default:
+        return (
+          <Text variant="body" className="text-sm">
+            {value}
+          </Text>
+        );
+    }
+  };
 
   // Check if search has no results and should show Dynamic 365 modal
   const shouldShowDynamic365Suggestion =
@@ -172,8 +270,8 @@ const SparePartsSearchResults = ({ onBack, country }) => {
         </div>
       </div>
 
-      {/* Search */}
-      <div className="flex items-center gap-4">
+      {/* Search and Controls */}
+      <div className="flex items-center justify-between gap-4">
         <div className="relative max-w-md">
           <SearchIcon
             size={20}
@@ -186,96 +284,42 @@ const SparePartsSearchResults = ({ onBack, country }) => {
             className="pl-10"
           />
         </div>
+
+        <ColumnVisibilityFilter
+          columns={ALL_SPARE_PARTS_COLUMNS}
+          visibleColumns={visibleColumns}
+          onVisibilityChange={setVisibleColumns}
+          buttonText="Columns"
+        />
       </div>
 
       {/* Results Table */}
       <div className="w-full bg-white rounded-lg border border-gray-200 overflow-hidden">
         <div className="w-full overflow-x-auto">
-          <div className="min-w-[1100px]">
+          <div
+            className={`min-w-[${Math.max(
+              800,
+              visibleColumnDefs.length * 150
+            )}px]`}
+          >
             <Table>
               <Table.Header>
                 <Table.Row>
-                  <Table.HeaderCell>Item Number</Table.HeaderCell>
-                  <Table.HeaderCell>Product Name</Table.HeaderCell>
-                  <Table.HeaderCell>Product Type</Table.HeaderCell>
-                  <Table.HeaderCell>Purchase Unit</Table.HeaderCell>
-                  <Table.HeaderCell>Vendor Check</Table.HeaderCell>
-                  <Table.HeaderCell>Sales Tax Group</Table.HeaderCell>
-                  <Table.HeaderCell>Inventory Unit</Table.HeaderCell>
-                  <Table.HeaderCell>Bag Item</Table.HeaderCell>
-                  <Table.HeaderCell>CW Product</Table.HeaderCell>
-                  <Table.HeaderCell>Business Sector</Table.HeaderCell>
+                  {visibleColumnDefs.map((column) => (
+                    <Table.HeaderCell key={column.key}>
+                      {column.label}
+                    </Table.HeaderCell>
+                  ))}
                 </Table.Row>
               </Table.Header>
               <Table.Body>
                 {filteredRecords.map((record, index) => (
                   <Table.Row key={index} className="hover:bg-gray-50">
-                    <Table.Cell>
-                      <Text
-                        variant="body"
-                        weight="medium"
-                        className="font-mono text-sm"
-                      >
-                        {record.itemNumber}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text variant="body" weight="medium">
-                        {record.productName}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className={getProductTypeBadge(record.productType)}>
-                        {record.productType}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text
-                        variant="body"
-                        weight="medium"
-                        className="font-mono"
-                      >
-                        {record.purchaseUnit}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span className={getVendorCheckBadge(record.vendorCheck)}>
-                        {record.vendorCheck}
-                      </span>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text variant="body" weight="medium">
-                        {record.salesTaxGroup}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text
-                        variant="body"
-                        weight="medium"
-                        className="font-mono"
-                      >
-                        {record.inventoryUnit}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text variant="body" className="text-sm">
-                        {record.bagItem}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <Text variant="body" className="text-sm">
-                        {record.cwProduct}
-                      </Text>
-                    </Table.Cell>
-                    <Table.Cell>
-                      <span
-                        className={getBusinessSectorBadge(
-                          record.businessSector
-                        )}
-                      >
-                        {record.businessSector}
-                      </span>
-                    </Table.Cell>
+                    {visibleColumnDefs.map((column) => (
+                      <Table.Cell key={column.key}>
+                        {renderCellContent(record, column.key)}
+                      </Table.Cell>
+                    ))}
                   </Table.Row>
                 ))}
               </Table.Body>

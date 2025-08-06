@@ -7,6 +7,7 @@ import Button from "../../atoms/Button";
 import CustomerSearchResults from "./CustomerSearchResults";
 import FinishedGoodsSearchResults from "./FinishedGoodsSearchResults";
 import SparePartsSearchResults from "./SparePartsSearchResults";
+import MainCustomerSearchResults from "./MainCustomerSearchResults";
 
 // Sample countries data
 const COUNTRIES = [
@@ -32,6 +33,14 @@ const SEARCH_ENTITIES = [
   },
   {
     id: 2,
+    title: "Main Customer",
+    description:
+      "Search and view main customer master data, organization details, and classification groups. Access primary customer relationships.",
+    image:
+      "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?w=400&h=300&fit=crop&crop=center",
+  },
+  {
+    id: 3,
     title: "Spare Parts",
     description:
       "Search spare parts inventory, check availability, and view part specifications. Find parts by code, name, or category.",
@@ -39,7 +48,7 @@ const SEARCH_ENTITIES = [
       "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=300&fit=crop&crop=center",
   },
   {
-    id: 3,
+    id: 4,
     title: "Finished Goods",
     description:
       "Search finished goods inventory, track product status, and view production history. Find products by SKU or description.",
@@ -85,6 +94,13 @@ const Search = () => {
       case "Customers":
         return (
           <CustomerSearchResults
+            onBack={handleBackToEntities}
+            country={selectedCountry}
+          />
+        );
+      case "Main Customer":
+        return (
+          <MainCustomerSearchResults
             onBack={handleBackToEntities}
             country={selectedCountry}
           />
