@@ -22,7 +22,7 @@ const ValidationConfigPanel = ({
     validationConfigJson: `[
   {
     "field_name": "CustomerType",
-    "validations": "[ { 'type': 'VALUE', 'operator': 'DEFAULT', 'message': '', 'value': 'A,B,C'}, { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'} ]"
+    "validations": "[{ 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'} ]"
   },
   {
     "field_name": "Organizationname",
@@ -34,7 +34,7 @@ const ValidationConfigPanel = ({
   },
   {
     "field_name": "Country",
-    "validations": "[ {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DISPLAYMODE', 'operator': 'DEFAULT', 'message': '', 'value': 'DISABLE'}]"
+    "validations": "[{'type': 'DISPLAYMODE', 'operator': 'DEFAULT', 'message': '', 'value': 'DISABLE'}]"
   }
 ]`,
   });
@@ -217,7 +217,7 @@ const ValidationConfigPanel = ({
                     {
                       field_name: "CustomerType",
                       validations:
-                        "[ { 'type': 'VALUE', 'operator': 'DEFAULT', 'message': '', 'value': 'A,B,C'}, { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'} ]",
+                        "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'} ]",
                     },
                     {
                       field_name: "Organizationname",
@@ -232,7 +232,7 @@ const ValidationConfigPanel = ({
                     {
                       field_name: "Country",
                       validations:
-                        "[ {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DISPLAYMODE', 'operator': 'DEFAULT', 'message': '', 'value': 'DISABLE'}]",
+                        "[ {'type': 'DISPLAYMODE', 'operator': 'DEFAULT', 'message': '', 'value': 'DISABLE'}]",
                     },
                   ],
                   null,
@@ -253,7 +253,7 @@ const ValidationConfigPanel = ({
           placeholder={`[
   {
     "field_name": "CustomerType",
-    "validations": "[ { 'type': 'VALUE', 'operator': 'DEFAULT', 'message': '', 'value': 'A,B,C'}, { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'} ]"
+    "validations": "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'} ]"
   },
   {
     "field_name": "Organizationname",
@@ -265,7 +265,7 @@ const ValidationConfigPanel = ({
   },
   {
     "field_name": "Country",
-    "validations": "[ {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DISPLAYMODE', 'operator': 'DEFAULT', 'message': '', 'value': 'DISABLE'}]"
+    "validations": "[{'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DISPLAYMODE', 'operator': 'DEFAULT', 'message': '', 'value': 'DISABLE'}]"
   }
 ]`}
         />

@@ -146,10 +146,8 @@ const ValidationConfig = ({
 
   // Load configs when entity/request type changes
   useEffect(() => {
-    if (selectedEntity && selectedRequestType) {
-      // For demo, load all sample configs
-      setConfigs(SAMPLE_VALIDATION_CONFIG);
-    }
+    // Always load sample configs for demo purposes
+    setConfigs(SAMPLE_VALIDATION_CONFIG);
   }, [selectedEntity, selectedRequestType]);
 
   const handleEditConfig = (config) => {

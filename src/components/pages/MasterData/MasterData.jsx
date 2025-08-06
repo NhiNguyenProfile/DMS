@@ -1,10 +1,11 @@
 import { useState } from "react";
 import Text from "../../atoms/Text";
-import Tabs from "../../atoms/Tabs";
-import { Globe, Building, Users } from "lucide-react";
+import VerticalTabs from "../../atoms/VerticalTabs";
+import { Globe, Building, Users, Database } from "lucide-react";
 import CountryMasterData from "./components/CountryMasterData";
 import LegalEntityMasterData from "./components/LegalEntityMasterData";
 import DepartmentMasterData from "./components/DepartmentMasterData";
+import MasterDataRecords from "./MasterDataRecords";
 
 const MasterData = () => {
   return (
@@ -22,31 +23,39 @@ const MasterData = () => {
 
       {/* Tab Navigation */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <Tabs defaultTab="countries" variant="default">
-          <Tabs.Panel
+        <VerticalTabs defaultTab="countries" variant="default">
+          <VerticalTabs.Panel
             tabId="countries"
             label="Countries"
             icon={<Globe size={16} />}
           >
             <CountryMasterData />
-          </Tabs.Panel>
+          </VerticalTabs.Panel>
 
-          <Tabs.Panel
+          <VerticalTabs.Panel
             tabId="legal-entities"
             label="Legal Entities"
             icon={<Building size={16} />}
           >
             <LegalEntityMasterData />
-          </Tabs.Panel>
+          </VerticalTabs.Panel>
 
-          <Tabs.Panel
+          <VerticalTabs.Panel
             tabId="departments"
             label="Departments"
             icon={<Users size={16} />}
           >
             <DepartmentMasterData />
-          </Tabs.Panel>
-        </Tabs>
+          </VerticalTabs.Panel>
+
+          <VerticalTabs.Panel
+            tabId="records"
+            label="Records"
+            icon={<Database size={16} />}
+          >
+            <MasterDataRecords />
+          </VerticalTabs.Panel>
+        </VerticalTabs>
       </div>
     </div>
   );

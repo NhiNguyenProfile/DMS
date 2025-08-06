@@ -154,12 +154,11 @@ const AutoFieldConfig = ({ selectedEntity, selectedRequestType, disabled }) => {
   // Load configs when entity/request type changes
   useEffect(() => {
     if (selectedEntity && selectedRequestType) {
-      // Filter configs by entity and request type
-      const filteredConfigs = SAMPLE_AUTO_FIELD_CONFIG.filter(
-        (config) =>
-          config.applied_entity === selectedEntity || !config.applied_entity
-      );
-      setConfigs(filteredConfigs);
+      // Always show all sample configs for demo purposes
+      setConfigs(SAMPLE_AUTO_FIELD_CONFIG);
+    } else {
+      // Show all configs even without selection for demo
+      setConfigs(SAMPLE_AUTO_FIELD_CONFIG);
     }
   }, [selectedEntity, selectedRequestType]);
 

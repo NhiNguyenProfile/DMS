@@ -1,43 +1,49 @@
 import { useState } from "react";
 import Text from "../../atoms/Text";
-import Button from "../../atoms/Button";
 import EntityCard from "../../atoms/EntityCard";
 import { ArrowLeft } from "lucide-react";
-import { ENTITIES } from "../../../constants";
-import RuleFieldConfigContent from "./RuleFieldConfigContent";
+import Button from "../../atoms/Button";
+import CustomerRecords from "./CustomerRecords";
+import SparePartRecords from "./SparePartRecords";
+import FinishedGoodRecords from "./FinishedGoodRecords";
 
-const ConfigurationWizard = () => {
+const ENTITIES = ["Customer", "Spare Part", "Finished Good"];
+
+const MasterDataRecords = () => {
   const [selectedEntity, setSelectedEntity] = useState("");
 
   const handleEntityClick = (entity) => {
     setSelectedEntity(entity);
   };
 
-  // Show configuration if entity is selected
+  const handleBackToEntities = () => {
+    setSelectedEntity("");
+  };
+
+  // Show records for selected entity
   if (selectedEntity) {
     return (
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => setSelectedEntity("")}>
+        <div className="flex items-center space-x-4">
+          <Button variant="ghost" onClick={handleBackToEntities}>
             <ArrowLeft size={16} className="mr-2" />
             Back to Entities
           </Button>
           <div>
-            <Text variant="heading" size="xl" weight="bold" className="mb-2">
-              Form Configuration
+            <Text variant="heading" size="xl" weight="bold" className="mb-1">
+              {selectedEntity} Records
             </Text>
             <Text variant="body" color="muted">
-              {selectedEntity}
+              View and manage {selectedEntity.toLowerCase()} master data records
             </Text>
           </div>
         </div>
 
-        {/* Configuration Content */}
-        <RuleFieldConfigContent
-          selectedEntity={selectedEntity}
-          hideFilters={true}
-        />
+        {/* Entity Records Component */}
+        {selectedEntity === "Customer" && <CustomerRecords />}
+        {selectedEntity === "Spare Part" && <SparePartRecords />}
+        {selectedEntity === "Finished Good" && <FinishedGoodRecords />}
       </div>
     );
   }
@@ -48,10 +54,10 @@ const ConfigurationWizard = () => {
       {/* Header */}
       <div>
         <Text variant="heading" size="xl" weight="bold" className="mb-2">
-          Form Configuration
+          Master Data Records
         </Text>
         <Text variant="body" color="muted">
-          Choose an entity type to configure fields and validation rules
+          Choose an entity type to view and manage records
         </Text>
       </div>
 
@@ -61,7 +67,7 @@ const ConfigurationWizard = () => {
           <EntityCard
             key={entity}
             title={entity}
-            description={`Configure ${entity.toLowerCase()} fields and validation rules`}
+            description={`View and manage ${entity.toLowerCase()} master data records`}
             image={`https://images.unsplash.com/photo-${
               entity === "Customer"
                 ? "1560472354-b33ff0c44a43"
@@ -78,4 +84,4 @@ const ConfigurationWizard = () => {
   );
 };
 
-export default ConfigurationWizard;
+export default MasterDataRecords;

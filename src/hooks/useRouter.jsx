@@ -83,4 +83,9 @@ export const ROUTES = {
     title: "Data Management",
     breadcrumb: "Data Management",
   },
+  "sync-history": {
+    id: "sync-history",
+    title: "Synchronize History",
+    breadcrumb: "Synchronize History",
+  },
 };

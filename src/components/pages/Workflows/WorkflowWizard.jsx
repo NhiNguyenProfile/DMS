@@ -4,35 +4,33 @@ import Button from "../../atoms/Button";
 import EntityCard from "../../atoms/EntityCard";
 import Tabs from "../../atoms/Tabs";
 import { ArrowLeft, Workflow, Users } from "lucide-react";
-import { COUNTRIES } from "../../../constants";
+import { ENTITIES } from "../../../constants";
 import WorkflowsContent from "./WorkflowsContentNew";
 import GroupConfig from "./components/GroupConfig";
 
 const WorkflowWizard = () => {
-  const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedEntity, setSelectedEntity] = useState("");
 
-  const handleCountryClick = (country) => {
-    setSelectedCountry(country.value);
-    setSelectedEntity(""); // Reset entity when country changes
+  const handleEntityClick = (entity) => {
+    setSelectedEntity(entity);
   };
 
-  // Show workflow management if country is selected
-  if (selectedCountry) {
+  // Show workflow management if entity is selected
+  if (selectedEntity) {
     return (
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={() => setSelectedCountry("")}>
+          <Button variant="ghost" onClick={() => setSelectedEntity("")}>
             <ArrowLeft size={16} className="mr-2" />
-            Back to Countries
+            Back to Entities
           </Button>
           <div>
             <Text variant="heading" size="xl" weight="bold" className="mb-2">
               Workflow Management
             </Text>
             <Text variant="body" color="muted">
-              {COUNTRIES.find((c) => c.value === selectedCountry)?.label}
+              {selectedEntity}
             </Text>
           </div>
         </div>
@@ -47,7 +45,6 @@ const WorkflowWizard = () => {
             >
               <div className="mt-4">
                 <WorkflowsContent
-                  selectedCountry={selectedCountry}
                   selectedEntity={selectedEntity}
                   hideFilters={true}
                 />
@@ -69,7 +66,7 @@ const WorkflowWizard = () => {
     );
   }
 
-  // Show country selection (default view)
+  // Show entity selection (default view)
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -78,25 +75,25 @@ const WorkflowWizard = () => {
           Workflow Management
         </Text>
         <Text variant="body" color="muted">
-          Select a country to start managing workflows
+          Choose an entity type to manage workflows
         </Text>
       </div>
 
-      {/* Country Cards Grid */}
+      {/* Entity Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {COUNTRIES.map((country) => (
+        {ENTITIES.map((entity) => (
           <EntityCard
-            key={country.value}
-            title={country.label}
-            description={`Manage approval workflows and processes for ${country.label} operations`}
-            image={
-              country.value === "VN"
-                ? "https://www.deheus.com.vn/contentassets/20da7b24992f46eeb74f1914a3ce1735/premix-plant.png?mode=crop&width=622"
-                : country.value === "NL"
-                ? "https://www.deheus.com/globalassets/careers/hoofdkantoor-ede.jpg?mode=crop&width=750&height=402"
-                : "https://images.unsplash.com/photo-1480796927426-f609979314bd"
-            }
-            onClick={() => handleCountryClick(country)}
+            key={entity}
+            title={entity}
+            description={`Manage approval workflows and processes for ${entity.toLowerCase()}`}
+            image={`https://images.unsplash.com/photo-${
+              entity === "Customer"
+                ? "1560472354-b33ff0c44a43"
+                : entity === "Finished Good"
+                ? "1586528116311-ad8dd3c8310d"
+                : "1581092918056-0c4c3acd3789"
+            }?w=400&h=200&fit=crop`}
+            onClick={() => handleEntityClick(entity)}
             className="hover:border-blue-300"
           />
         ))}

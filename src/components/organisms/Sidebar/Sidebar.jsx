@@ -12,6 +12,7 @@ import {
   Search,
   Shield,
   Database,
+  RefreshCw,
 } from "lucide-react";
 import { useRouter } from "../../../hooks/useRouter.jsx";
 
@@ -53,6 +54,11 @@ const Sidebar = ({ isOpen = true, onToggle, className = "", ...props }) => {
       id: "master-data",
       icon: <Database size={20} />,
       label: "Data Management",
+    },
+    {
+      id: "sync-history",
+      icon: <RefreshCw size={20} />,
+      label: "Synchronize History",
     },
   ];
 

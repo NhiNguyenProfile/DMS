@@ -19,9 +19,9 @@ const RuleFieldConfigContent = ({
     propSelectedEntity || ""
   );
   const [selectedCountry, setSelectedCountry] = useState(
-    propSelectedCountry || ""
+    propSelectedCountry || "VN" // Default to Vietnam
   );
-  const [isCountryLocked, setIsCountryLocked] = useState(false);
+  const [isCountryLocked, setIsCountryLocked] = useState(true); // Lock by default
 
   // Use props if provided
   const finalSelectedCountry = propSelectedCountry || selectedCountry;
@@ -56,8 +56,8 @@ const RuleFieldConfigContent = ({
               />
               {isCountryLocked && (
                 <div className="mt-2 flex items-center justify-between">
-                  <Text variant="caption" color="muted">
-                    Country locked for this session
+                  <Text variant="caption" color="success">
+                    ✓ Vietnam selected (default)
                   </Text>
                   <Button
                     variant="ghost"
@@ -83,13 +83,11 @@ const RuleFieldConfigContent = ({
                 value={selectedEntity}
                 onChange={setSelectedEntity}
                 placeholder="Select Entity"
-                disabled={!selectedCountry}
+                disabled={false} // Always enabled since Vietnam is default
               />
-              {!selectedCountry && (
-                <Text variant="caption" color="muted" className="mt-1">
-                  Please select country first
-                </Text>
-              )}
+              <Text variant="caption" color="muted" className="mt-1">
+                Select an entity to configure
+              </Text>
             </div>
           </div>
         </div>

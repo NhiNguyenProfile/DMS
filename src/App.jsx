@@ -8,6 +8,7 @@ import WorkflowWizard from "./components/pages/Workflows";
 import WorkflowEdit from "./components/pages/WorkflowEdit";
 import Permissions from "./components/pages/Permissions";
 import MasterData from "./components/pages/MasterData";
+import SyncHistory from "./components/pages/SyncHistory";
 
 function AppContent() {
   const { currentRoute } = useRouter();
@@ -30,6 +31,8 @@ function AppContent() {
         return <Permissions />;
       case "master-data":
         return <MasterData />;
+      case "sync-history":
+        return <SyncHistory />;
       default:
         return <MyRequest />;
     }

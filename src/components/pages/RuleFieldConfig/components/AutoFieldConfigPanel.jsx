@@ -278,11 +278,7 @@ const AutoFieldConfigPanel = ({
                       handleInputChange(
                         "criteriaJson",
                         JSON.stringify(
-                          {
-                            field: "",
-                            operator: "==",
-                            value: "",
-                          },
+                          "criteria_1 and criteria_2 or criteria_3",
                           null,
                           2
                         )
@@ -301,11 +297,7 @@ const AutoFieldConfigPanel = ({
                   handleInputChange(
                     "criteriaJson",
                     JSON.stringify(
-                      {
-                        field: "",
-                        operator: "==",
-                        value: "",
-                      },
+                      "criteria_1 and criteria_2 or criteria_3",
                       null,
                       2
                     )
@@ -321,18 +313,7 @@ const AutoFieldConfigPanel = ({
             value={formData.criteriaJson || ""}
             onChange={(e) => handleInputChange("criteriaJson", e.target.value)}
             placeholder={`{
-  "field": "country",
-  "operator": "==",
-  "value": "VN"
-}
-
-or for complex criteria:
-
-{
-  "and": [
-    {"field": "country", "operator": "==", "value": "VN"},
-    {"field": "customerType", "operator": "!=", "value": "Company"}
-  ]
+  criteria_1 and criteria_2 or criteria_3
 }`}
           />
           {errors.criteriaJson && (
