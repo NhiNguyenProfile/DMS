@@ -161,6 +161,25 @@ const ObjectSelectDemo = () => {
             44. Notice code formats: Customer Code FEXXXXXX (e.g., FE100001),
             Main Customer FEXXXXXXM (e.g., FE001234M)
           </li>
+          <li className="mt-3">
+            <strong>Test 6 - Spare Parts Request Flow:</strong>
+          </li>
+          <li>45. Try "Create New Record" for Spare Parts</li>
+          <li>
+            46. Notice SparePartsDetailForm with Product tab (blue active state
+            with manual tab implementation) and collapsible groups - easy to add
+            more tabs
+          </li>
+          <li>47. Try "Mass Create Records" for Spare Parts</li>
+          <li>
+            48. Notice SparePartsBulkCreatePage with consistent Button styling
+            (h-24 flex-col gap-2) matching CustomerBulkCreatePage
+          </li>
+          <li>49. Try "Mass Edit Records" for Spare Parts</li>
+          <li>50. Try "Copy Existing Record" and "Edit Existing Record"</li>
+          <li>
+            51. Notice legal entity selection modal on "Send Mass Request"
+          </li>
         </ul>
       </div>
       <CustomerDetailForm

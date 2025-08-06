@@ -461,6 +461,13 @@ const BulkCreatePage = ({ mode = "create", onBack, onSendBulkRequest }) => {
           { key: "company", label: "Company" },
           { key: "customerGroup", label: "Customer Group" },
         ]}
+        searchFields={[
+          "customerAccount",
+          "organizationName",
+          "mainCustomer",
+          "company",
+          "customerGroup",
+        ]}
         onSelect={handleSelectExistingCustomer}
         searchPlaceholder="Search customers..."
       />

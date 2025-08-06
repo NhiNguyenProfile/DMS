@@ -3,240 +3,558 @@ import Text from "../../atoms/Text";
 import Button from "../../atoms/Button";
 import Input from "../../atoms/Input";
 import Select from "../../atoms/Select";
-import { ArrowLeft, Eye } from "lucide-react";
+import Toggle from "../../atoms/Toggle";
+import MultiSelect from "../../atoms/MultiSelect";
+import { ArrowLeft, Eye, ChevronDown, ChevronRight } from "lucide-react";
 import ApprovalTreeSlider from "./ApprovalTreeSlider";
 import ConfirmationModal from "../../atoms/ConfirmationModal";
 
-// Spare Parts Form Fields
+// Spare Parts Form Fields - Updated according to specification
 const GENERAL_FIELDS = [
-  { label: "Product Type", type: "text", required: true, key: "productType" },
+  {
+    label: "Product type",
+    type: "text",
+    required: false,
+    key: "productType",
+    defaultValue: "Item",
+    readOnly: true,
+  },
   {
     label: "Product Subtype",
     type: "text",
     required: false,
     key: "productSubtype",
+    defaultValue: "Product",
+    readOnly: true,
   },
-  { label: "Item Number", type: "text", required: true, key: "itemNumber" },
   {
-    label: "Product Number",
+    label: "Item Number",
     type: "text",
-    required: false,
+    required: true,
+    key: "itemNumber",
+  },
+  {
+    label: "Product number",
+    type: "text",
+    required: true,
     key: "productNumber",
   },
-  { label: "Product Name", type: "text", required: true, key: "productName" },
-  { label: "Search Name", type: "text", required: false, key: "searchName" },
-  { label: "Class Group", type: "text", required: false, key: "classGroup" },
-  { label: "Class Type", type: "text", required: false, key: "classType" },
-  { label: "Class Kind", type: "text", required: false, key: "classKind" },
   {
     label: "Business Sector",
-    type: "select",
-    options: ["Feed", "Aqua", "Pharma"],
+    type: "text",
     required: false,
     key: "businessSector",
   },
-  { label: "Sync to DHC", type: "yes-no", required: false, key: "syncToDHC" },
+  {
+    label: "Item type",
+    type: "text",
+    required: false,
+    key: "itemType",
+    defaultValue: "Unknown",
+    readOnly: true,
+  },
+  {
+    label: "5Class Group",
+    type: "text",
+    required: false,
+    key: "classGroup",
+  },
+  {
+    label: "5Class Type",
+    type: "text",
+    required: false,
+    key: "classType",
+    defaultValue: "Spare Part",
+    readOnly: true,
+  },
+  {
+    label: "5Class Kind",
+    type: "text",
+    required: false,
+    key: "classKind",
+  },
+  {
+    label: "5Class Sub Group",
+    type: "text",
+    required: false,
+    key: "classSubGroup",
+  },
+  {
+    label: "5Class Ultra Group",
+    type: "text",
+    required: false,
+    key: "classUltraGroup",
+  },
+  {
+    label: "Sync to DHC",
+    type: "text",
+    required: false,
+    key: "syncToDHC",
+    defaultValue: "No",
+    readOnly: true,
+  },
+  {
+    label: "Product Name",
+    type: "text",
+    required: true,
+    key: "productName",
+  },
+  {
+    label: "Search name",
+    type: "text",
+    required: true,
+    key: "searchName",
+  },
+  {
+    label: "Storage dimension group",
+    type: "text",
+    required: false,
+    key: "storageDimensionGroup",
+    defaultValue: "SWFL",
+    readOnly: true,
+  },
+  {
+    label: "Tracking dimension group",
+    type: "text",
+    required: false,
+    key: "trackingDimensionGroup",
+    defaultValue: "None",
+    readOnly: true,
+  },
+  {
+    label: "Item model group",
+    type: "select",
+    options: ["FIFO", "LIFO", "Standard", "Weighted Average"],
+    required: true,
+    key: "itemModelGroup",
+  },
+  {
+    label: "Local Item Classification",
+    type: "select",
+    options: ["Class A", "Class B", "Class C", "Class D"],
+    required: true,
+    key: "localItemClassification",
+  },
 ];
 
 const PURCHASE_FIELDS = [
   {
-    label: "Purchase Unit",
-    type: "text",
-    required: false,
+    label: "Purchase unit",
+    type: "select",
+    options: ["PCS", "KG", "L", "M", "SET"],
+    required: true,
     key: "purchaseUnit",
   },
   {
-    label: "Sales Tax Group (Purchase)",
-    type: "select",
-    options: ["VAT", "PPN"],
+    label: "Overdelivery percentage for purchases",
+    type: "text",
     required: false,
-    key: "salesTaxGroupPurchase",
+    key: "overdeliveryPercentagePurchases",
+    defaultValue: "0",
+    readOnly: true,
   },
   {
-    label: "Vendor Check Method",
-    type: "select",
-    options: ["Strict", "Relaxed"],
+    label: "Underdelivery percentage for purchases",
+    type: "text",
     required: false,
-    key: "vendorCheckMethod",
+    key: "underdeliveryPercentagePurchases",
+    defaultValue: "100",
+    readOnly: true,
+  },
+  {
+    label: "Purchased item quality",
+    type: "text",
+    required: false,
+    key: "purchasedItemQuality",
+  },
+  {
+    label: "Item sales tax group for purchases",
+    type: "select",
+    options: ["VAT", "Non-VAT", "Exempt", "Zero-rated"],
+    required: true,
+    key: "itemSalesTaxGroupPurchases",
+  },
+  {
+    label: "Approved vendor check method",
+    type: "text",
+    required: false,
+    key: "approvedVendorCheckMethod",
+    defaultValue: "No Check",
+    readOnly: true,
   },
 ];
 
 const SELL_FIELDS = [
-  { label: "Sales Unit", type: "text", required: true, key: "salesUnit" },
   {
-    label: "Sales Tax Group (Sales)",
+    label: "Sale unit",
     type: "select",
-    options: ["VAT", "PPN"],
+    options: ["PCS", "KG", "L", "M", "SET"],
     required: true,
-    key: "salesTaxGroupSales",
+    key: "saleUnit",
+  },
+  {
+    label: "Overdelivery percentage for sales",
+    type: "text",
+    required: false,
+    key: "overdeliveryPercentageSales",
+    defaultValue: "0",
+    readOnly: true,
+  },
+  {
+    label: "Underdelivery percentage for sales",
+    type: "text",
+    required: false,
+    key: "underdeliveryPercentageSales",
+    defaultValue: "100",
+    readOnly: true,
+  },
+  {
+    label: "Item sales tax group for sales",
+    type: "select",
+    options: ["VAT", "Non-VAT", "Exempt", "Zero-rated"],
+    required: true,
+    key: "itemSalesTaxGroupSales",
   },
   {
     label: "Pricing Formula",
     type: "text",
     required: false,
     key: "pricingFormula",
+    defaultValue: "Standard",
+    readOnly: true,
   },
   {
-    label: "Sales Price Model",
-    type: "select",
-    options: ["Standard", "Promotion", "Volume Based"],
+    label: "Sales price model",
+    type: "text",
     required: false,
     key: "salesPriceModel",
+    defaultValue: "None",
+    readOnly: true,
+  },
+  {
+    label: "Base price",
+    type: "text",
+    required: false,
+    key: "basePrice",
+    defaultValue: "Purchase Price",
+    readOnly: true,
+  },
+  {
+    label: "When to use: Alternative product",
+    type: "text",
+    required: false,
+    key: "whenToUseAlternativeProduct",
+    defaultValue: "Never",
+    readOnly: true,
+  },
+  {
+    label: "Allow sales price adjustment",
+    type: "text",
+    required: false,
+    key: "allowSalesPriceAdjustment",
+    defaultValue: "Yes",
+    readOnly: true,
+  },
+  {
+    label: "Date of Price",
+    type: "date",
+    required: false,
+    key: "dateOfPrice",
   },
 ];
 
-const INVENTORY_FIELDS = [
+const MANAGE_INVENTORY_FIELDS = [
   {
-    label: "Inventory Unit",
-    type: "text",
+    label: "Net Weight",
+    type: "number",
+    required: false,
+    key: "netWeight",
+  },
+  {
+    label: "Inventory unit",
+    type: "select",
+    options: ["PCS", "KG", "L", "M", "SET"],
     required: true,
     key: "inventoryUnit",
   },
-  { label: "CW Product", type: "yes-no", required: false, key: "cwProduct" },
   {
-    label: "Packing Group",
+    label: "Packing group",
     type: "text",
     required: false,
     key: "packingGroup",
+    defaultValue: "Bulk",
+    readOnly: true,
   },
-  { label: "Bag Item", type: "yes-no", required: false, key: "bagItem" },
   {
-    label: "Storage/Tracking Group",
+    label: "Overdelivery percentage for transfer orders",
     type: "text",
     required: false,
-    key: "storageTrackingGroup",
+    key: "overdeliveryPercentageTransferOrders",
+    defaultValue: "0",
+    readOnly: true,
+  },
+  {
+    label: "Underdelivery percentage for transfer orders",
+    type: "text",
+    required: false,
+    key: "underdeliveryPercentageTransferOrders",
+    defaultValue: "100",
+    readOnly: true,
+  },
+  {
+    label: "Yield percent",
+    type: "text",
+    required: false,
+    key: "yieldPercent",
+    defaultValue: "0",
+    readOnly: true,
+  },
+  {
+    label: "CW unit",
+    type: "text",
+    required: false,
+    key: "cwUnit",
+  },
+  {
+    label: "CW product",
+    type: "text",
+    required: false,
+    key: "cwProduct",
+    defaultValue: "No",
+    readOnly: true,
+  },
+  {
+    label: "Maximum quantity",
+    type: "text",
+    required: false,
+    key: "maximumQuantity",
+    defaultValue: "0",
+    readOnly: true,
+  },
+  {
+    label: "Minimum quantity",
+    type: "text",
+    required: false,
+    key: "minimumQuantity",
+    defaultValue: "0",
+    readOnly: true,
+  },
+  {
+    label: "Bag item",
+    type: "select",
+    options: ["Yes", "No"],
+    required: true,
+    key: "bagItem",
+  },
+  {
+    label: "Default Order Settings Menu",
+    type: "text",
+    required: true,
+    key: "defaultOrderSettingsMenu",
   },
 ];
 
 const ENGINEER_FIELDS = [
   {
-    label: "Production Type",
+    label: "Production type",
     type: "text",
     required: false,
     key: "productionType",
-  },
-  { label: "BOM Unit", type: "text", required: false, key: "bomUnit" },
-  {
-    label: "Item Group",
-    type: "select",
-    options: ["FGD", "RAW", "SPARE"],
-    required: true,
-    key: "itemGroup",
+    defaultValue: "None",
+    readOnly: true,
   },
   {
-    label: "Product Form",
-    type: "select",
-    options: ["Solid", "Liquid", "Powder"],
-    required: true,
-    key: "productForm",
-  },
-  {
-    label: "Dimensions A00",
+    label: "BOM Unit",
     type: "text",
     required: false,
-    key: "dimensionsA00",
-  },
-  {
-    label: "Dimensions A01",
-    type: "text",
-    required: false,
-    key: "dimensionsA01",
-  },
-  {
-    label: "Dimensions A02",
-    type: "text",
-    required: false,
-    key: "dimensionsA02",
-  },
-  {
-    label: "Dimensions A03",
-    type: "text",
-    required: false,
-    key: "dimensionsA03",
-  },
-  {
-    label: "Dimensions A04",
-    type: "text",
-    required: false,
-    key: "dimensionsA04",
-  },
-  {
-    label: "Dimensions A05",
-    type: "text",
-    required: false,
-    key: "dimensionsA05",
-  },
-  {
-    label: "Dimensions A06",
-    type: "text",
-    required: false,
-    key: "dimensionsA06",
-  },
-  {
-    label: "Dimensions A07",
-    type: "text",
-    required: false,
-    key: "dimensionsA07",
-  },
-  {
-    label: "Dimensions A08",
-    type: "text",
-    required: false,
-    key: "dimensionsA08",
-  },
-  {
-    label: "Dimensions A09",
-    type: "text",
-    required: false,
-    key: "dimensionsA09",
-  },
-  {
-    label: "Dimensions A10",
-    type: "text",
-    required: false,
-    key: "dimensionsA10",
-  },
-  {
-    label: "Dimensions A11",
-    type: "text",
-    required: false,
-    key: "dimensionsA11",
-  },
-  {
-    label: "Dimensions A12",
-    type: "text",
-    required: false,
-    key: "dimensionsA12",
-  },
-  {
-    label: "Dimensions A13",
-    type: "text",
-    required: false,
-    key: "dimensionsA13",
+    key: "bomUnit",
+    defaultValue: "Blank",
+    readOnly: true,
   },
 ];
 
-const SparePartsDetailForm = ({ requestData, onBack }) => {
+const MANAGE_COSTS_FIELDS = [
+  {
+    label: "Item Group",
+    type: "text",
+    required: false,
+    key: "itemGroup",
+    defaultValue: "SPP",
+    readOnly: true,
+  },
+  {
+    label: "Latest Cost Price",
+    type: "text",
+    required: false,
+    key: "latestCostPrice",
+    defaultValue: "Yes",
+    readOnly: true,
+  },
+];
+
+const FINANCIAL_DIMENSIONS_FIELDS = [
+  {
+    label: "A00_BusinessUnit",
+    type: "text",
+    required: false,
+    key: "a00BusinessUnit",
+  },
+  {
+    label: "A01_CostCategory",
+    type: "text",
+    required: false,
+    key: "a01CostCategory",
+  },
+  {
+    label: "A02_Intercompany",
+    type: "text",
+    required: false,
+    key: "a02Intercompany",
+  },
+  {
+    label: "A03_Department",
+    type: "text",
+    required: false,
+    key: "a03Department",
+  },
+  {
+    label: "A04_Location",
+    type: "text",
+    required: false,
+    key: "a04Location",
+  },
+  {
+    label: "A05_Employee",
+    type: "text",
+    required: false,
+    key: "a05Employee",
+  },
+  {
+    label: "A06_Cashflow",
+    type: "text",
+    required: false,
+    key: "a06Cashflow",
+  },
+  {
+    label: "A08_Division",
+    type: "text",
+    required: false,
+    key: "a08Division",
+  },
+  {
+    label: "A09_Species",
+    type: "text",
+    required: false,
+    key: "a09Species",
+  },
+  {
+    label: "A10_Bank Account",
+    type: "text",
+    required: false,
+    key: "a10BankAccount",
+  },
+  {
+    label: "A11_Project",
+    type: "text",
+    required: false,
+    key: "a11Project",
+  },
+  {
+    label: "A12_Customer",
+    type: "text",
+    required: false,
+    key: "a12Customer",
+  },
+  {
+    label: "A13_Cost Center",
+    type: "text",
+    required: false,
+    key: "a13CostCenter",
+  },
+];
+
+const PRODUCT_ATTRIBUTE_FIELDS = [
+  {
+    label: "Product Form",
+    type: "text",
+    required: false,
+    key: "productForm",
+  },
+];
+
+const UNIT_OF_CONVERSION_FIELDS = [
+  {
+    label: "Unit of measure conversion",
+    type: "text",
+    required: false,
+    key: "unitOfMeasureConversion",
+  },
+];
+
+const SparePartsDetailForm = ({ requestData, onBack, onSave }) => {
   // Debug: Log requestData to check if it's being passed correctly
   console.log("SparePartsDetailForm - requestData:", requestData);
 
-  const [activeTab, setActiveTab] = useState("general");
+  const [activeTab, setActiveTab] = useState("product");
   const [formData, setFormData] = useState({});
   const [showApprovalSlider, setShowApprovalSlider] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [collapsedGroups, setCollapsedGroups] = useState({});
+  const [selectedLegalEntities, setSelectedLegalEntities] = useState([
+    "DHV",
+    "DHBH",
+    "DHHP",
+  ]);
 
-  const tabs = [
-    { id: "general", label: "General", fields: GENERAL_FIELDS },
-    { id: "purchase", label: "Purchase", fields: PURCHASE_FIELDS },
-    { id: "sell", label: "Sell", fields: SELL_FIELDS },
-    { id: "inventory", label: "Inventory", fields: INVENTORY_FIELDS },
+  // Tab configuration - easy to add new tabs
+  const tabsConfig = [
     {
-      id: "engineer",
-      label: "Engineer / Cost / Finance",
-      fields: ENGINEER_FIELDS,
+      id: "product",
+      label: "Product",
+      groups: [
+        { id: "general", label: "General", fields: GENERAL_FIELDS },
+        { id: "purchase", label: "Purchase", fields: PURCHASE_FIELDS },
+        { id: "sell", label: "Sell", fields: SELL_FIELDS },
+        {
+          id: "manageInventory",
+          label: "Manage Inventory",
+          fields: MANAGE_INVENTORY_FIELDS,
+        },
+        { id: "engineer", label: "Engineer", fields: ENGINEER_FIELDS },
+        {
+          id: "manageCosts",
+          label: "Manage Costs",
+          fields: MANAGE_COSTS_FIELDS,
+        },
+        {
+          id: "financialDimensions",
+          label: "Financial Dimensions",
+          fields: FINANCIAL_DIMENSIONS_FIELDS,
+        },
+        {
+          id: "productAttribute",
+          label: "Product Attribute",
+          fields: PRODUCT_ATTRIBUTE_FIELDS,
+        },
+        {
+          id: "unitOfConversion",
+          label: "Unit of Conversion",
+          fields: UNIT_OF_CONVERSION_FIELDS,
+        },
+      ],
     },
   ];
+
+  // Create tabs array for manual tab implementation
+  const tabs = tabsConfig.map((tab) => ({
+    id: tab.id,
+    label: tab.label,
+    count: tab.groups.length,
+  }));
+
+  // Get groups from current active tab
+  const groups = tabsConfig.find((tab) => tab.id === activeTab)?.groups || [];
 
   const handleInputChange = (key, value) => {
     setFormData((prev) => ({
@@ -245,9 +563,17 @@ const SparePartsDetailForm = ({ requestData, onBack }) => {
     }));
   };
 
+  const toggleGroupCollapse = (groupId) => {
+    setCollapsedGroups((prev) => ({
+      ...prev,
+      [groupId]: !prev[groupId],
+    }));
+  };
+
   const renderField = (field) => {
-    const value = formData[field.key] || "";
-    const isEditable = requestData?.currentSteps === "Waiting for Entry";
+    const value = formData[field.key] || field.defaultValue || "";
+    const isEditable =
+      requestData?.currentSteps === "Waiting for Entry" && !field.readOnly;
 
     return (
       <div key={field.key} className="space-y-2">
@@ -256,13 +582,18 @@ const SparePartsDetailForm = ({ requestData, onBack }) => {
             {field.label}
           </Text>
           {field.required && <span className="text-red-500 text-sm">*</span>}
-          {!isEditable && (
-            <span className="text-xs text-gray-500 ml-2">(View Only)</span>
+          {(!isEditable || field.readOnly) && (
+            <span className="text-xs text-gray-500 ml-2">
+              {field.readOnly ? "(Default Value)" : "(View Only)"}
+            </span>
           )}
         </div>
 
-        {field.type === "text" && (
+        {(field.type === "text" ||
+          field.type === "number" ||
+          field.type === "date") && (
           <Input
+            type={field.type}
             value={value}
             onChange={
               isEditable
@@ -293,32 +624,58 @@ const SparePartsDetailForm = ({ requestData, onBack }) => {
         )}
 
         {field.type === "yes-no" && (
-          <Select
-            options={[
-              { value: "yes", label: "Yes" },
-              { value: "no", label: "No" },
-            ]}
-            value={value}
-            onChange={
-              isEditable
-                ? (val) => handleInputChange(field.key, val)
-                : undefined
+          <Toggle
+            checked={value === "yes"}
+            onChange={(checked) =>
+              isEditable && handleInputChange(field.key, checked ? "yes" : "no")
             }
-            placeholder={isEditable ? "Select option" : ""}
             disabled={!isEditable}
+            label={value === "yes" ? "Yes" : "No"}
           />
         )}
       </div>
     );
   };
 
-  const renderTabContent = () => {
-    const currentTab = tabs.find((tab) => tab.id === activeTab);
-    if (!currentTab) return null;
-
+  const renderAllGroups = () => {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {currentTab.fields.map((field) => renderField(field))}
+      <div className="space-y-8">
+        {groups.map((group) => {
+          const isCollapsed = collapsedGroups[group.id];
+
+          return (
+            <div key={group.id} className="space-y-6">
+              {/* Group Header with Collapse Toggle */}
+              <div className="border-b border-gray-200 pb-2">
+                <button
+                  onClick={() => toggleGroupCollapse(group.id)}
+                  className="flex items-center gap-2 w-full text-left hover:bg-gray-50 p-2 -m-2 rounded transition-colors"
+                >
+                  {isCollapsed ? (
+                    <ChevronRight size={20} className="text-gray-500" />
+                  ) : (
+                    <ChevronDown size={20} className="text-gray-500" />
+                  )}
+                  <Text
+                    variant="heading"
+                    size="lg"
+                    weight="bold"
+                    className="text-gray-900"
+                  >
+                    {group.label}
+                  </Text>
+                </button>
+              </div>
+
+              {/* Group Fields - Only show if not collapsed */}
+              {!isCollapsed && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {group.fields.map((field) => renderField(field))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     );
   };
@@ -336,8 +693,14 @@ const SparePartsDetailForm = ({ requestData, onBack }) => {
       action: "cancel",
     });
 
-    // Submit button only for "Waiting for Entry" status
-    if (requestData.currentSteps === "Waiting for Entry") {
+    // Different button for mass create vs regular request
+    if (requestData.isMassCreate) {
+      actions.push({
+        label: "Save",
+        variant: "primary",
+        action: "save",
+      });
+    } else if (requestData.currentSteps === "Waiting for Entry") {
       actions.push({
         label: "Submit Request",
         variant: "primary",
@@ -351,7 +714,21 @@ const SparePartsDetailForm = ({ requestData, onBack }) => {
   const handleAction = (action) => {
     switch (action) {
       case "cancel":
-        setShowCancelModal(true);
+        if (requestData?.isMassCreate) {
+          // For mass create, cancel directly without confirmation
+          if (onBack) {
+            onBack();
+          }
+        } else {
+          // For regular requests, show confirmation modal
+          setShowCancelModal(true);
+        }
+        break;
+      case "save":
+        // For mass create, save directly
+        if (onSave) {
+          onSave({ ...requestData, ...formData });
+        }
         break;
       case "submit":
         setShowSubmitModal(true);
@@ -368,9 +745,12 @@ const SparePartsDetailForm = ({ requestData, onBack }) => {
   };
 
   const handleSubmitConfirm = () => {
-    console.log("Submit spare parts request", formData);
+    console.log("Submit spare parts request", {
+      formData,
+      selectedLegalEntities,
+    });
     setShowSubmitModal(false);
-    // Handle submit logic
+    // Handle submit logic - product will be released to selected legal entities
   };
 
   return (
@@ -459,9 +839,11 @@ const SparePartsDetailForm = ({ requestData, onBack }) => {
       {/* Form Content */}
       <div className="flex-1 px-6 py-8 pb-24">
         <div className="max-w-6xl mx-auto">
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            {renderTabContent()}
-          </div>
+          {activeTab === "product" && (
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              {renderAllGroups()}
+            </div>
+          )}
         </div>
       </div>
 
@@ -502,16 +884,56 @@ const SparePartsDetailForm = ({ requestData, onBack }) => {
         commentRequired={true}
       />
 
-      {/* Submit Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={showSubmitModal}
-        onClose={() => setShowSubmitModal(false)}
-        onConfirm={handleSubmitConfirm}
-        title="Submit Request"
-        message="Are you sure you want to submit this spare parts request for approval?"
-        confirmText="Submit Request"
-        showCommentInput={false}
-      />
+      {/* Submit Confirmation Modal with Legal Entity Selection */}
+      {showSubmitModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <div className="mb-4">
+              <Text variant="heading" size="lg" weight="bold">
+                Submit Request
+              </Text>
+              <Text variant="body" className="text-gray-600 mt-2">
+                Which legal entities would you like to release this product to?
+              </Text>
+            </div>
+
+            <div className="mb-6">
+              <Text variant="body" weight="medium" className="mb-3">
+                Select Legal Entities:
+              </Text>
+              <MultiSelect
+                options={[
+                  { value: "DHV", label: "DHV" },
+                  { value: "DHBH", label: "DHBH" },
+                  { value: "DHHP", label: "DHHP" },
+                  { value: "DHHY", label: "DHHY" },
+                  { value: "DHGC", label: "DHGC" },
+                  { value: "DHGD", label: "DHGD" },
+                ]}
+                value={selectedLegalEntities}
+                onChange={setSelectedLegalEntities}
+                placeholder="Select legal entities..."
+              />
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowSubmitModal(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleSubmitConfirm}
+                disabled={selectedLegalEntities.length === 0}
+              >
+                Submit Request
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

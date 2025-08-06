@@ -5,9 +5,108 @@ import Input from "../../atoms/Input";
 import Table from "../../atoms/Table";
 import Modal from "../../atoms/Modal";
 import Select from "../../atoms/Select";
-import { Search, Filter, Plus, ArrowLeft } from "lucide-react";
+import ObjectSelectModal from "../../atoms/ObjectSelectModal";
+import { Search, Filter, Plus, ArrowLeft, Edit, Copy, Eye } from "lucide-react";
 import ApprovalTreeSlider from "./ApprovalTreeSlider";
 import SparePartsDetailForm from "./SparePartsDetailForm";
+import SparePartsBulkCreatePage from "./SparePartsBulkCreatePage";
+
+// Request Types for Spare Parts
+const REQUEST_TYPES = [
+  { value: "Create", label: "Create New Record" },
+  { value: "MassCreate", label: "Mass Create Records" },
+  { value: "MassEdit", label: "Mass Edit Records" },
+  { value: "Copy", label: "Copy Existing Record" },
+  { value: "Edit", label: "Edit Existing Record" },
+];
+
+// Existing Spare Parts for Copy/Edit
+const EXISTING_SPARE_PARTS = [
+  {
+    id: 1,
+    itemNumber: "SP001",
+    productName: "Bearing Assembly",
+    productNumber: "FE400001",
+    businessSector: "Feed",
+    itemType: "Unknown",
+    classType: "Spare Part",
+    company: "DHV",
+    status: "Active",
+    searchName: "Bearing Assy",
+    productType: "Item",
+    productSubtype: "Product",
+    syncToDHC: "No",
+    storageDimensionGroup: "SWFL",
+    trackingDimensionGroup: "None",
+    itemModelGroup: "FIFO",
+    localItemClassification: "Class A",
+    purchaseUnit: "PCS",
+    saleUnit: "PCS",
+    inventoryUnit: "PCS",
+    packingGroup: "Bulk",
+    bagItem: "No",
+    itemGroup: "SPP",
+    latestCostPrice: "Yes",
+    productionType: "None",
+    bomUnit: "Blank",
+  },
+  {
+    id: 2,
+    itemNumber: "SP002",
+    productName: "Motor Coupling",
+    productNumber: "FE400002",
+    businessSector: "Aqua",
+    itemType: "Unknown",
+    classType: "Spare Part",
+    company: "DHBH",
+    status: "Active",
+    searchName: "Motor Coupling",
+    productType: "Item",
+    productSubtype: "Product",
+    syncToDHC: "No",
+    storageDimensionGroup: "SWFL",
+    trackingDimensionGroup: "None",
+    itemModelGroup: "Standard",
+    localItemClassification: "Class B",
+    purchaseUnit: "PCS",
+    saleUnit: "PCS",
+    inventoryUnit: "PCS",
+    packingGroup: "Bulk",
+    bagItem: "No",
+    itemGroup: "SPP",
+    latestCostPrice: "Yes",
+    productionType: "None",
+    bomUnit: "Blank",
+  },
+  {
+    id: 3,
+    itemNumber: "SP003",
+    productName: "Filter Element",
+    productNumber: "FE400003",
+    businessSector: "Pharma",
+    itemType: "Unknown",
+    classType: "Spare Part",
+    company: "DHHP",
+    status: "Active",
+    searchName: "Filter Element",
+    productType: "Item",
+    productSubtype: "Product",
+    syncToDHC: "No",
+    storageDimensionGroup: "SWFL",
+    trackingDimensionGroup: "None",
+    itemModelGroup: "Weighted Average",
+    localItemClassification: "Class C",
+    purchaseUnit: "PCS",
+    saleUnit: "PCS",
+    inventoryUnit: "PCS",
+    packingGroup: "Bulk",
+    bagItem: "Yes",
+    itemGroup: "SPP",
+    latestCostPrice: "Yes",
+    productionType: "None",
+    bomUnit: "Blank",
+  },
+];
 
 // Sample spare parts requests data
 const SPARE_PARTS_REQUESTS = [
@@ -100,52 +199,6 @@ const SPARE_PARTS_APPROVAL_TREES = {
   },
 };
 
-const REQUEST_TYPES = [
-  { value: "Create", label: "Create New Record" },
-  { value: "Edit", label: "Edit Existing Record" },
-  { value: "Disable", label: "Disable Existing Record" },
-  { value: "Reactivate", label: "Reactivate Existing Record" },
-];
-
-// Available spare parts for search
-const EXISTING_SPARE_PARTS = [
-  {
-    id: "PART-001",
-    name: "Hydraulic Pump Model HP-200",
-    code: "HP200",
-    category: "Hydraulic",
-    status: "Active",
-  },
-  {
-    id: "PART-002",
-    name: "Conveyor Belt 1200mm",
-    code: "CB1200",
-    category: "Conveyor",
-    status: "Active",
-  },
-  {
-    id: "PART-003",
-    name: "Motor Gear Assembly",
-    code: "MGA001",
-    category: "Motor",
-    status: "Active",
-  },
-  {
-    id: "PART-004",
-    name: "Safety Valve SV-50",
-    code: "SV050",
-    category: "Safety",
-    status: "Inactive",
-  },
-  {
-    id: "PART-005",
-    name: "Bearing Set BS-100",
-    code: "BS100",
-    category: "Bearing",
-    status: "Active",
-  },
-];
-
 const STATUS_OPTIONS = [
   { value: "", label: "All Status" },
   { value: "Pending", label: "Pending" },
@@ -171,6 +224,8 @@ const SparePartsRequestList = ({
   const [selectedPart, setSelectedPart] = useState(null);
   const [showDetailForm, setShowDetailForm] = useState(false);
   const [selectedRequestData, setSelectedRequestData] = useState(null);
+  const [showObjectSelectModal, setShowObjectSelectModal] = useState(false);
+  const [showBulkCreatePage, setShowBulkCreatePage] = useState(false);
   const [filters, setFilters] = useState({
     status: "",
     fromDate: "",
@@ -196,10 +251,54 @@ const SparePartsRequestList = ({
   });
 
   const handleAddRequest = (requestType) => {
+    // Close the modal first
     setShowAddModal(false);
-    setSelectedRequestType(requestType);
 
-    if (requestType === "Create") {
+    if (requestType === "MassCreate") {
+      // For Mass Create, show mass create page
+      setSelectedRequestType("MassCreate");
+      setShowBulkCreatePage(true);
+
+      // Also trigger onShowDetail if provided (for parent component)
+      if (onShowDetail) {
+        onShowDetail(
+          <SparePartsBulkCreatePage
+            mode="create"
+            onBack={() => {
+              setShowBulkCreatePage(false);
+              setSelectedRequestType(null);
+              onShowDetail(null);
+            }}
+            onSendBulkRequest={(massRequest) => {
+              handleSendMassRequest(massRequest);
+              onShowDetail(null);
+            }}
+          />
+        );
+      }
+    } else if (requestType === "MassEdit") {
+      // For Mass Edit, show mass edit page
+      setSelectedRequestType("MassEdit");
+      setShowBulkCreatePage(true);
+      // Also trigger onShowDetail if provided (for parent component)
+      if (onShowDetail) {
+        console.log("🔍 Parent component mode - Mass Edit, mode='edit'");
+        onShowDetail(
+          <SparePartsBulkCreatePage
+            mode="edit"
+            onBack={() => {
+              setShowBulkCreatePage(false);
+              setSelectedRequestType(null);
+              onShowDetail(null);
+            }}
+            onSendBulkRequest={(massRequest) => {
+              handleSendMassRequest(massRequest);
+              onShowDetail(null);
+            }}
+          />
+        );
+      }
+    } else if (requestType === "Create") {
       // For Create New Record, create new request and go to detail form
       const newRequest = {
         id: `REQ-${Date.now()}`,
@@ -238,8 +337,9 @@ const SparePartsRequestList = ({
       // Add to requests list
       setRequests((prev) => [newRequest, ...prev]);
 
-      // Also trigger onShowDetail if provided (for parent component)
+      // Always show detail form immediately
       if (onShowDetail) {
+        // Parent component mode - pass detail component to parent
         onShowDetail(
           <SparePartsDetailForm
             requestData={newRequest}
@@ -257,6 +357,10 @@ const SparePartsRequestList = ({
             }}
           />
         );
+      } else {
+        // Local mode - show detail form locally
+        setSelectedRequestData(newRequest);
+        setShowDetailForm(true);
       }
     } else {
       // For other types, show search modal to find existing records
@@ -284,6 +388,55 @@ const SparePartsRequestList = ({
   const handleSelectPart = (part) => {
     // Just set the selected part, don't create request yet
     setSelectedPart(part);
+  };
+
+  const handleSendMassRequest = (massRequest) => {
+    // Add mass request to requests list
+    setRequests((prev) => [massRequest, ...prev]);
+
+    // Close mass create page
+    setShowBulkCreatePage(false);
+    setSelectedRequestType(null);
+
+    // Show success message or redirect
+    console.log("Mass request created:", massRequest);
+  };
+
+  const handleSelectExistingSparePart = (selectedSparePart) => {
+    const requestData = {
+      ...selectedSparePart,
+      id: selectedRequestType === "Copy" ? "SP-COPY" : "SP-EDIT",
+      requestType: selectedRequestType,
+      requestTitle: `${selectedRequestType} Spare Part - ${selectedSparePart.productName}`,
+      stepOwner: "You - Maintenance Admin",
+      currentSteps: "Waiting for Entry",
+      status: "Draft",
+      createdDate: new Date().toISOString(),
+      isNew: false,
+      isCopy: selectedRequestType === "Copy",
+    };
+
+    if (onShowDetail) {
+      onShowDetail(
+        <SparePartsDetailForm
+          requestData={requestData}
+          onBack={() => onShowDetail(null)}
+          onSave={(savedData) => {
+            // Add request to list
+            const newRequest = {
+              ...savedData,
+              id: `SP-REQ-${Date.now()}`,
+              createdDate: new Date().toISOString(),
+            };
+            setRequests((prev) => [newRequest, ...prev]);
+            onShowDetail(null);
+          }}
+        />
+      );
+    }
+
+    setShowObjectSelectModal(false);
+    setSelectedRequestType(null);
   };
 
   const handleSendRequest = () => {
@@ -447,6 +600,24 @@ const SparePartsRequestList = ({
       <SparePartsDetailForm
         requestData={selectedRequestData}
         onBack={handleBackFromDetail}
+      />
+    );
+  }
+
+  // If showing bulk create page locally (cards mode)
+  if (showBulkCreatePage && !onShowDetail) {
+    // Cards mode - show mass create/edit page locally
+    console.log("🔍 Cards mode - selectedRequestType:", selectedRequestType);
+    const mode = selectedRequestType === "MassEdit" ? "edit" : "create";
+    console.log("🔍 Cards mode - calculated mode:", mode);
+    return (
+      <SparePartsBulkCreatePage
+        mode={mode}
+        onBack={() => {
+          setShowBulkCreatePage(false);
+          setSelectedRequestType(null);
+        }}
+        onSendBulkRequest={handleSendMassRequest}
       />
     );
   }
@@ -831,6 +1002,30 @@ const SparePartsRequestList = ({
           </div>
         </div>
       </Modal>
+
+      {/* Object Select Modal for Copy/Edit */}
+      <ObjectSelectModal
+        isOpen={showObjectSelectModal}
+        onClose={() => setShowObjectSelectModal(false)}
+        title={`Select Spare Part to ${selectedRequestType}`}
+        data={EXISTING_SPARE_PARTS}
+        columns={[
+          { key: "itemNumber", label: "Item Number" },
+          { key: "productName", label: "Product Name" },
+          { key: "productNumber", label: "Product Number" },
+          { key: "businessSector", label: "Business Sector" },
+          { key: "company", label: "Company" },
+        ]}
+        searchFields={[
+          "itemNumber",
+          "productName",
+          "productNumber",
+          "businessSector",
+          "company",
+        ]}
+        onSelect={handleSelectExistingSparePart}
+        searchPlaceholder="Search spare parts..."
+      />
 
       {/* Approval Tree Slider */}
       <ApprovalTreeSlider

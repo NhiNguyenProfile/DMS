@@ -3,6 +3,7 @@ import Text from "../../atoms/Text";
 import Button from "../../atoms/Button";
 import Input from "../../atoms/Input";
 import Select from "../../atoms/Select";
+import Toggle from "../../atoms/Toggle";
 import ObjectSelectModal from "../../atoms/ObjectSelectModal";
 import AddressTable from "../../atoms/AddressTable";
 import { ArrowLeft, Eye } from "lucide-react";
@@ -661,19 +662,14 @@ const CustomerDetailForm = ({
         )}
 
         {field.type === "yes-no" && (
-          <Select
-            options={[
-              { value: "yes", label: "Yes" },
-              { value: "no", label: "No" },
-            ]}
-            value={value}
-            onChange={
-              !isFieldDisabled
-                ? (val) => handleInputChange(field.key, val)
-                : undefined
+          <Toggle
+            checked={value === "yes"}
+            onChange={(checked) =>
+              !isFieldDisabled &&
+              handleInputChange(field.key, checked ? "yes" : "no")
             }
-            placeholder={!isFieldDisabled ? "Select option" : ""}
             disabled={isFieldDisabled}
+            label={value === "yes" ? "Yes" : "No"}
           />
         )}
 
