@@ -376,8 +376,8 @@ const SparePartsRequestList = ({
     if (term.trim()) {
       const results = EXISTING_SPARE_PARTS.filter(
         (part) =>
-          part.name.toLowerCase().includes(term.toLowerCase()) ||
-          part.code.toLowerCase().includes(term.toLowerCase())
+          (part.name && part.name.toLowerCase().includes(term.toLowerCase())) ||
+          (part.code && part.code.toLowerCase().includes(term.toLowerCase()))
       );
       setSearchResults(results);
     } else {

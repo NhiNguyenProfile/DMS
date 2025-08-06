@@ -3,10 +3,11 @@ import Text from "../../atoms/Text";
 import Button from "../../atoms/Button";
 import Input from "../../atoms/Input";
 import Select from "../../atoms/Select";
+import MultiSelect from "../../atoms/MultiSelect";
 import Toggle from "../../atoms/Toggle";
 import ObjectSelectModal from "../../atoms/ObjectSelectModal";
 import AddressTable from "../../atoms/AddressTable";
-import { ArrowLeft, Eye } from "lucide-react";
+import { ArrowLeft, Eye, X } from "lucide-react";
 import ApprovalTreeSlider from "./ApprovalTreeSlider";
 import ConfirmationModal from "../../atoms/ConfirmationModal";
 
@@ -403,6 +404,7 @@ const CustomerDetailForm = ({
   const [showApprovalSlider, setShowApprovalSlider] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [selectedLegalEntities, setSelectedLegalEntities] = useState([]);
   const [objectSelectModal, setObjectSelectModal] = useState({
     isOpen: false,
     field: null,
@@ -844,10 +846,17 @@ const CustomerDetailForm = ({
 
   const handleSubmitConfirm = () => {
     console.log("Submit request", formData);
+    console.log("Selected Legal Entities:", selectedLegalEntities);
     setShowSubmitModal(false);
-    // Handle submit logic
+
+    // Handle submit logic with selected legal entities
     if (onSave) {
-      onSave({ ...requestData, ...formData, addresses });
+      onSave({
+        ...requestData,
+        ...formData,
+        addresses,
+        copyToLegalEntities: selectedLegalEntities,
+      });
     }
   };
 
@@ -973,16 +982,131 @@ const CustomerDetailForm = ({
         commentRequired={true}
       />
 
-      {/* Submit Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={showSubmitModal}
-        onClose={() => setShowSubmitModal(false)}
-        onConfirm={handleSubmitConfirm}
-        title="Submit Request"
-        message="Are you sure you want to submit this request for approval?"
-        confirmText="Submit Request"
-        showCommentInput={false}
-      />
+      {/* Submit Confirmation Modal with Legal Entity Selection */}
+      {showSubmitModal && (
+        <div className="fixed inset-0 !mt-0 bg-black bg-opacity-50 transition-opacity z-[100]">
+          <div className="fixed inset-0 !mt-0 flex items-center justify-center z-[100] p-4">
+            <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col overflow-visible">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 flex-shrink-0">
+                <div>
+                  <Text variant="heading" size="lg" weight="semibold">
+                    Submit Request
+                  </Text>
+                  <Text variant="caption" color="muted">
+                    {requestData?.isCopy || requestData?.requestType === "Copy"
+                      ? "Select Legal Entities to copy this customer to"
+                      : "Confirm submission for approval"}
+                  </Text>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="small"
+                  onClick={() => setShowSubmitModal(false)}
+                >
+                  <X size={20} />
+                </Button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 p-6 overflow-y-auto overflow-x-visible min-h-0">
+                <div className="space-y-4">
+                  {requestData?.isCopy ||
+                  requestData?.requestType === "Copy" ? (
+                    <>
+                      <Text variant="body" className="mb-4">
+                        This customer record will be copied to the selected
+                        Legal Entities.
+                      </Text>
+
+                      <div>
+                        <Text variant="body" weight="medium" className="mb-3">
+                          Select Legal Entities:
+                        </Text>
+
+                        <div style={{ position: "relative", zIndex: 9999 }}>
+                          <MultiSelect
+                            options={[
+                              { value: "DHV", label: "DHV" },
+                              { value: "PBH", label: "PBH" },
+                              { value: "PHP", label: "PHP" },
+                              { value: "PHY", label: "PHY" },
+                              { value: "DGC", label: "DGC" },
+                              { value: "DGD", label: "DGD" },
+                              { value: "DHP", label: "DHP" },
+                              {
+                                value: "DHT",
+                                label: "DHT - De Heus Thai Nguyen",
+                              },
+                            ]}
+                            value={selectedLegalEntities}
+                            onChange={setSelectedLegalEntities}
+                            placeholder="Select Legal Entities to copy to..."
+                            searchable={true}
+                            dropdownClassName="!z-[9999] absolute"
+                            className="relative"
+                            style={{ zIndex: 9999 }}
+                          />
+                        </div>
+
+                        {selectedLegalEntities.length > 0 && (
+                          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                            <Text
+                              variant="body"
+                              weight="medium"
+                              className="mb-2"
+                            >
+                              Selected Legal Entities (
+                              {selectedLegalEntities.length}):
+                            </Text>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedLegalEntities.map((entity) => (
+                                <span
+                                  key={entity}
+                                  className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+                                >
+                                  {entity}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <Text variant="body">
+                      Are you sure you want to submit this request for approval?
+                    </Text>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="flex justify-end gap-3 p-6 border-t border-gray-200 flex-shrink-0">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowSubmitModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleSubmitConfirm}
+                  disabled={
+                    (requestData?.isCopy ||
+                      requestData?.requestType === "Copy") &&
+                    selectedLegalEntities.length === 0
+                  }
+                >
+                  {requestData?.isCopy || requestData?.requestType === "Copy"
+                    ? `Submit to ${selectedLegalEntities.length} Legal Entities`
+                    : "Submit Request"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Object Select Modal */}
       {objectSelectModal.field && (
