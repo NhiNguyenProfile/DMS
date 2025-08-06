@@ -1036,7 +1036,7 @@ const CustomerDetailForm = ({
                               { value: "DHP", label: "DHP" },
                               {
                                 value: "DHT",
-                                label: "DHT - De Heus Thai Nguyen",
+                                label: "DHT",
                               },
                             ]}
                             value={selectedLegalEntities}
