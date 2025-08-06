@@ -204,13 +204,13 @@ const SyncHistoryTable = () => {
   const calculateDuration = (startTime, endTime) => {
     if (!startTime) return "N/A";
     if (!endTime) return "Running...";
-    
+
     const start = new Date(startTime);
     const end = new Date(endTime);
     const diffMs = end - start;
     const diffSecs = Math.floor(diffMs / 1000);
     const diffMins = Math.floor(diffSecs / 60);
-    
+
     if (diffMins > 0) {
       return `${diffMins}m ${diffSecs % 60}s`;
     }
@@ -249,17 +249,13 @@ const SyncHistoryTable = () => {
             {SYNC_SESSIONS.map((session) => (
               <>
                 {/* Main Session Row */}
-                <Table.Row 
-                  key={session.id} 
+                <Table.Row
+                  key={session.id}
                   className="hover:bg-gray-50 cursor-pointer"
                   onClick={() => toggleSession(session.id)}
                 >
                   <Table.Cell>
-                    <Button
-                      variant="ghost"
-                      size="small"
-                      className="p-1 h-auto"
-                    >
+                    <Button variant="ghost" size="small" className="p-1 h-auto">
                       {expandedSessions.has(session.id) ? (
                         <ChevronDown size={16} />
                       ) : (
@@ -301,15 +297,16 @@ const SyncHistoryTable = () => {
                       {session.completedTasks}/{session.totalTasks} tasks
                     </Text>
                   </Table.Cell>
-                  <Table.Cell>
-                    {getStatusBadge(session.status)}
-                  </Table.Cell>
+                  <Table.Cell>{getStatusBadge(session.status)}</Table.Cell>
                 </Table.Row>
 
                 {/* Expanded Tasks Rows */}
-                {expandedSessions.has(session.id) && (
+                {expandedSessions.has(session.id) &&
                   session.tasks.map((task) => (
-                    <Table.Row key={task.id} className="bg-gray-50/50 border-l-4 border-l-blue-200">
+                    <Table.Row
+                      key={task.id}
+                      className="bg-gray-50/50 border-l-4 border-l-blue-200"
+                    >
                       <Table.Cell></Table.Cell>
                       <Table.Cell>
                         <div className="flex items-center space-x-2 pl-6">
@@ -332,10 +329,14 @@ const SyncHistoryTable = () => {
                         </div>
                       </Table.Cell>
                       <Table.Cell>
-                        <Text variant="caption" color="muted">Task</Text>
+                        <Text variant="caption" color="muted">
+                          Task
+                        </Text>
                       </Table.Cell>
                       <Table.Cell>
-                        <Text variant="caption" color="muted">-</Text>
+                        <Text variant="caption" color="muted">
+                          -
+                        </Text>
                       </Table.Cell>
                       <Table.Cell>
                         <Text variant="caption">
@@ -348,21 +349,14 @@ const SyncHistoryTable = () => {
                         </Text>
                       </Table.Cell>
                       <Table.Cell>
-                        <Text variant="caption">
-                          {calculateDuration(task.startTime, task.endTime)}
+                        <Text variant="caption" color="muted">
+                          -
                         </Text>
                       </Table.Cell>
                       <Table.Cell>
-                        <div>
-                          <Text variant="caption">
-                            {task.recordsSuccess}/{task.recordsProcessed}
-                          </Text>
-                          {task.recordsFailed > 0 && (
-                            <Text variant="caption" className="text-red-500 block">
-                              ({task.recordsFailed} failed)
-                            </Text>
-                          )}
-                        </div>
+                        <Text variant="caption" color="muted">
+                          -
+                        </Text>
                       </Table.Cell>
                       <Table.Cell>
                         <div className="space-y-1">
@@ -377,8 +371,7 @@ const SyncHistoryTable = () => {
                         </div>
                       </Table.Cell>
                     </Table.Row>
-                  ))
-                )}
+                  ))}
               </>
             ))}
           </Table.Body>
