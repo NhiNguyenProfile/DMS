@@ -121,16 +121,30 @@ const SparePartsSearchResults = ({ onBack, country }) => {
     "vendorCheck",
     "salesTaxGroup",
   ]);
+  // Toggle filter row
+  const [showColumnFilters, setShowColumnFilters] = useState(false);
+  // State for each column filter
+  const [columnFilters, setColumnFilters] = useState({});
 
-  // Filter records based on search term
-  const filteredRecords = SPARE_PARTS_RECORDS.filter(
-    (record) =>
+  // Filter records based on search term and column filters
+  const filteredRecords = SPARE_PARTS_RECORDS.filter((record) => {
+    // Search term filter
+    const matchesSearch =
       record.itemNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.productName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.productType.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.businessSector.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.purchaseUnit.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      record.purchaseUnit.toLowerCase().includes(searchTerm.toLowerCase());
+    // Column filters
+    const matchesColumnFilters = visibleColumns.every((colKey) => {
+      const filterValue = columnFilters[colKey] || "";
+      if (!filterValue) return true;
+      return String(record[colKey])
+        .toLowerCase()
+        .includes(filterValue.toLowerCase());
+    });
+    return matchesSearch && matchesColumnFilters;
+  });
 
   // Get visible column definitions
   const visibleColumnDefs = ALL_SPARE_PARTS_COLUMNS.filter((col) =>
@@ -272,19 +286,27 @@ const SparePartsSearchResults = ({ onBack, country }) => {
 
       {/* Search and Controls */}
       <div className="flex items-center justify-between gap-4">
-        <div className="relative max-w-md">
-          <SearchIcon
-            size={20}
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-          />
-          <Input
-            placeholder="Search spare parts..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex items-center gap-2">
+          <div className="relative max-w-md">
+            <SearchIcon
+              size={20}
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            />
+            <Input
+              placeholder="Search spare parts..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button
+            variant={showColumnFilters ? "primary" : "outline"}
+            size="sm"
+            onClick={() => setShowColumnFilters((v) => !v)}
+          >
+            {showColumnFilters ? "Hide Filters" : "Show Filters"}
+          </Button>
         </div>
-
         <ColumnVisibilityFilter
           columns={ALL_SPARE_PARTS_COLUMNS}
           visibleColumns={visibleColumns}
@@ -311,6 +333,26 @@ const SparePartsSearchResults = ({ onBack, country }) => {
                     </Table.HeaderCell>
                   ))}
                 </Table.Row>
+                {/* Filter row */}
+                {showColumnFilters && (
+                  <Table.Row>
+                    {visibleColumnDefs.map((column) => (
+                      <Table.HeaderCell key={column.key}>
+                        <Input
+                          placeholder={`Filter ${column.label}`}
+                          value={columnFilters[column.key] || ""}
+                          onChange={(e) =>
+                            setColumnFilters((prev) => ({
+                              ...prev,
+                              [column.key]: e.target.value,
+                            }))
+                          }
+                          className="w-full text-xs px-2 py-1"
+                        />
+                      </Table.HeaderCell>
+                    ))}
+                  </Table.Row>
+                )}
               </Table.Header>
               <Table.Body>
                 {filteredRecords.map((record, index) => (

@@ -126,16 +126,33 @@ const CustomerSearchResults = ({ onBack, country }) => {
     "mainCustomer",
   ]);
 
-  // Filter records based on search term
-  const filteredRecords = CUSTOMER_RECORDS.filter(
-    (record) =>
+  // Toggle filter row
+  const [showColumnFilters, setShowColumnFilters] = useState(false);
+  // State for each column filter
+  const [columnFilters, setColumnFilters] = useState({});
+
+  // Filter records based on search term and column filters
+  const filteredRecords = CUSTOMER_RECORDS.filter((record) => {
+    // Search term filter (giữ nguyên)
+    const matchesSearch =
       record.customerAccount.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.classification.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.segment.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.emailAddress.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      record.emailAddress.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Column filters
+    const matchesColumnFilters = visibleColumns.every((colKey) => {
+      const filterValue = columnFilters[colKey] || "";
+      if (!filterValue) return true;
+      return String(record[colKey])
+        .toLowerCase()
+        .includes(filterValue.toLowerCase());
+    });
+
+    return matchesSearch && matchesColumnFilters;
+  });
 
   // Get visible column definitions
   const visibleColumnDefs = ALL_CUSTOMER_COLUMNS.filter((col) =>
@@ -249,19 +266,27 @@ const CustomerSearchResults = ({ onBack, country }) => {
 
       {/* Search and Controls */}
       <div className="flex items-center justify-between gap-4">
-        <div className="relative max-w-md">
-          <SearchIcon
-            size={20}
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-          />
-          <Input
-            placeholder="Search customers..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex items-center gap-2">
+          <div className="relative max-w-md">
+            <SearchIcon
+              size={20}
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            />
+            <Input
+              placeholder="Search customers..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button
+            variant={showColumnFilters ? "primary" : "outline"}
+            size="sm"
+            onClick={() => setShowColumnFilters((v) => !v)}
+          >
+            {showColumnFilters ? "Hide Filters" : "Show Filters"}
+          </Button>
         </div>
-
         <ColumnVisibilityFilter
           columns={ALL_CUSTOMER_COLUMNS}
           visibleColumns={visibleColumns}
@@ -288,6 +313,26 @@ const CustomerSearchResults = ({ onBack, country }) => {
                     </Table.HeaderCell>
                   ))}
                 </Table.Row>
+                {/* Filter row */}
+                {showColumnFilters && (
+                  <Table.Row>
+                    {visibleColumnDefs.map((column) => (
+                      <Table.HeaderCell key={column.key}>
+                        <Input
+                          placeholder={`Filter ${column.label}`}
+                          value={columnFilters[column.key] || ""}
+                          onChange={(e) =>
+                            setColumnFilters((prev) => ({
+                              ...prev,
+                              [column.key]: e.target.value,
+                            }))
+                          }
+                          className="w-full text-xs px-2 py-1"
+                        />
+                      </Table.HeaderCell>
+                    ))}
+                  </Table.Row>
+                )}
               </Table.Header>
               <Table.Body>
                 {filteredRecords.map((record, index) => (
