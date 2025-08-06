@@ -123,13 +123,13 @@ const ApprovalDetailForm = ({ requestData, onBack, onViewApproval }) => {
   const [showRequestUpdateModal, setShowRequestUpdateModal] = useState(false);
 
   const tabs = [
-    { id: "main", label: "Main Customer", fields: MAIN_CUSTOMER_FIELDS },
-    { id: "tax", label: "Tax", fields: TAX_FIELDS },
     {
       id: "final",
-      label: "Final Customer",
+      label: "(1) Final Customer",
       sections: [{ title: "General", fields: FINAL_CUSTOMER_GENERAL }],
     },
+    { id: "main", label: "(2) Main Customer", fields: MAIN_CUSTOMER_FIELDS },
+    { id: "tax", label: "(3) Tax", fields: TAX_FIELDS },
   ];
 
   const renderField = (field) => {

@@ -74,10 +74,135 @@ const REQUEST_HISTORY = {
         ],
       },
     ],
+    // Mock data cho customers từ search results
+    FE016977: [
+      {
+        requestId: "REQ-20241205-003",
+        requestType: "Create",
+        status: "Approved",
+        submittedBy: "Trần Mạnh Hiệp",
+        submittedDate: "2024-12-05T08:30:00Z",
+        completedDate: "2024-12-05T17:15:00Z",
+        approvalTree: [
+          {
+            stepName: "Document Verification",
+            owners: [
+              {
+                name: "Nguyễn Thị Mai",
+                title: "Document Officer",
+                status: "Approved",
+                approvedAt: "2024-12-05T11:00:00Z",
+                note: "All required documents verified and complete",
+              },
+            ],
+          },
+          {
+            stepName: "Credit Assessment",
+            owners: [
+              {
+                name: "Lê Văn Đức",
+                title: "Credit Manager",
+                status: "Approved",
+                approvedAt: "2024-12-05T14:30:00Z",
+                note: "Customer meets credit requirements for dealer classification",
+              },
+            ],
+          },
+          {
+            stepName: "Final Approval",
+            owners: [
+              {
+                name: "Phạm Thị Hoa",
+                title: "Regional Manager",
+                status: "Approved",
+                approvedAt: "2024-12-05T17:15:00Z",
+                note: "Approved for dealer partnership in Ho Chi Minh region",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        requestId: "REQ-20241120-004",
+        requestType: "Edit",
+        status: "Approved",
+        submittedBy: "Admin User",
+        submittedDate: "2024-11-20T13:00:00Z",
+        completedDate: "2024-11-20T15:45:00Z",
+        approvalTree: [
+          {
+            stepName: "Information Update",
+            owners: [
+              {
+                name: "Võ Thị Lan",
+                title: "Data Specialist",
+                status: "Approved",
+                approvedAt: "2024-11-20T15:45:00Z",
+                note: "Contact information and address updated successfully",
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    FE017112: [
+      {
+        requestId: "REQ-20241203-005",
+        requestType: "Create",
+        status: "In Progress",
+        submittedBy: "Lê Thị Hồng",
+        submittedDate: "2024-12-03T10:15:00Z",
+        completedDate: null,
+        approvalTree: [
+          {
+            stepName: "Initial Review",
+            owners: [
+              {
+                name: "Trần Văn Nam",
+                title: "Review Officer",
+                status: "Approved",
+                approvedAt: "2024-12-03T14:20:00Z",
+                note: "Initial documentation review completed",
+              },
+            ],
+          },
+          {
+            stepName: "Business Verification",
+            owners: [
+              {
+                name: "Hoàng Thị Kim",
+                title: "Business Analyst",
+                status: "In Progress",
+                approvedAt: null,
+                note: "Currently verifying business registration details",
+              },
+            ],
+          },
+          {
+            stepName: "Final Approval",
+            owners: [
+              {
+                name: "Đỗ Văn Minh",
+                title: "Branch Manager",
+                status: "Waiting",
+                approvedAt: null,
+                note: null,
+              },
+            ],
+          },
+        ],
+      },
+    ],
   },
 };
 
-const RequestHistoryModal = ({ isOpen, onClose, record, entityType }) => {
+const RequestHistoryModal = ({
+  isOpen,
+  onClose,
+  record,
+  entityType,
+  onStepClick,
+}) => {
   const [expandedRequests, setExpandedRequests] = useState(new Set());
   const [showStepDetail, setShowStepDetail] = useState(false);
   const [selectedStepData, setSelectedStepData] = useState(null);
@@ -117,9 +242,15 @@ const RequestHistoryModal = ({ isOpen, onClose, record, entityType }) => {
   };
 
   const handleStepClick = (step, request) => {
-    setSelectedStepData(step);
-    setSelectedRequestData(request);
-    setShowStepDetail(true);
+    if (onStepClick) {
+      // Nếu có onStepClick prop, sử dụng nó (từ CustomerDetail)
+      onStepClick(step, request);
+    } else {
+      // Fallback cho các component khác
+      setSelectedStepData(step);
+      setSelectedRequestData(request);
+      setShowStepDetail(true);
+    }
   };
 
   const handleCloseStepDetail = () => {
@@ -168,12 +299,12 @@ const RequestHistoryModal = ({ isOpen, onClose, record, entityType }) => {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 !mt-0 bg-black bg-opacity-50 transition-opacity z-50"
+        className="fixed inset-0 !mt-0 bg-black bg-opacity-50 transition-opacity z-[90]"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="fixed inset-0 !mt-0 flex items-center justify-center z-50 p-4">
+      <div className="fixed inset-0 !mt-0 flex items-center justify-center z-[90] p-4">
         <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -212,20 +343,25 @@ const RequestHistoryModal = ({ isOpen, onClose, record, entityType }) => {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <Button variant="ghost" size="small" className="p-1 h-auto">
+                          <Button
+                            variant="ghost"
+                            size="small"
+                            className="p-1 h-auto"
+                          >
                             {expandedRequests.has(request.requestId) ? (
                               <ChevronDown size={16} />
                             ) : (
                               <ChevronRight size={16} />
                             )}
                           </Button>
-                          
+
                           <div>
                             <Text variant="body" weight="semibold">
                               {request.requestId}
                             </Text>
                             <Text variant="caption" color="muted">
-                              {request.requestType} request by {request.submittedBy}
+                              {request.requestType} request by{" "}
+                              {request.submittedBy}
                             </Text>
                           </div>
                         </div>
@@ -237,11 +373,12 @@ const RequestHistoryModal = ({ isOpen, onClose, record, entityType }) => {
                             </Text>
                             {request.completedDate && (
                               <Text variant="caption" color="muted">
-                                Completed: {formatDateTime(request.completedDate)}
+                                Completed:{" "}
+                                {formatDateTime(request.completedDate)}
                               </Text>
                             )}
                           </div>
-                          
+
                           {getStatusBadge(request.status)}
                         </div>
                       </div>
@@ -253,7 +390,7 @@ const RequestHistoryModal = ({ isOpen, onClose, record, entityType }) => {
                         <Text variant="body" weight="medium" className="mb-3">
                           Approval Tree ({request.approvalTree.length} steps)
                         </Text>
-                        
+
                         <div className="space-y-4">
                           {request.approvalTree.map((step, index) => (
                             <div key={index} className="relative">
@@ -266,13 +403,17 @@ const RequestHistoryModal = ({ isOpen, onClose, record, entityType }) => {
                               <div className="relative">
                                 {/* Step Number */}
                                 <div className="absolute left-0 top-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                  <Text variant="caption" weight="bold" className="text-blue-600">
+                                  <Text
+                                    variant="caption"
+                                    weight="bold"
+                                    className="text-blue-600"
+                                  >
                                     {index + 1}
                                   </Text>
                                 </div>
 
                                 {/* Step Content - Clickable */}
-                                <div 
+                                <div
                                   className="ml-12 bg-white rounded-lg border border-gray-200 p-4 cursor-pointer hover:bg-gray-50 transition-colors"
                                   onClick={() => handleStepClick(step, request)}
                                 >
@@ -288,23 +429,38 @@ const RequestHistoryModal = ({ isOpen, onClose, record, entityType }) => {
                                   {/* Owners */}
                                   <div className="space-y-2">
                                     {step.owners.map((owner, ownerIndex) => (
-                                      <div key={ownerIndex} className="flex items-center justify-between">
+                                      <div
+                                        key={ownerIndex}
+                                        className="flex items-center justify-between"
+                                      >
                                         <div className="flex items-center space-x-3">
                                           <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                                            <Text variant="caption" weight="medium" className="text-gray-600">
-                                              {owner.name.charAt(0).toUpperCase()}
+                                            <Text
+                                              variant="caption"
+                                              weight="medium"
+                                              className="text-gray-600"
+                                            >
+                                              {owner.name
+                                                .charAt(0)
+                                                .toUpperCase()}
                                             </Text>
                                           </div>
                                           <div>
-                                            <Text variant="body" weight="medium">
+                                            <Text
+                                              variant="body"
+                                              weight="medium"
+                                            >
                                               {owner.name}
                                             </Text>
-                                            <Text variant="caption" color="muted">
+                                            <Text
+                                              variant="caption"
+                                              color="muted"
+                                            >
                                               {owner.title}
                                             </Text>
                                           </div>
                                         </div>
-                                        
+
                                         <div className="flex items-center space-x-2">
                                           {getStatusIcon(owner.status)}
                                           {getStatusBadge(owner.status)}

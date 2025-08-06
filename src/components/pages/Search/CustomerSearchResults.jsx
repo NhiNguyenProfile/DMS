@@ -6,6 +6,7 @@ import Table from "../../atoms/Table";
 import Modal from "../../atoms/Modal";
 import ColumnVisibilityFilter from "../../atoms/ColumnVisibilityFilter";
 import { Search as SearchIcon, ArrowLeft, Loader2 } from "lucide-react";
+import CustomerDetail from "./CustomerDetail";
 
 // Sample customer records data
 const CUSTOMER_RECORDS = [
@@ -116,6 +117,10 @@ const CustomerSearchResults = ({ onBack, country }) => {
   const [dynamic365SearchCompleted, setDynamic365SearchCompleted] =
     useState(false);
 
+  // Customer detail page state
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [showCustomerDetail, setShowCustomerDetail] = useState(false);
+
   // Default visible columns (first 6 columns)
   const [visibleColumns, setVisibleColumns] = useState([
     "customerAccount",
@@ -199,6 +204,17 @@ const CustomerSearchResults = ({ onBack, country }) => {
   const shouldShowDynamic365Suggestion =
     searchTerm.length > 0 && filteredRecords.length === 0;
 
+  // Handle customer row click
+  const handleCustomerClick = (customer) => {
+    setSelectedCustomer(customer);
+    setShowCustomerDetail(true);
+  };
+
+  const handleCloseCustomerDetail = () => {
+    setShowCustomerDetail(false);
+    setSelectedCustomer(null);
+  };
+
   const handleToggleDynamic365 = () => {
     setSearchWithDynamic365(!searchWithDynamic365);
     console.log("Search with Dynamic 365:", !searchWithDynamic365);
@@ -245,6 +261,16 @@ const CustomerSearchResults = ({ onBack, country }) => {
       colors[type] || "bg-gray-100 text-gray-800"
     }`;
   };
+
+  // Show customer detail page if selected
+  if (showCustomerDetail && selectedCustomer) {
+    return (
+      <CustomerDetail
+        customer={selectedCustomer}
+        onBack={handleCloseCustomerDetail}
+      />
+    );
+  }
 
   return (
     <div className="w-full space-y-6">
@@ -336,7 +362,11 @@ const CustomerSearchResults = ({ onBack, country }) => {
               </Table.Header>
               <Table.Body>
                 {filteredRecords.map((record, index) => (
-                  <Table.Row key={index} className="hover:bg-gray-50">
+                  <Table.Row
+                    key={index}
+                    className="hover:bg-blue-50 cursor-pointer transition-colors"
+                    onClick={() => handleCustomerClick(record)}
+                  >
                     {visibleColumnDefs.map((column) => (
                       <Table.Cell key={column.key}>
                         {renderCellContent(record, column.key)}

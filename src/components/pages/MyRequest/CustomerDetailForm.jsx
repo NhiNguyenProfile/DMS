@@ -509,11 +509,9 @@ const CustomerDetailForm = ({
   }, [requestData]);
 
   const tabs = [
-    { id: "main", label: "Main Customer", fields: MAIN_CUSTOMER_FIELDS },
-    { id: "tax", label: "Tax", fields: TAX_FIELDS },
     {
       id: "final",
-      label: "Final Customer",
+      label: "(1) Final Customer",
       sections: [
         { title: "General", fields: FINAL_CUSTOMER_GENERAL },
         { title: "Address", isAddressTable: true },
@@ -523,6 +521,8 @@ const CustomerDetailForm = ({
         { title: "Payment & Invoice", fields: FINAL_CUSTOMER_PAYMENT },
       ],
     },
+    { id: "main", label: "(2) Main Customer", fields: MAIN_CUSTOMER_FIELDS },
+    { id: "tax", label: "(3) Tax", fields: TAX_FIELDS },
   ];
 
   const handleInputChange = (key, value) => {

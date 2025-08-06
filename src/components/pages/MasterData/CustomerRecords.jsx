@@ -170,7 +170,10 @@ const CustomerRecords = () => {
               <tr
                 key={record.id}
                 className="hover:bg-blue-50 cursor-pointer transition-colors"
-                onClick={() => handleViewDetail(record)}
+                onClick={() => {
+                  console.log("Row clicked:", record);
+                  handleViewDetail(record);
+                }}
               >
                 <td className="px-6 py-4 whitespace-nowrap">
                   <Text variant="body" weight="medium">
@@ -197,15 +200,28 @@ const CustomerRecords = () => {
                   <Text variant="body">{record.country}</Text>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span
-                    className={`px-2 py-1 text-xs font-medium rounded ${
-                      record.status === "Active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    {record.status}
-                  </span>
+                  <div className="flex items-center space-x-2">
+                    <span
+                      className={`px-2 py-1 text-xs font-medium rounded ${
+                        record.status === "Active"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {record.status}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log("Button clicked:", record);
+                        handleViewDetail(record);
+                      }}
+                    >
+                      View
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}
