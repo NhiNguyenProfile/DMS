@@ -149,7 +149,7 @@ const SparePartsBulkCreatePage = ({
   const handleConfirmSendRequest = () => {
     const massRequest = {
       id: `MASS-REQ-${Date.now()}`,
-      requestType: mode === "edit" ? "Mass Edit" : "Mass Create",
+      requestType: mode === "edit" ? "MassEdit" : "MassCreate",
       requestTitle:
         mode === "edit"
           ? `Mass Edit ${spareParts.length} Spare Parts`

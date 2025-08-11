@@ -9,6 +9,7 @@ import { Search, Plus, ArrowLeft } from "lucide-react";
 import ApprovalTreeSlider from "./ApprovalTreeSlider";
 import CustomerDetailForm from "./CustomerDetailForm";
 import BulkCreatePage from "./BulkCreatePage";
+import MassRequestDetailView from "./MassRequestDetailView";
 
 // Sample customer requests data
 const CUSTOMER_REQUESTS = [
@@ -38,6 +39,42 @@ const CUSTOMER_REQUESTS = [
     currentSteps: "Waiting for Approve",
     status: "Pending",
     createdDate: "2025-07-25T09:00:00Z",
+  },
+  // Mass Create Request
+  {
+    id: "MASS-REQ-20250724-001",
+    requestType: "MassCreate",
+    requestTitle: "Mass Create 15 Customers",
+    stepOwner: "You - Sale Admin",
+    currentSteps: "Waiting for Approval",
+    status: "Pending",
+    createdDate: "2025-07-24T14:30:00Z",
+    totalCount: 15,
+    mode: "create",
+  },
+  // Mass Edit Request
+  {
+    id: "MASS-REQ-20250723-002",
+    requestType: "MassEdit",
+    requestTitle: "Mass Edit 8 Customer Records",
+    stepOwner: "Mike - Sales Manager",
+    currentSteps: "Technical Review",
+    status: "In Progress",
+    createdDate: "2025-07-23T11:15:00Z",
+    totalCount: 8,
+    mode: "edit",
+  },
+  // Another Mass Create Request
+  {
+    id: "MASS-REQ-20250722-003",
+    requestType: "MassCreate",
+    requestTitle: "Mass Create 25 New Customers",
+    stepOwner: "Sarah - Regional Manager",
+    currentSteps: "Final Approval",
+    status: "Approved",
+    createdDate: "2025-07-22T16:45:00Z",
+    totalCount: 25,
+    mode: "create",
   },
 ];
 
@@ -150,7 +187,7 @@ const APPROVAL_TREES = {
   },
 };
 
-const REQUEST_TYPES = [
+const ALL_REQUEST_TYPES = [
   { value: "Create", label: "Create New Record" },
   { value: "MassCreate", label: "Mass Create Records" },
   { value: "MassEdit", label: "Mass Edit Records" },
@@ -355,12 +392,25 @@ const EXISTING_CUSTOMERS = [
   },
 ];
 
-const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
+const CustomerRequestList = ({
+  onBack,
+  hideHeader = false,
+  onShowDetail,
+  allowedRequestTypes = null,
+}) => {
   const [requests, setRequests] = useState(CUSTOMER_REQUESTS);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showApprovalSlider, setShowApprovalSlider] = useState(false);
+
+  // Filter request types based on allowedRequestTypes
+  const REQUEST_TYPES = allowedRequestTypes
+    ? ALL_REQUEST_TYPES.filter((type) =>
+        allowedRequestTypes.includes(type.value)
+      )
+    : ALL_REQUEST_TYPES;
+
   const [selectedRequestData, setSelectedRequestData] = useState(null);
   const [showDetailForm, setShowDetailForm] = useState(false);
   const [showBulkCreatePage, setShowBulkCreatePage] = useState(false);
@@ -407,7 +457,14 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
         .includes(filterValue.toLowerCase());
     });
 
-    return matchesSearch && matchesDate && matchesColumnFilters;
+    // Filter by allowed request types (for tab filtering)
+    const matchesRequestType = allowedRequestTypes
+      ? allowedRequestTypes.includes(request.requestType)
+      : true;
+
+    return (
+      matchesSearch && matchesDate && matchesColumnFilters && matchesRequestType
+    );
   });
 
   // Get visible column definitions
@@ -903,6 +960,25 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
   };
 
   const handleRowClick = (request) => {
+    // Check if this is a mass request
+    const isMassRequest =
+      request.requestType === "MassCreate" ||
+      request.requestType === "MassEdit";
+
+    if (isMassRequest) {
+      // For mass requests, show the mass request detail view
+      if (onShowDetail) {
+        onShowDetail(
+          <MassRequestDetailView
+            massRequest={request}
+            onBack={() => onShowDetail(null)}
+          />
+        );
+      }
+      return;
+    }
+
+    // For regular requests, use existing logic
     const approvalData = APPROVAL_TREES[request.id];
     if (approvalData) {
       // Combine request data with approval data

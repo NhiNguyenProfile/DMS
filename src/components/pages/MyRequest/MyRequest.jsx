@@ -2,9 +2,9 @@ import { useState } from "react";
 import Text from "../../atoms/Text";
 import Input from "../../atoms/Input";
 import EntityCard from "../../atoms/EntityCard";
-import CustomerRequestList from "./CustomerRequestList";
-import SparePartsRequestList from "./SparePartsRequestList";
-import FinishedGoodsRequestList from "./FinishedGoodsRequestList";
+import CustomerRequestWrapper from "./CustomerRequestWrapper";
+import SparePartsRequestWrapper from "./SparePartsRequestWrapper";
+import FinishedGoodsRequestWrapper from "./FinishedGoodsRequestWrapper";
 import { Search } from "lucide-react";
 
 // Sample entity data
@@ -60,11 +60,11 @@ const MyRequest = () => {
   if (selectedEntity) {
     switch (selectedEntity.title) {
       case "Customers":
-        return <CustomerRequestList onBack={handleBackToEntities} />;
+        return <CustomerRequestWrapper onBack={handleBackToEntities} />;
       case "Spare Parts":
-        return <SparePartsRequestList onBack={handleBackToEntities} />;
+        return <SparePartsRequestWrapper onBack={handleBackToEntities} />;
       case "Finished Goods":
-        return <FinishedGoodsRequestList onBack={handleBackToEntities} />;
+        return <FinishedGoodsRequestWrapper onBack={handleBackToEntities} />;
       default:
         return (
           <div>Request list for {selectedEntity.title} coming soon...</div>

@@ -127,8 +127,10 @@ const FINISHED_GOODS_APPROVAL_TREES = {
   },
 };
 
-const REQUEST_TYPES = [
+const ALL_REQUEST_TYPES = [
   { value: "Create", label: "Create New Record" },
+  { value: "MassCreate", label: "Mass Create Records" },
+  { value: "MassEdit", label: "Mass Edit Records" },
   { value: "Copy", label: "Copy Existing Record" },
   { value: "Extend", label: "Extend Existing Record" },
   { value: "Edit", label: "Edit Existing Record" },
@@ -187,12 +189,20 @@ const FinishedGoodsRequestList = ({
   onBack,
   hideHeader = false,
   onShowDetail,
+  allowedRequestTypes = null,
 }) => {
   const [requests, setRequests] = useState(FINISHED_GOODS_REQUESTS);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showApprovalSlider, setShowApprovalSlider] = useState(false);
+
+  // Filter request types based on allowedRequestTypes
+  const REQUEST_TYPES = allowedRequestTypes
+    ? ALL_REQUEST_TYPES.filter((type) =>
+        allowedRequestTypes.includes(type.value)
+      )
+    : ALL_REQUEST_TYPES;
   const [showDetailForm, setShowDetailForm] = useState(false);
   const [selectedRequestData, setSelectedRequestData] = useState(null);
   const [showSearchModal, setShowSearchModal] = useState(false);

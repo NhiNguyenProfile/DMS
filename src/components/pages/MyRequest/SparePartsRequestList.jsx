@@ -12,7 +12,7 @@ import SparePartsDetailForm from "./SparePartsDetailForm";
 import SparePartsBulkCreatePage from "./SparePartsBulkCreatePage";
 
 // Request Types for Spare Parts
-const REQUEST_TYPES = [
+const ALL_REQUEST_TYPES = [
   { value: "Create", label: "Create New Record" },
   { value: "MassCreate", label: "Mass Create Records" },
   { value: "MassEdit", label: "Mass Edit Records" },
@@ -212,12 +212,20 @@ const SparePartsRequestList = ({
   onBack,
   hideHeader = false,
   onShowDetail,
+  allowedRequestTypes = null,
 }) => {
   const [requests, setRequests] = useState(SPARE_PARTS_REQUESTS);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [showApprovalSlider, setShowApprovalSlider] = useState(false);
+
+  // Filter request types based on allowedRequestTypes
+  const REQUEST_TYPES = allowedRequestTypes
+    ? ALL_REQUEST_TYPES.filter((type) =>
+        allowedRequestTypes.includes(type.value)
+      )
+    : ALL_REQUEST_TYPES;
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [selectedRequestType, setSelectedRequestType] = useState(null);
   const [searchResults, setSearchResults] = useState([]);
@@ -248,7 +256,12 @@ const SparePartsRequestList = ({
       (!filters.toDate ||
         new Date(request.createdDate) <= new Date(filters.toDate));
 
-    return matchesSearch && matchesStatus && matchesDate;
+    // Filter by allowed request types (for tab filtering)
+    const matchesRequestType = allowedRequestTypes
+      ? allowedRequestTypes.includes(request.requestType)
+      : true;
+
+    return matchesSearch && matchesStatus && matchesDate && matchesRequestType;
   });
 
   const handleAddRequest = (requestType) => {
