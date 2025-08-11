@@ -3,11 +3,13 @@ import Text from "../../atoms/Text";
 import Button from "../../atoms/Button";
 import Table from "../../atoms/Table";
 import CustomerDetailForm from "./CustomerDetailForm";
-import { ArrowLeft, Eye } from "lucide-react";
+import { ArrowLeft, Eye, ChevronLeft, ChevronRight } from "lucide-react";
 
 const MassRequestDetailView = ({ massRequest, onBack }) => {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showCustomerDetail, setShowCustomerDetail] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10); // Items per page
 
   // Mock data for individual customers in the mass request
   const mockCustomers = Array.from(
@@ -39,6 +41,28 @@ const MassRequestDetailView = ({ massRequest, onBack }) => {
   const handleBackFromCustomerDetail = () => {
     setShowCustomerDetail(false);
     setSelectedCustomer(null);
+  };
+
+  // Pagination logic
+  const totalPages = Math.ceil(mockCustomers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentCustomers = mockCustomers.slice(startIndex, endIndex);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
   };
 
   // If showing individual customer detail
@@ -177,7 +201,7 @@ const MassRequestDetailView = ({ massRequest, onBack }) => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {mockCustomers.map((customer) => (
+              {currentCustomers.map((customer) => (
                 <tr
                   key={customer.id}
                   className="hover:bg-gray-50 cursor-pointer"
@@ -201,12 +225,66 @@ const MassRequestDetailView = ({ massRequest, onBack }) => {
             </tbody>
           </table>
         </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
+            <div className="flex items-center text-sm text-gray-700">
+              <Text variant="body" color="muted">
+                Showing {startIndex + 1} to{" "}
+                {Math.min(endIndex, mockCustomers.length)} of{" "}
+                {mockCustomers.length} records
+              </Text>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="small"
+                onClick={handlePrevPage}
+                disabled={currentPage === 1}
+                className="flex items-center gap-1"
+              >
+                <ChevronLeft size={16} />
+                Previous
+              </Button>
+
+              <div className="flex items-center space-x-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                  (page) => (
+                    <Button
+                      key={page}
+                      variant={currentPage === page ? "primary" : "outline"}
+                      size="small"
+                      onClick={() => handlePageChange(page)}
+                      className="min-w-[40px]"
+                    >
+                      {page}
+                    </Button>
+                  )
+                )}
+              </div>
+
+              <Button
+                variant="outline"
+                size="small"
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+                className="flex items-center gap-1"
+              >
+                Next
+                <ChevronRight size={16} />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Summary */}
       <div className="bg-gray-50 rounded-lg p-4">
         <Text variant="body" color="muted" className="text-sm">
-          Showing {mockCustomers.length} individual records in this mass request
+          Total: {mockCustomers.length} records | Page {currentPage} of{" "}
+          {totalPages}
         </Text>
       </div>
     </div>
