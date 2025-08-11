@@ -15,6 +15,7 @@ import {
   User,
   FileText,
 } from "lucide-react";
+import Table from "../../atoms/Table";
 
 // Mock entity data at different steps (showing changes over time)
 const ENTITY_STEP_DATA = {
@@ -250,6 +251,37 @@ const ENTITY_STEP_DATA = {
   },
 };
 
+// Change log data for edit requests
+const CHANGE_LOG_DATA = {
+  "REQ-20241120-004": [
+    {
+      fieldName: "Customer Name",
+      previousValue: "ABC Company Ltd.",
+      newValue: "ABC Corporation Ltd.",
+    },
+    {
+      fieldName: "Contact Person",
+      previousValue: "John Smith",
+      newValue: "Jane Smith",
+    },
+    {
+      fieldName: "Phone Number",
+      previousValue: "+84-28-1234-5678",
+      newValue: "+84-28-9876-5432",
+    },
+    {
+      fieldName: "Email Address",
+      previousValue: "contact@abccompany.com",
+      newValue: "info@abccorporation.com",
+    },
+    {
+      fieldName: "Address",
+      previousValue: "123 Nguyen Hue Street, District 1, Ho Chi Minh City",
+      newValue: "456 Le Loi Boulevard, District 1, Ho Chi Minh City",
+    },
+  ],
+};
+
 const EntityStepDetailModal = ({
   isOpen,
   onClose,
@@ -338,7 +370,9 @@ const EntityStepDetailModal = ({
               </div>
               <div>
                 <Text variant="heading" size="lg" weight="semibold">
-                  {entityType} Details at Step: {stepData.stepName}
+                  {requestData.requestId === "REQ-20241120-004"
+                    ? `Change Log at Step: ${stepData.stepName}`
+                    : `${entityType} Details at Step: ${stepData.stepName}`}
                 </Text>
                 <Text variant="caption" color="muted">
                   {requestData.requestId} - {requestData.requestType} Request
@@ -529,112 +563,295 @@ const EntityStepDetailModal = ({
                   </div>
                 )}
 
-                {/* Customer Form Detail at This Step */}
+                {/* Customer Form Detail at This Step OR Change Log for REQ-20241120-004 */}
                 <div className="bg-white rounded-lg border border-gray-200 p-6">
-                  <Text
-                    variant="heading"
-                    size="lg"
-                    weight="semibold"
-                    className="mb-6"
-                  >
-                    {entityType} Form Detail at Step: {stepData.stepName}
-                  </Text>
-
-                  {/* Customer Information Form */}
-                  <div className="space-y-6">
-                    <div>
+                  {requestData.requestId === "REQ-20241120-004" ? (
+                    <>
                       <Text
-                        variant="body"
+                        variant="heading"
+                        size="lg"
                         weight="semibold"
-                        className="mb-4 text-blue-600"
+                        className="mb-6"
                       >
-                        Customer Information
+                        Change Log - {stepData.stepName}
                       </Text>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {/* Customer Account */}
-                        <div>
-                          <Text variant="body" weight="medium" className="mb-2">
-                            Customer Account *
-                          </Text>
-                          <Input
-                            value={
-                              entityData.customerAccount ||
-                              entityData.customerCode ||
-                              ""
-                            }
-                            disabled
-                            className="bg-gray-50"
-                          />
-                        </div>
+                      <Text
+                        variant="body"
+                        color="muted"
+                        className="text-sm mb-6"
+                      >
+                        The following fields were modified during this step:
+                      </Text>
 
-                        {/* Customer Group */}
-                        <div>
-                          <Text variant="body" weight="medium" className="mb-2">
-                            Customer Group *
-                          </Text>
-                          <Select
-                            options={[
-                              {
-                                value: "LOC_EXT",
-                                label: "LOC_EXT - Local External Customer",
-                              },
-                              {
-                                value: "AQTP",
-                                label: "AQTP - Aquaculture Trading Partner",
-                              },
-                              {
-                                value: "LSTP",
-                                label: "LSTP - Livestock Trading Partner",
-                              },
-                            ]}
-                            value={entityData.group || "LOC_EXT"}
-                            disabled
-                          />
-                        </div>
+                      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                        <Table>
+                          <Table.Header>
+                            <Table.Row>
+                              <Table.HeaderCell className="w-1/3">
+                                Field Name
+                              </Table.HeaderCell>
+                              <Table.HeaderCell className="w-1/3">
+                                Previous Value
+                              </Table.HeaderCell>
+                              <Table.HeaderCell className="w-1/3">
+                                New Value
+                              </Table.HeaderCell>
+                            </Table.Row>
+                          </Table.Header>
+                          <Table.Body>
+                            {CHANGE_LOG_DATA["REQ-20241120-004"].map(
+                              (change, index) => (
+                                <Table.Row key={index}>
+                                  <Table.Cell>
+                                    <Text variant="body" weight="medium">
+                                      {change.fieldName}
+                                    </Text>
+                                  </Table.Cell>
+                                  <Table.Cell>
+                                    <div className="bg-red-50 border border-red-200 rounded px-3 py-2">
+                                      <Text
+                                        variant="body"
+                                        className="text-red-800 text-sm"
+                                      >
+                                        {change.previousValue || "—"}
+                                      </Text>
+                                    </div>
+                                  </Table.Cell>
+                                  <Table.Cell>
+                                    <div className="bg-green-50 border border-green-200 rounded px-3 py-2">
+                                      <Text
+                                        variant="body"
+                                        className="text-green-800 text-sm"
+                                      >
+                                        {change.newValue || "—"}
+                                      </Text>
+                                    </div>
+                                  </Table.Cell>
+                                </Table.Row>
+                              )
+                            )}
+                          </Table.Body>
+                        </Table>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Text
+                        variant="heading"
+                        size="lg"
+                        weight="semibold"
+                        className="mb-6"
+                      >
+                        {entityType} Form Detail at Step: {stepData.stepName}
+                      </Text>
 
-                        {/* Customer Type */}
+                      {/* Customer Information Form */}
+                      <div className="space-y-6">
                         <div>
-                          <Text variant="body" weight="medium" className="mb-2">
-                            Customer Type *
+                          <Text
+                            variant="body"
+                            weight="semibold"
+                            className="mb-4 text-blue-600"
+                          >
+                            Customer Information
                           </Text>
-                          <Select
-                            options={[
-                              { value: "Person", label: "Person" },
-                              { value: "Organization", label: "Organization" },
-                            ]}
-                            value={entityData.customerType || "Person"}
-                            disabled
-                          />
-                        </div>
 
-                        {/* Generate Virtual Account */}
-                        <div>
-                          <Text variant="body" weight="medium" className="mb-2">
-                            Generate Virtual Account *
-                          </Text>
-                          <div className="flex items-center space-x-4">
-                            <Toggle checked={true} disabled />
-                            <Text variant="body" color="muted">
-                              Yes
-                            </Text>
-                          </div>
-                        </div>
-
-                        {/* Customer Name Fields */}
-                        {entityData.customerType === "Person" && (
-                          <>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Customer Account */}
                             <div>
                               <Text
                                 variant="body"
                                 weight="medium"
                                 className="mb-2"
                               >
-                                First Name *
+                                Customer Account *
                               </Text>
                               <Input
                                 value={
-                                  entityData.customerName?.split(" ")[0] || ""
+                                  entityData.customerAccount ||
+                                  entityData.customerCode ||
+                                  ""
+                                }
+                                disabled
+                                className="bg-gray-50"
+                              />
+                            </div>
+
+                            {/* Customer Group */}
+                            <div>
+                              <Text
+                                variant="body"
+                                weight="medium"
+                                className="mb-2"
+                              >
+                                Customer Group *
+                              </Text>
+                              <Select
+                                options={[
+                                  {
+                                    value: "LOC_EXT",
+                                    label: "LOC_EXT - Local External Customer",
+                                  },
+                                  {
+                                    value: "AQTP",
+                                    label: "AQTP - Aquaculture Trading Partner",
+                                  },
+                                  {
+                                    value: "LSTP",
+                                    label: "LSTP - Livestock Trading Partner",
+                                  },
+                                ]}
+                                value={entityData.group || "LOC_EXT"}
+                                disabled
+                              />
+                            </div>
+
+                            {/* Customer Type */}
+                            <div>
+                              <Text
+                                variant="body"
+                                weight="medium"
+                                className="mb-2"
+                              >
+                                Customer Type *
+                              </Text>
+                              <Select
+                                options={[
+                                  { value: "Person", label: "Person" },
+                                  {
+                                    value: "Organization",
+                                    label: "Organization",
+                                  },
+                                ]}
+                                value={entityData.customerType || "Person"}
+                                disabled
+                              />
+                            </div>
+
+                            {/* Generate Virtual Account */}
+                            <div>
+                              <Text
+                                variant="body"
+                                weight="medium"
+                                className="mb-2"
+                              >
+                                Generate Virtual Account *
+                              </Text>
+                              <div className="flex items-center space-x-4">
+                                <Toggle checked={true} disabled />
+                                <Text variant="body" color="muted">
+                                  Yes
+                                </Text>
+                              </div>
+                            </div>
+
+                            {/* Customer Name Fields */}
+                            {entityData.customerType === "Person" && (
+                              <>
+                                <div>
+                                  <Text
+                                    variant="body"
+                                    weight="medium"
+                                    className="mb-2"
+                                  >
+                                    First Name *
+                                  </Text>
+                                  <Input
+                                    value={
+                                      entityData.customerName?.split(" ")[0] ||
+                                      ""
+                                    }
+                                    disabled
+                                    className="bg-gray-50"
+                                  />
+                                </div>
+
+                                <div>
+                                  <Text
+                                    variant="body"
+                                    weight="medium"
+                                    className="mb-2"
+                                  >
+                                    Last Name *
+                                  </Text>
+                                  <Input
+                                    value={
+                                      entityData.customerName
+                                        ?.split(" ")
+                                        .slice(1)
+                                        .join(" ") || ""
+                                    }
+                                    disabled
+                                    className="bg-gray-50"
+                                  />
+                                </div>
+                              </>
+                            )}
+
+                            {entityData.customerType === "Organization" && (
+                              <div>
+                                <Text
+                                  variant="body"
+                                  weight="medium"
+                                  className="mb-2"
+                                >
+                                  Organization Name *
+                                </Text>
+                                <Input
+                                  value={entityData.customerName || ""}
+                                  disabled
+                                  className="bg-gray-50"
+                                />
+                              </div>
+                            )}
+
+                            {/* Classification */}
+                            <div>
+                              <Text
+                                variant="body"
+                                weight="medium"
+                                className="mb-2"
+                              >
+                                Classification *
+                              </Text>
+                              <Select
+                                options={[
+                                  { value: "Dealer", label: "Dealer" },
+                                  { value: "Reseller", label: "Reseller" },
+                                  { value: "Retailer", label: "Retailer" },
+                                ]}
+                                value={entityData.classification || "Dealer"}
+                                disabled
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Contact Information */}
+                        <div>
+                          <Text
+                            variant="body"
+                            weight="semibold"
+                            className="mb-4 text-blue-600"
+                          >
+                            Contact Information
+                          </Text>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                              <Text
+                                variant="body"
+                                weight="medium"
+                                className="mb-2"
+                              >
+                                Email Address *
+                              </Text>
+                              <Input
+                                value={
+                                  entityData.emailAddress ||
+                                  entityData.email ||
+                                  ""
                                 }
                                 disabled
                                 className="bg-gray-50"
@@ -647,161 +864,107 @@ const EntityStepDetailModal = ({
                                 weight="medium"
                                 className="mb-2"
                               >
-                                Last Name *
+                                Phone Number
                               </Text>
                               <Input
                                 value={
-                                  entityData.customerName
-                                    ?.split(" ")
-                                    .slice(1)
-                                    .join(" ") || ""
+                                  entityData.phoneNumber ||
+                                  entityData.phone ||
+                                  ""
                                 }
                                 disabled
                                 className="bg-gray-50"
                               />
                             </div>
-                          </>
-                        )}
 
-                        {entityData.customerType === "Organization" && (
-                          <div>
-                            <Text
-                              variant="body"
-                              weight="medium"
-                              className="mb-2"
-                            >
-                              Organization Name *
-                            </Text>
-                            <Input
-                              value={entityData.customerName || ""}
-                              disabled
-                              className="bg-gray-50"
-                            />
+                            <div>
+                              <Text
+                                variant="body"
+                                weight="medium"
+                                className="mb-2"
+                              >
+                                City
+                              </Text>
+                              <Input
+                                value={entityData.city || ""}
+                                disabled
+                                className="bg-gray-50"
+                              />
+                            </div>
                           </div>
-                        )}
+                        </div>
 
-                        {/* Classification */}
+                        {/* Financial Information */}
                         <div>
-                          <Text variant="body" weight="medium" className="mb-2">
-                            Classification *
+                          <Text
+                            variant="body"
+                            weight="semibold"
+                            className="mb-4 text-blue-600"
+                          >
+                            Financial Information
                           </Text>
-                          <Select
-                            options={[
-                              { value: "Dealer", label: "Dealer" },
-                              { value: "Reseller", label: "Reseller" },
-                              { value: "Retailer", label: "Retailer" },
-                            ]}
-                            value={entityData.classification || "Dealer"}
-                            disabled
-                          />
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                              <Text
+                                variant="body"
+                                weight="medium"
+                                className="mb-2"
+                              >
+                                Currency *
+                              </Text>
+                              <Select
+                                options={[
+                                  {
+                                    value: "VND",
+                                    label: "VND - Vietnamese Dong",
+                                  },
+                                  { value: "USD", label: "USD - US Dollar" },
+                                  { value: "EUR", label: "EUR - Euro" },
+                                ]}
+                                value={entityData.currency || "VND"}
+                                disabled
+                              />
+                            </div>
+
+                            <div>
+                              <Text
+                                variant="body"
+                                weight="medium"
+                                className="mb-2"
+                              >
+                                Credit Limit
+                              </Text>
+                              <Input
+                                value={
+                                  entityData.creditLimit
+                                    ? `$${entityData.creditLimit.toLocaleString()}`
+                                    : ""
+                                }
+                                disabled
+                                className="bg-gray-50"
+                              />
+                            </div>
+
+                            <div>
+                              <Text
+                                variant="body"
+                                weight="medium"
+                                className="mb-2"
+                              >
+                                Payment Terms
+                              </Text>
+                              <Input
+                                value={entityData.paymentTerms || ""}
+                                disabled
+                                className="bg-gray-50"
+                              />
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Contact Information */}
-                    <div>
-                      <Text
-                        variant="body"
-                        weight="semibold"
-                        className="mb-4 text-blue-600"
-                      >
-                        Contact Information
-                      </Text>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <Text variant="body" weight="medium" className="mb-2">
-                            Email Address *
-                          </Text>
-                          <Input
-                            value={
-                              entityData.emailAddress || entityData.email || ""
-                            }
-                            disabled
-                            className="bg-gray-50"
-                          />
-                        </div>
-
-                        <div>
-                          <Text variant="body" weight="medium" className="mb-2">
-                            Phone Number
-                          </Text>
-                          <Input
-                            value={
-                              entityData.phoneNumber || entityData.phone || ""
-                            }
-                            disabled
-                            className="bg-gray-50"
-                          />
-                        </div>
-
-                        <div>
-                          <Text variant="body" weight="medium" className="mb-2">
-                            City
-                          </Text>
-                          <Input
-                            value={entityData.city || ""}
-                            disabled
-                            className="bg-gray-50"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Financial Information */}
-                    <div>
-                      <Text
-                        variant="body"
-                        weight="semibold"
-                        className="mb-4 text-blue-600"
-                      >
-                        Financial Information
-                      </Text>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <Text variant="body" weight="medium" className="mb-2">
-                            Currency *
-                          </Text>
-                          <Select
-                            options={[
-                              { value: "VND", label: "VND - Vietnamese Dong" },
-                              { value: "USD", label: "USD - US Dollar" },
-                              { value: "EUR", label: "EUR - Euro" },
-                            ]}
-                            value={entityData.currency || "VND"}
-                            disabled
-                          />
-                        </div>
-
-                        <div>
-                          <Text variant="body" weight="medium" className="mb-2">
-                            Credit Limit
-                          </Text>
-                          <Input
-                            value={
-                              entityData.creditLimit
-                                ? `$${entityData.creditLimit.toLocaleString()}`
-                                : ""
-                            }
-                            disabled
-                            className="bg-gray-50"
-                          />
-                        </div>
-
-                        <div>
-                          <Text variant="body" weight="medium" className="mb-2">
-                            Payment Terms
-                          </Text>
-                          <Input
-                            value={entityData.paymentTerms || ""}
-                            disabled
-                            className="bg-gray-50"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    </>
+                  )}
                 </div>
               </div>
             ) : (

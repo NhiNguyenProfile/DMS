@@ -3,7 +3,8 @@ import Text from "../../atoms/Text";
 import Button from "../../atoms/Button";
 import Input from "../../atoms/Input";
 import Table from "../../atoms/Table";
-import { Search, Eye } from "lucide-react";
+import Modal from "../../atoms/Modal";
+import { Search, Eye, Plus } from "lucide-react";
 import CustomerRecordDetail from "./CustomerRecordDetail";
 
 // Mock customer records data
@@ -64,11 +65,22 @@ const CUSTOMER_RECORDS = [
   },
 ];
 
+const REQUEST_TYPES = [
+  { value: "Create", label: "Create New Record" },
+  { value: "MassCreate", label: "Mass Create Records" },
+  { value: "MassEdit", label: "Mass Edit Records" },
+  { value: "Copy", label: "Copy Existing Record" },
+  { value: "Extend", label: "Extend Existing Record" },
+  { value: "Edit", label: "Edit Existing Record" },
+];
+
 const CustomerRecords = () => {
   const [records, setRecords] = useState(CUSTOMER_RECORDS);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showRequestList, setShowRequestList] = useState(false);
 
   const filteredRecords = records.filter(
     (record) =>
@@ -86,6 +98,13 @@ const CustomerRecords = () => {
   const handleCloseDetail = () => {
     setShowDetail(false);
     setSelectedRecord(null);
+  };
+
+  const handleAddRequest = (requestType) => {
+    setShowAddModal(false);
+
+    // Show warning modal instead of navigating to request creation
+    alert("No suitable workflow available to perform this action.");
   };
 
   console.log("showDetail:", showDetail, "selectedRecord:", selectedRecord);
@@ -124,9 +143,9 @@ const CustomerRecords = () => {
         </Text>
       </div>
 
-      {/* Search */}
-      <div className="flex items-center space-x-4">
-        <div className="flex-1 relative">
+      {/* Search and Actions */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex-1 relative max-w-md">
           <Search
             size={20}
             className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
@@ -138,6 +157,13 @@ const CustomerRecords = () => {
             className="pl-10"
           />
         </div>
+        <Button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 whitespace-nowrap"
+        >
+          <Plus size={16} />
+          Add New Request
+        </Button>
       </div>
 
       {/* Records Table */}
@@ -235,6 +261,31 @@ const CustomerRecords = () => {
           Showing {filteredRecords.length} of {records.length} customer records
         </Text>
       </div>
+
+      {/* Add New Request Modal */}
+      <Modal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title="Add New Request"
+      >
+        <div className="space-y-4">
+          <Text variant="body" color="muted">
+            Select the type of request you want to create:
+          </Text>
+          <div className="grid grid-cols-1 gap-3">
+            {REQUEST_TYPES.map((type) => (
+              <Button
+                key={type.value}
+                variant="outline"
+                onClick={() => handleAddRequest(type.value)}
+                className="justify-start"
+              >
+                {type.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

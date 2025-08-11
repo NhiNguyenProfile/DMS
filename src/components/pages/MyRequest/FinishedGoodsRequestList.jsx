@@ -129,6 +129,8 @@ const FINISHED_GOODS_APPROVAL_TREES = {
 
 const REQUEST_TYPES = [
   { value: "Create", label: "Create New Record" },
+  { value: "Copy", label: "Copy Existing Record" },
+  { value: "Extend", label: "Extend Existing Record" },
   { value: "Edit", label: "Edit Existing Record" },
   { value: "Disable", label: "Disable Existing Record" },
   { value: "Reactivate", label: "Reactivate Existing Record" },

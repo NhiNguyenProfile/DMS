@@ -4,8 +4,8 @@ import Button from "../../atoms/Button";
 import Input from "../../atoms/Input";
 import Table from "../../atoms/Table";
 import Modal from "../../atoms/Modal";
-import Select from "../../atoms/Select";
-import { Search, Filter, Plus, Calendar, ArrowLeft } from "lucide-react";
+import ColumnVisibilityFilter from "../../atoms/ColumnVisibilityFilter";
+import { Search, Plus, ArrowLeft } from "lucide-react";
 import ApprovalTreeSlider from "./ApprovalTreeSlider";
 import CustomerDetailForm from "./CustomerDetailForm";
 import BulkCreatePage from "./BulkCreatePage";
@@ -155,9 +155,20 @@ const REQUEST_TYPES = [
   { value: "MassCreate", label: "Mass Create Records" },
   { value: "MassEdit", label: "Mass Edit Records" },
   { value: "Copy", label: "Copy Existing Record" },
+  { value: "Extend", label: "Extend Existing Record" },
   { value: "Edit", label: "Edit Existing Record" },
   // { value: "Disable", label: "Disable Existing Record" },
   // { value: "Reactivate", label: "Reactivate Existing Record" },
+];
+
+// Column definitions for the requests table
+const ALL_REQUEST_COLUMNS = [
+  { key: "id", label: "Request ID" },
+  { key: "requestTitle", label: "Request Title" },
+  { key: "requestType", label: "Type" },
+  { key: "stepOwner", label: "Step Owner" },
+  { key: "currentSteps", label: "Current Steps" },
+  { key: "createdDate", label: "Created Date" },
 ];
 
 // Sample existing customers for search
@@ -344,14 +355,6 @@ const EXISTING_CUSTOMERS = [
   },
 ];
 
-const STATUS_OPTIONS = [
-  { value: "", label: "All Status" },
-  { value: "Pending", label: "Pending" },
-  { value: "Approved", label: "Approved" },
-  { value: "Rejected", label: "Rejected" },
-  { value: "Synced", label: "Synced" },
-];
-
 const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
   const [requests, setRequests] = useState(CUSTOMER_REQUESTS);
   const [searchTerm, setSearchTerm] = useState("");
@@ -367,10 +370,20 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
   const [customerSearchTerm, setCustomerSearchTerm] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [filters, setFilters] = useState({
-    status: "",
     fromDate: "",
     toDate: "",
   });
+
+  // Column visibility and filtering
+  const [visibleColumns, setVisibleColumns] = useState([
+    "id",
+    "requestTitle",
+    "stepOwner",
+    "currentSteps",
+    "createdDate",
+  ]);
+  const [showColumnFilters, setShowColumnFilters] = useState(false);
+  const [columnFilters, setColumnFilters] = useState({});
 
   // Filter requests
   const filteredRequests = requests.filter((request) => {
@@ -379,16 +392,77 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
       request.requestTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.stepOwner.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = !filters.status || request.status === filters.status;
-
     const matchesDate =
       (!filters.fromDate ||
         new Date(request.createdDate) >= new Date(filters.fromDate)) &&
       (!filters.toDate ||
         new Date(request.createdDate) <= new Date(filters.toDate));
 
-    return matchesSearch && matchesStatus && matchesDate;
+    // Column filters
+    const matchesColumnFilters = visibleColumns.every((colKey) => {
+      const filterValue = columnFilters[colKey] || "";
+      if (!filterValue) return true;
+      return String(request[colKey])
+        .toLowerCase()
+        .includes(filterValue.toLowerCase());
+    });
+
+    return matchesSearch && matchesDate && matchesColumnFilters;
   });
+
+  // Get visible column definitions
+  const visibleColumnDefs = ALL_REQUEST_COLUMNS.filter((col) =>
+    visibleColumns.includes(col.key)
+  );
+
+  // Helper function to render cell content
+  const renderCellContent = (request, columnKey) => {
+    switch (columnKey) {
+      case "id":
+        return (
+          <Text variant="body" weight="medium" className="font-mono text-sm">
+            {request.id}
+          </Text>
+        );
+      case "requestTitle":
+        return (
+          <Text
+            variant="body"
+            className="truncate max-w-[180px]"
+            title={request.requestTitle}
+          >
+            {request.requestTitle}
+          </Text>
+        );
+      case "requestType":
+        return (
+          <Text variant="body" className="text-sm truncate">
+            {request.requestType}
+          </Text>
+        );
+      case "stepOwner":
+        return (
+          <Text variant="body" className="text-sm truncate">
+            {request.stepOwner}
+          </Text>
+        );
+      case "currentSteps":
+        return (
+          <Text variant="body" className="text-sm truncate">
+            {request.currentSteps}
+          </Text>
+        );
+
+      case "createdDate":
+        return (
+          <Text variant="body" className="text-xs">
+            {formatDate(request.createdDate)}
+          </Text>
+        );
+      default:
+        return String(request[columnKey] || "");
+    }
+  };
 
   const handleAddRequest = (requestType) => {
     setShowAddModal(false);
@@ -499,8 +573,8 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
           />
         );
       }
-    } else if (requestType === "Copy") {
-      // For Copy, show search modal to find existing record to copy from
+    } else if (requestType === "Copy" || requestType === "Extend") {
+      // For Copy and Extend, show search modal to find existing record to copy/extend from
       setShowSearchModal(true);
       setCustomerSearchTerm("");
       setSearchResults([]);
@@ -568,6 +642,79 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
         createdDate: new Date().toISOString(),
         isNew: true,
         isCopy: true, // Flag to indicate this is copied from existing
+        sourceCustomerId: selectedCustomer.id,
+        sourceCustomerData: selectedCustomer, // Store original data for pre-filling
+        approvalTree: [
+          {
+            stepName: "Waiting for Entry",
+            owners: [{ name: "You", role: "Sale Admin", status: "current" }],
+            status: "current",
+          },
+          {
+            stepName: "Credit Check",
+            owners: [
+              { name: "Alicia", role: "Credit Officer", status: "pending" },
+            ],
+            status: "pending",
+          },
+          {
+            stepName: "Final Approval",
+            owners: [
+              { name: "James", role: "Credit Supervisor", status: "pending" },
+            ],
+            status: "pending",
+          },
+        ],
+      };
+
+      // Add to requests list
+      setRequests((prev) => [newRequest, ...prev]);
+
+      // Close search modal and reset
+      setShowSearchModal(false);
+      setSelectedRequestType(null);
+      setSelectedCustomer(null);
+      setCustomerSearchTerm("");
+      setSearchResults([]);
+
+      // Set as selected request and show detail form
+      setSelectedRequestData(newRequest);
+      setShowDetailForm(true);
+
+      // Also trigger onShowDetail if provided (for parent component)
+      if (onShowDetail) {
+        onShowDetail(
+          <CustomerDetailForm
+            requestData={newRequest}
+            onBack={() => {
+              setShowDetailForm(false);
+              onShowDetail(null);
+            }}
+            onSave={(updatedRequest) => {
+              // Update the request in the list
+              setRequests((prev) =>
+                prev.map((req) =>
+                  req.id === updatedRequest.id ? updatedRequest : req
+                )
+              );
+              setShowDetailForm(false);
+              onShowDetail(null);
+            }}
+          />
+        );
+      }
+    } else if (selectedRequestType === "Extend") {
+      // For Extend, create new request with extended data and go to detail form
+      const newRequest = {
+        id: `REQ-${Date.now()}`,
+        requestType: "Create", // Extend becomes Create with pre-filled data
+        requestTitle: `Extend Customer - ${selectedCustomer.name}`,
+        stepOwner: "You - Sale Admin",
+        currentSteps: "Waiting for Entry",
+        status: "Draft",
+        createdDate: new Date().toISOString(),
+        isNew: true,
+        isExtend: true, // Flag to indicate this is extended from existing
         sourceCustomerId: selectedCustomer.id,
         sourceCustomerData: selectedCustomer, // Store original data for pre-filling
         approvalTree: [
@@ -750,7 +897,6 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
 
   const handleResetFilters = () => {
     setFilters({
-      status: "",
       fromDate: "",
       toDate: "",
     });
@@ -829,18 +975,6 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
   const handleViewApprovalFromDetail = () => {
     setShowDetailForm(false);
     setShowApprovalSlider(true);
-  };
-
-  const getStatusBadge = (status) => {
-    const colors = {
-      Pending: "bg-yellow-100 text-yellow-800",
-      Approved: "bg-green-100 text-green-800",
-      Rejected: "bg-red-100 text-red-800",
-      Synced: "bg-blue-100 text-blue-800",
-    };
-    return `px-2 py-1 text-xs font-medium rounded ${
-      colors[status] || "bg-gray-100 text-gray-800"
-    }`;
   };
 
   const formatDate = (dateString) => {
@@ -935,17 +1069,28 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
               className="pl-10"
             />
           </div>
-          <Button variant="outline" onClick={() => setShowFilterModal(true)}>
-            <Filter size={16} className="mr-2" />
-            Filter
+          <Button
+            variant={showColumnFilters ? "primary" : "outline"}
+            size="sm"
+            onClick={() => setShowColumnFilters((v) => !v)}
+          >
+            {showColumnFilters ? "Hide Filters" : "Show Filters"}
           </Button>
         </div>
 
-        {/* Add New Button */}
-        <Button onClick={() => setShowAddModal(true)}>
-          <Plus size={16} className="mr-2" />
-          Add New
-        </Button>
+        {/* Controls */}
+        <div className="flex items-center gap-2">
+          <ColumnVisibilityFilter
+            columns={ALL_REQUEST_COLUMNS}
+            visibleColumns={visibleColumns}
+            onVisibilityChange={setVisibleColumns}
+            buttonText="Columns"
+          />
+          <Button onClick={() => setShowAddModal(true)}>
+            <Plus size={16} className="mr-2" />
+            Add New
+          </Button>
+        </div>
       </div>
 
       {/* Table */}
@@ -954,28 +1099,32 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
           <Table>
             <Table.Header>
               <Table.Row>
-                <Table.HeaderCell className="min-w-[140px]">
-                  Request ID
-                </Table.HeaderCell>
-                <Table.HeaderCell className="min-w-[100px]">
-                  Type
-                </Table.HeaderCell>
-                <Table.HeaderCell className="min-w-[200px]">
-                  Request Title
-                </Table.HeaderCell>
-                <Table.HeaderCell className="min-w-[150px]">
-                  Step Owner
-                </Table.HeaderCell>
-                <Table.HeaderCell className="min-w-[130px]">
-                  Current Steps
-                </Table.HeaderCell>
-                <Table.HeaderCell className="min-w-[80px]">
-                  Status
-                </Table.HeaderCell>
-                <Table.HeaderCell className="min-w-[120px]">
-                  Created Date
-                </Table.HeaderCell>
+                {visibleColumnDefs.map((column) => (
+                  <Table.HeaderCell key={column.key} className="min-w-[120px]">
+                    {column.label}
+                  </Table.HeaderCell>
+                ))}
               </Table.Row>
+              {/* Filter row */}
+              {showColumnFilters && (
+                <Table.Row>
+                  {visibleColumnDefs.map((column) => (
+                    <Table.HeaderCell key={column.key}>
+                      <Input
+                        placeholder={`Filter ${column.label}`}
+                        value={columnFilters[column.key] || ""}
+                        onChange={(e) =>
+                          setColumnFilters((prev) => ({
+                            ...prev,
+                            [column.key]: e.target.value,
+                          }))
+                        }
+                        className="w-full text-xs px-2 py-1"
+                      />
+                    </Table.HeaderCell>
+                  ))}
+                </Table.Row>
+              )}
             </Table.Header>
             <Table.Body>
               {filteredRequests.map((request) => (
@@ -984,49 +1133,11 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
                   onClick={() => handleRowClick(request)}
                   className="cursor-pointer hover:bg-gray-50"
                 >
-                  <Table.Cell>
-                    <Text
-                      variant="body"
-                      weight="medium"
-                      className="font-mono text-sm"
-                    >
-                      {request.id}
-                    </Text>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <Text variant="body" className="text-sm truncate">
-                      {request.requestType}
-                    </Text>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <Text
-                      variant="body"
-                      className="truncate max-w-[180px]"
-                      title={request.requestTitle}
-                    >
-                      {request.requestTitle}
-                    </Text>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <Text variant="body" className="text-sm truncate">
-                      {request.stepOwner}
-                    </Text>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <Text variant="body" className="text-sm truncate">
-                      {request.currentSteps}
-                    </Text>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <span className={getStatusBadge(request.status)}>
-                      {request.status}
-                    </span>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <Text variant="body" className="text-xs">
-                      {formatDate(request.createdDate)}
-                    </Text>
-                  </Table.Cell>
+                  {visibleColumnDefs.map((column) => (
+                    <Table.Cell key={column.key}>
+                      {renderCellContent(request, column.key)}
+                    </Table.Cell>
+                  ))}
                 </Table.Row>
               ))}
             </Table.Body>
@@ -1066,19 +1177,6 @@ const CustomerRequestList = ({ onBack, hideHeader = false, onShowDetail }) => {
         title="Filter Requests"
       >
         <div className="space-y-4">
-          <div>
-            <Text variant="body" weight="medium" className="mb-2">
-              Status
-            </Text>
-            <Select
-              options={STATUS_OPTIONS}
-              value={filters.status}
-              onChange={(value) =>
-                setFilters((prev) => ({ ...prev, status: value }))
-              }
-            />
-          </div>
-
           <div>
             <Text variant="body" weight="medium" className="mb-2">
               Created Date Range

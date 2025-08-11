@@ -3,8 +3,9 @@ import Text from "../../atoms/Text";
 import Button from "../../atoms/Button";
 import Input from "../../atoms/Input";
 import Table from "../../atoms/Table";
-import Select from "../../atoms/Select";
-import { Search, Filter, ArrowLeft } from "lucide-react";
+import ColumnVisibilityFilter from "../../atoms/ColumnVisibilityFilter";
+import ConfirmationModal from "../../atoms/ConfirmationModal";
+import { Search, ArrowLeft } from "lucide-react";
 import ApprovalTreeSlider from "../MyRequest/ApprovalTreeSlider";
 import ApprovalDetailForm from "./ApprovalDetailForm";
 import SparePartsApprovalDetailForm from "./SparePartsApprovalDetailForm";
@@ -248,11 +249,15 @@ const APPROVAL_TREES = {
   },
 };
 
-const STATUS_OPTIONS = [
-  { value: "", label: "All Status" },
-  { value: "Pending", label: "Pending" },
-  { value: "Approved", label: "Approved" },
-  { value: "Rejected", label: "Rejected" },
+// Column definitions for the approval requests table
+const ALL_APPROVAL_COLUMNS = [
+  { key: "select", label: "Select" },
+  { key: "id", label: "Request ID" },
+  { key: "requestTitle", label: "Request Title" },
+  { key: "requestType", label: "Type" },
+  { key: "stepOwner", label: "Step Owner" },
+  { key: "currentSteps", label: "Current Steps" },
+  { key: "createdDate", label: "Created Date" },
 ];
 
 const ApprovalRequestList = ({
@@ -261,19 +266,32 @@ const ApprovalRequestList = ({
   hideHeader = false,
   onShowDetail,
 }) => {
-  const [requests, setRequests] = useState(
-    APPROVAL_REQUESTS_DATA[entityType] || []
-  );
+  const [requests] = useState(APPROVAL_REQUESTS_DATA[entityType] || []);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showFilterModal, setShowFilterModal] = useState(false);
   const [showApprovalSlider, setShowApprovalSlider] = useState(false);
   const [showDetailForm, setShowDetailForm] = useState(false);
   const [selectedRequestData, setSelectedRequestData] = useState(null);
-  const [filters, setFilters] = useState({
-    status: "",
-    fromDate: "",
-    toDate: "",
-  });
+
+  // Mass approval functionality
+  const [selectedRequests, setSelectedRequests] = useState(new Set());
+  const [viewedRequests, setViewedRequests] = useState(new Set());
+
+  // Mass approval modals
+  const [showMassApproveModal, setShowMassApproveModal] = useState(false);
+  const [showMassRejectModal, setShowMassRejectModal] = useState(false);
+  const [showMassUpdateModal, setShowMassUpdateModal] = useState(false);
+
+  // Column visibility and filtering
+  const [visibleColumns, setVisibleColumns] = useState([
+    "select",
+    "id",
+    "requestTitle",
+    "stepOwner",
+    "currentSteps",
+    "createdDate",
+  ]);
+  const [showColumnFilters, setShowColumnFilters] = useState(false);
+  const [columnFilters, setColumnFilters] = useState({});
 
   // Filter requests - only show "Waiting for Approve"
   const filteredRequests = requests.filter((request) => {
@@ -285,18 +303,102 @@ const ApprovalRequestList = ({
       request.requestTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.stepOwner.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = !filters.status || request.status === filters.status;
+    // Column filters
+    const matchesColumnFilters = visibleColumns.every((colKey) => {
+      const filterValue = columnFilters[colKey] || "";
+      if (!filterValue) return true;
+      return String(request[colKey])
+        .toLowerCase()
+        .includes(filterValue.toLowerCase());
+    });
 
-    const matchesDate =
-      (!filters.fromDate ||
-        new Date(request.createdDate) >= new Date(filters.fromDate)) &&
-      (!filters.toDate ||
-        new Date(request.createdDate) <= new Date(filters.toDate));
-
-    return matchesSearch && matchesStatus && matchesDate;
+    return matchesSearch && matchesColumnFilters;
   });
 
+  // Get visible column definitions
+  const visibleColumnDefs = ALL_APPROVAL_COLUMNS.filter((col) =>
+    visibleColumns.includes(col.key)
+  );
+
+  // Helper function to render cell content
+  const renderCellContent = (request, columnKey) => {
+    switch (columnKey) {
+      case "select":
+        const isViewed = viewedRequests.has(request.id);
+        const isSelected = selectedRequests.has(request.id);
+        return (
+          <div onClick={(e) => e.stopPropagation()}>
+            <input
+              type="checkbox"
+              checked={isSelected}
+              disabled={!isViewed}
+              onChange={(e) => {
+                const newSelected = new Set(selectedRequests);
+                if (e.target.checked) {
+                  newSelected.add(request.id);
+                } else {
+                  newSelected.delete(request.id);
+                }
+                setSelectedRequests(newSelected);
+              }}
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
+            />
+          </div>
+        );
+      case "id":
+        return (
+          <Text variant="body" weight="medium" className="font-mono text-sm">
+            {request.id}
+          </Text>
+        );
+      case "requestTitle":
+        return (
+          <Text
+            variant="body"
+            className="truncate max-w-[180px]"
+            title={request.requestTitle}
+          >
+            {request.requestTitle}
+          </Text>
+        );
+      case "requestType":
+        return (
+          <Text variant="body" className="text-sm">
+            {request.requestType}
+          </Text>
+        );
+      case "stepOwner":
+        return (
+          <Text
+            variant="body"
+            className="text-sm truncate"
+            title={request.stepOwner}
+          >
+            {request.stepOwner}
+          </Text>
+        );
+      case "currentSteps":
+        return (
+          <Text variant="body" className="text-sm truncate">
+            {request.currentSteps}
+          </Text>
+        );
+
+      case "createdDate":
+        return (
+          <Text variant="body" className="text-xs">
+            {formatDate(request.createdDate)}
+          </Text>
+        );
+      default:
+        return String(request[columnKey] || "");
+    }
+  };
+
   const handleRowClick = (request) => {
+    // Mark request as viewed
+    setViewedRequests((prev) => new Set([...prev, request.id]));
+
     const approvalData = APPROVAL_TREES[request.id];
     if (approvalData) {
       // Combine request data with approval data
@@ -404,33 +506,99 @@ const ApprovalRequestList = ({
     setSelectedRequestData(null);
   };
 
-  const handleViewApprovalFromDetail = () => {
-    setShowDetailForm(false);
-    setShowApprovalSlider(true);
+  // Mass approval handlers
+  const handleSelectAll = () => {
+    const viewedRequestIds = filteredRequests
+      .filter((req) => viewedRequests.has(req.id))
+      .map((req) => req.id);
+    setSelectedRequests(new Set(viewedRequestIds));
   };
 
-  const handleApplyFilters = () => {
-    setShowFilterModal(false);
+  const handleDeselectAll = () => {
+    setSelectedRequests(new Set());
   };
 
-  const handleResetFilters = () => {
-    setFilters({
-      status: "",
-      fromDate: "",
-      toDate: "",
+  const handleMassAction = (action) => {
+    if (selectedRequests.size === 0) return;
+
+    // Show appropriate modal based on action
+    if (action === "approve") {
+      setShowMassApproveModal(true);
+    } else if (action === "reject") {
+      setShowMassRejectModal(true);
+    } else if (action === "update") {
+      setShowMassUpdateModal(true);
+    }
+  };
+
+  // Mass approval confirmation handlers
+  const handleMassApproveConfirm = (comment) => {
+    console.log(
+      "Mass approve requests:",
+      Array.from(selectedRequests),
+      "Comment:",
+      comment
+    );
+
+    // Clear selections and close modal
+    setSelectedRequests(new Set());
+    setViewedRequests((prev) => {
+      const newViewed = new Set(prev);
+      selectedRequests.forEach((id) => newViewed.delete(id));
+      return newViewed;
     });
+    setShowMassApproveModal(false);
+
+    // In a real app, you would update the backend here
+    alert(
+      `Successfully approved ${selectedRequests.size} request(s). They have been removed from the list.`
+    );
   };
 
-  const getStatusBadge = (status) => {
-    const colors = {
-      Pending: "bg-yellow-100 text-yellow-800",
-      Approved: "bg-green-100 text-green-800",
-      Rejected: "bg-red-100 text-red-800",
-      Synced: "bg-blue-100 text-blue-800",
-    };
-    return `px-2 py-1 text-xs font-medium rounded ${
-      colors[status] || "bg-gray-100 text-gray-800"
-    }`;
+  const handleMassRejectConfirm = (comment) => {
+    console.log(
+      "Mass reject requests:",
+      Array.from(selectedRequests),
+      "Reason:",
+      comment
+    );
+
+    // Clear selections and close modal
+    setSelectedRequests(new Set());
+    setViewedRequests((prev) => {
+      const newViewed = new Set(prev);
+      selectedRequests.forEach((id) => newViewed.delete(id));
+      return newViewed;
+    });
+    setShowMassRejectModal(false);
+
+    // In a real app, you would update the backend here
+    alert(
+      `Successfully rejected ${selectedRequests.size} request(s). They have been removed from the list.`
+    );
+  };
+
+  const handleMassUpdateConfirm = (comment) => {
+    console.log(
+      "Mass request update:",
+      Array.from(selectedRequests),
+      "Comment:",
+      comment
+    );
+
+    // Clear selections and close modal
+    setSelectedRequests(new Set());
+    setViewedRequests((prev) => {
+      const newViewed = new Set(prev);
+      selectedRequests.forEach((id) => newViewed.delete(id));
+      return newViewed;
+    });
+    setShowMassUpdateModal(false);
+
+    // In a real app, you would update the backend here
+    alert(
+      `Successfully requested updates for ${selectedRequests.size} request(s). They have been removed from the list.`
+    );
   };
 
   const formatDate = (dateString) => {
@@ -500,23 +668,38 @@ const ApprovalRequestList = ({
       )}
 
       {/* Search and Filter */}
-      <div className="flex items-center gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Search
-            size={20}
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-          />
-          <Input
-            placeholder="Search requests..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <div className="relative max-w-md">
+            <Search
+              size={20}
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            />
+            <Input
+              placeholder="Search requests..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Button
+            variant={showColumnFilters ? "primary" : "outline"}
+            size="sm"
+            onClick={() => setShowColumnFilters((v) => !v)}
+          >
+            {showColumnFilters ? "Hide Filters" : "Show Filters"}
+          </Button>
+        </div>
+
+        {/* Controls */}
+        <div className="flex items-center gap-2">
+          <ColumnVisibilityFilter
+            columns={ALL_APPROVAL_COLUMNS}
+            visibleColumns={visibleColumns}
+            onVisibilityChange={setVisibleColumns}
+            buttonText="Columns"
           />
         </div>
-        <Button variant="outline" onClick={() => setShowFilterModal(true)}>
-          <Filter size={16} className="mr-2" />
-          Filter
-        </Button>
       </div>
 
       {/* Table */}
@@ -525,88 +708,127 @@ const ApprovalRequestList = ({
           <Table>
             <Table.Header>
               <Table.Row>
-                <Table.HeaderCell className="min-w-[140px]">
-                  Request ID
-                </Table.HeaderCell>
-                <Table.HeaderCell className="min-w-[100px]">
-                  Type
-                </Table.HeaderCell>
-                <Table.HeaderCell className="min-w-[200px]">
-                  Request Title
-                </Table.HeaderCell>
-                <Table.HeaderCell className="min-w-[150px]">
-                  Step Owner
-                </Table.HeaderCell>
-                <Table.HeaderCell className="min-w-[130px]">
-                  Current Steps
-                </Table.HeaderCell>
-                <Table.HeaderCell className="min-w-[80px]">
-                  Status
-                </Table.HeaderCell>
-                <Table.HeaderCell className="min-w-[120px]">
-                  Created Date
-                </Table.HeaderCell>
+                {visibleColumnDefs.map((column) => (
+                  <Table.HeaderCell key={column.key} className="min-w-[120px]">
+                    {column.key === "select" ? (
+                      <input
+                        type="checkbox"
+                        checked={
+                          selectedRequests.size > 0 &&
+                          selectedRequests.size ===
+                            filteredRequests.filter((req) =>
+                              viewedRequests.has(req.id)
+                            ).length
+                        }
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            handleSelectAll();
+                          } else {
+                            handleDeselectAll();
+                          }
+                        }}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                    ) : (
+                      column.label
+                    )}
+                  </Table.HeaderCell>
+                ))}
               </Table.Row>
+              {/* Filter row */}
+              {showColumnFilters && (
+                <Table.Row>
+                  {visibleColumnDefs.map((column) => (
+                    <Table.HeaderCell key={column.key}>
+                      {column.key === "select" ? (
+                        <div className="w-full h-8"></div>
+                      ) : (
+                        <Input
+                          placeholder={`Filter ${column.label}`}
+                          value={columnFilters[column.key] || ""}
+                          onChange={(e) =>
+                            setColumnFilters((prev) => ({
+                              ...prev,
+                              [column.key]: e.target.value,
+                            }))
+                          }
+                          className="w-full text-xs px-2 py-1"
+                        />
+                      )}
+                    </Table.HeaderCell>
+                  ))}
+                </Table.Row>
+              )}
             </Table.Header>
             <Table.Body>
-              {filteredRequests.map((request) => (
-                <Table.Row
-                  key={request.id}
-                  onClick={() => handleRowClick(request)}
-                  className="cursor-pointer hover:bg-orange-50"
-                >
-                  <Table.Cell className="min-w-[140px]">
-                    <Text
-                      variant="body"
-                      weight="medium"
-                      className="font-mono text-sm"
-                    >
-                      {request.id}
-                    </Text>
-                  </Table.Cell>
-                  <Table.Cell className="min-w-[100px]">
-                    <Text variant="body" className="text-sm">
-                      {request.requestType}
-                    </Text>
-                  </Table.Cell>
-                  <Table.Cell className="min-w-[200px]">
-                    <Text
-                      variant="body"
-                      className="truncate max-w-[180px]"
-                      title={request.requestTitle}
-                    >
-                      {request.requestTitle}
-                    </Text>
-                  </Table.Cell>
-                  <Table.Cell className="min-w-[150px]">
-                    <Text
-                      variant="body"
-                      className="text-sm truncate"
-                      title={request.stepOwner}
-                    >
-                      {request.stepOwner}
-                    </Text>
-                  </Table.Cell>
-                  <Table.Cell className="min-w-[130px]">
-                    <span className="px-2 py-1 text-xs font-medium rounded bg-orange-100 text-orange-800">
-                      {request.currentSteps}
-                    </span>
-                  </Table.Cell>
-                  <Table.Cell className="min-w-[80px]">
-                    <span className={getStatusBadge(request.status)}>
-                      {request.status}
-                    </span>
-                  </Table.Cell>
-                  <Table.Cell className="min-w-[120px]">
-                    <Text variant="body" className="text-xs">
-                      {formatDate(request.createdDate)}
-                    </Text>
-                  </Table.Cell>
-                </Table.Row>
-              ))}
+              {filteredRequests.map((request) => {
+                const isViewed = viewedRequests.has(request.id);
+                return (
+                  <Table.Row
+                    key={request.id}
+                    onClick={() => handleRowClick(request)}
+                    className={`cursor-pointer hover:bg-orange-50 ${
+                      isViewed ? "bg-blue-50" : ""
+                    }`}
+                  >
+                    {visibleColumnDefs.map((column) => (
+                      <Table.Cell key={column.key}>
+                        {renderCellContent(request, column.key)}
+                      </Table.Cell>
+                    ))}
+                  </Table.Row>
+                );
+              })}
             </Table.Body>
           </Table>
         </div>
+      </div>
+
+      {/* Mass Action Buttons */}
+      <div className="flex items-center justify-between bg-gray-50 rounded-lg p-4">
+        <div className="flex items-center gap-2">
+          <Text variant="body" color="muted" className="text-sm">
+            {selectedRequests.size} of {filteredRequests.length} requests
+            selected
+          </Text>
+          {selectedRequests.size > 0 && (
+            <Text variant="body" color="muted" className="text-sm">
+              •{" "}
+              {
+                filteredRequests.filter((req) => viewedRequests.has(req.id))
+                  .length
+              }{" "}
+              viewed
+            </Text>
+          )}
+        </div>
+        {selectedRequests.size > 0 && (
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleMassAction("update")}
+            >
+              Request Update
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleMassAction("reject")}
+              className="text-red-600 border-red-300 hover:bg-red-50"
+            >
+              Reject
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => handleMassAction("approve")}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Approve
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* No results */}
@@ -632,6 +854,50 @@ const ApprovalRequestList = ({
         requestData={selectedRequestData}
         onViewDetail={handleViewDetail}
         hideViewDetail={showDetailForm}
+      />
+
+      {/* Mass Approval Confirmation Modals */}
+
+      {/* Mass Approve Modal */}
+      <ConfirmationModal
+        isOpen={showMassApproveModal}
+        onClose={() => setShowMassApproveModal(false)}
+        onConfirm={handleMassApproveConfirm}
+        title="Mass Approve Requests"
+        message={`Are you sure you want to approve ${selectedRequests.size} selected request(s)? This will move them to the next step in the workflow.`}
+        confirmText="Approve All"
+        confirmVariant="primary"
+        commentLabel="Approval comments"
+        commentPlaceholder="Add any comments or notes for this mass approval..."
+        commentRequired={false}
+      />
+
+      {/* Mass Reject Modal */}
+      <ConfirmationModal
+        isOpen={showMassRejectModal}
+        onClose={() => setShowMassRejectModal(false)}
+        onConfirm={handleMassRejectConfirm}
+        title="Mass Reject Requests"
+        message={`Are you sure you want to reject ${selectedRequests.size} selected request(s)? This action will notify all submitters.`}
+        confirmText="Reject All"
+        confirmVariant="outline"
+        commentLabel="Reason for rejection"
+        commentPlaceholder="Please provide a clear reason for rejecting these requests..."
+        commentRequired={true}
+      />
+
+      {/* Mass Request Update Modal */}
+      <ConfirmationModal
+        isOpen={showMassUpdateModal}
+        onClose={() => setShowMassUpdateModal(false)}
+        onConfirm={handleMassUpdateConfirm}
+        title="Mass Request Update"
+        message={`Request the submitters to update ${selectedRequests.size} selected request(s) with additional information or corrections.`}
+        confirmText="Request Updates"
+        confirmVariant="outline"
+        commentLabel="Update request details"
+        commentPlaceholder="Please specify what needs to be updated for these requests..."
+        commentRequired={true}
       />
     </div>
   );

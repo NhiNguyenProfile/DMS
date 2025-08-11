@@ -12,6 +12,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import EntityStepDetailModal from "./EntityStepDetailModal";
+import ChangeLogModal from "./ChangeLogModal";
 
 // Mock request history data
 const REQUEST_HISTORY = {
@@ -68,6 +69,52 @@ const REQUEST_HISTORY = {
                 status: "Approved",
                 approvedAt: "2024-11-15T16:45:00Z",
                 note: "All changes validated successfully",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        requestId: "REQ-20241210-004",
+        requestType: "Edit",
+        status: "Approved",
+        submittedBy: "Jane Smith",
+        submittedDate: "2024-12-10T14:00:00Z",
+        completedDate: "2024-12-10T18:45:00Z",
+        approvalTree: [
+          {
+            stepName: "Information Update",
+            owners: [
+              {
+                name: "Mike Johnson",
+                title: "Data Manager",
+                status: "Approved",
+                approvedAt: "2024-12-10T15:30:00Z",
+                note: "Address and contact information updated successfully",
+              },
+            ],
+          },
+          {
+            stepName: "Credit Review",
+            owners: [
+              {
+                name: "Sarah Wilson",
+                title: "Credit Officer",
+                status: "Approved",
+                approvedAt: "2024-12-10T17:15:00Z",
+                note: "Credit limit increase approved based on payment history",
+              },
+            ],
+          },
+          {
+            stepName: "Final Approval",
+            owners: [
+              {
+                name: "David Brown",
+                title: "Operations Manager",
+                status: "Approved",
+                approvedAt: "2024-12-10T18:45:00Z",
+                note: "All changes approved and implemented",
               },
             ],
           },
@@ -205,8 +252,13 @@ const RequestHistoryModal = ({
 }) => {
   const [expandedRequests, setExpandedRequests] = useState(new Set());
   const [showStepDetail, setShowStepDetail] = useState(false);
+  const [showChangeLog, setShowChangeLog] = useState(false);
   const [selectedStepData, setSelectedStepData] = useState(null);
   const [selectedRequestData, setSelectedRequestData] = useState(null);
+  const [changeLogData, setChangeLogData] = useState({
+    requestId: null,
+    stepName: null,
+  });
 
   // Close modal on Escape key
   useEffect(() => {
@@ -246,10 +298,20 @@ const RequestHistoryModal = ({
       // Nếu có onStepClick prop, sử dụng nó (từ CustomerDetail)
       onStepClick(step, request);
     } else {
-      // Fallback cho các component khác
-      setSelectedStepData(step);
-      setSelectedRequestData(request);
-      setShowStepDetail(true);
+      // Check if this is an edit request
+      if (request.requestType === "Edit") {
+        // Show change log for edit requests
+        setChangeLogData({
+          requestId: request.requestId,
+          stepName: step.stepName,
+        });
+        setShowChangeLog(true);
+      } else {
+        // Show regular step detail for create requests
+        setSelectedStepData(step);
+        setSelectedRequestData(request);
+        setShowStepDetail(true);
+      }
     }
   };
 
@@ -257,6 +319,11 @@ const RequestHistoryModal = ({
     setShowStepDetail(false);
     setSelectedStepData(null);
     setSelectedRequestData(null);
+  };
+
+  const handleCloseChangeLog = () => {
+    setShowChangeLog(false);
+    setChangeLogData({ requestId: null, stepName: null });
   };
 
   const getStatusIcon = (status) => {
@@ -498,6 +565,14 @@ const RequestHistoryModal = ({
         requestData={selectedRequestData}
         record={record}
         entityType={entityType}
+      />
+
+      {/* Change Log Modal */}
+      <ChangeLogModal
+        isOpen={showChangeLog}
+        onClose={handleCloseChangeLog}
+        requestId={changeLogData.requestId}
+        stepName={changeLogData.stepName}
       />
     </>
   );

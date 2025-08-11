@@ -5,7 +5,7 @@ import Input from "../../atoms/Input";
 import Table from "../../atoms/Table";
 import Modal from "../../atoms/Modal";
 import ColumnVisibilityFilter from "../../atoms/ColumnVisibilityFilter";
-import { Search as SearchIcon, ArrowLeft, Loader2 } from "lucide-react";
+import { Search as SearchIcon, ArrowLeft, Loader2, Plus } from "lucide-react";
 import CustomerDetail from "./CustomerDetail";
 
 // Sample customer records data
@@ -120,6 +120,9 @@ const CustomerSearchResults = ({ onBack, country }) => {
   // Customer detail page state
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showCustomerDetail, setShowCustomerDetail] = useState(false);
+
+  // Add New Request state
+  const [showAddModal, setShowAddModal] = useState(false);
 
   // Default visible columns (first 6 columns)
   const [visibleColumns, setVisibleColumns] = useState([
@@ -262,6 +265,23 @@ const CustomerSearchResults = ({ onBack, country }) => {
     }`;
   };
 
+  // Add New Request functionality
+  const REQUEST_TYPES = [
+    { value: "Create", label: "Create New Record" },
+    { value: "MassCreate", label: "Mass Create Records" },
+    { value: "MassEdit", label: "Mass Edit Records" },
+    { value: "Copy", label: "Copy Existing Record" },
+    { value: "Extend", label: "Extend Existing Record" },
+    { value: "Edit", label: "Edit Existing Record" },
+  ];
+
+  const handleAddRequest = (requestType) => {
+    setShowAddModal(false);
+
+    // Show warning modal instead of navigating to request creation
+    alert("No suitable workflow available to perform this action.");
+  };
+
   // Show customer detail page if selected
   if (showCustomerDetail && selectedCustomer) {
     return (
@@ -313,12 +333,21 @@ const CustomerSearchResults = ({ onBack, country }) => {
             {showColumnFilters ? "Hide Filters" : "Show Filters"}
           </Button>
         </div>
-        <ColumnVisibilityFilter
-          columns={ALL_CUSTOMER_COLUMNS}
-          visibleColumns={visibleColumns}
-          onVisibilityChange={setVisibleColumns}
-          buttonText="Columns"
-        />
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 whitespace-nowrap"
+          >
+            <Plus size={16} />
+            Add New Request
+          </Button>
+          <ColumnVisibilityFilter
+            columns={ALL_CUSTOMER_COLUMNS}
+            visibleColumns={visibleColumns}
+            onVisibilityChange={setVisibleColumns}
+            buttonText="Columns"
+          />
+        </div>
       </div>
 
       {/* Results Table */}
@@ -493,6 +522,31 @@ const CustomerSearchResults = ({ onBack, country }) => {
               </Button>
             </div>
           )}
+        </div>
+      </Modal>
+
+      {/* Add New Request Modal */}
+      <Modal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title="Add New Request"
+      >
+        <div className="space-y-4">
+          <Text variant="body" color="muted">
+            Select the type of request you want to create:
+          </Text>
+          <div className="grid grid-cols-1 gap-3">
+            {REQUEST_TYPES.map((type) => (
+              <Button
+                key={type.value}
+                variant="outline"
+                onClick={() => handleAddRequest(type.value)}
+                className="justify-start"
+              >
+                {type.label}
+              </Button>
+            ))}
+          </div>
         </div>
       </Modal>
     </div>

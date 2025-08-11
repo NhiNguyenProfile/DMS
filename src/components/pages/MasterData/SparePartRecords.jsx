@@ -3,7 +3,9 @@ import Text from "../../atoms/Text";
 import Button from "../../atoms/Button";
 import Input from "../../atoms/Input";
 import Table from "../../atoms/Table";
-import { Search, Eye } from "lucide-react";
+import Modal from "../../atoms/Modal";
+import { Search, Eye, Plus } from "lucide-react";
+import SparePartsRequestList from "../MyRequest/SparePartsRequestList";
 // import SparePartRecordDetail from "./SparePartRecordDetail";
 
 // Mock spare part records data
@@ -67,11 +69,22 @@ const SPARE_PART_RECORDS = [
   },
 ];
 
+const REQUEST_TYPES = [
+  { value: "Create", label: "Create New Record" },
+  { value: "MassCreate", label: "Mass Create Records" },
+  { value: "MassEdit", label: "Mass Edit Records" },
+  { value: "Copy", label: "Copy Existing Record" },
+  { value: "Extend", label: "Extend Existing Record" },
+  { value: "Edit", label: "Edit Existing Record" },
+];
+
 const SparePartRecords = () => {
   const [records, setRecords] = useState(SPARE_PART_RECORDS);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [showDetail, setShowDetail] = useState(false);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showRequestList, setShowRequestList] = useState(false);
 
   const filteredRecords = records.filter(
     (record) =>
@@ -88,6 +101,39 @@ const SparePartRecords = () => {
   const handleCloseDetail = () => {
     setShowDetail(false);
     setSelectedRecord(null);
+  };
+
+  const handleAddRequest = (requestType) => {
+    setShowAddModal(false);
+
+    // Generate a new request ID
+    const newRequestId = `REQ-${new Date()
+      .toISOString()
+      .slice(0, 10)
+      .replace(/-/g, "")}-${String(Math.floor(Math.random() * 1000)).padStart(
+      3,
+      "0"
+    )}`;
+
+    // Create request object
+    const newRequest = {
+      id: newRequestId,
+      requestType: requestType,
+      requestTitle: `${requestType} Spare Parts Request`,
+      stepOwner: "You - Technical Manager",
+      currentSteps: "Draft",
+      status: "Draft",
+      createdDate: new Date().toISOString(),
+      submittedBy: "Current User",
+    };
+
+    // In a real app, you would save this to backend
+    console.log("Created new request:", newRequest);
+
+    // Show success message
+    alert(
+      `Successfully created ${requestType} request with ID: ${newRequestId}\n\nThe request has been saved as draft and can be found in My Request tab.`
+    );
   };
 
   if (showDetail && selectedRecord) {
@@ -111,9 +157,9 @@ const SparePartRecords = () => {
         </Text>
       </div>
 
-      {/* Search */}
-      <div className="flex items-center space-x-4">
-        <div className="flex-1 relative">
+      {/* Search and Actions */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex-1 relative max-w-md">
           <Search
             size={20}
             className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
@@ -125,6 +171,13 @@ const SparePartRecords = () => {
             className="pl-10"
           />
         </div>
+        <Button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2 whitespace-nowrap"
+        >
+          <Plus size={16} />
+          Add New Request
+        </Button>
       </div>
 
       {/* Records Table */}
@@ -214,6 +267,31 @@ const SparePartRecords = () => {
           records
         </Text>
       </div>
+
+      {/* Add New Request Modal */}
+      <Modal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        title="Add New Request"
+      >
+        <div className="space-y-4">
+          <Text variant="body" color="muted">
+            Select the type of request you want to create:
+          </Text>
+          <div className="grid grid-cols-1 gap-3">
+            {REQUEST_TYPES.map((type) => (
+              <Button
+                key={type.value}
+                variant="outline"
+                onClick={() => handleAddRequest(type.value)}
+                className="justify-start"
+              >
+                {type.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

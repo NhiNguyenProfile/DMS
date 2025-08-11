@@ -134,6 +134,8 @@ export const ENTITY_CONFIGS = {
   Customer: {
     available_request_types: [
       { value: "Create", label: "Create" },
+      { value: "Copy", label: "Copy" },
+      { value: "Extend", label: "Extend" },
       { value: "Edit", label: "Edit" },
       { value: "Disable", label: "Disable" },
       { value: "Unlock", label: "Unlock" },
@@ -143,6 +145,8 @@ export const ENTITY_CONFIGS = {
   "Spare Part": {
     available_request_types: [
       { value: "Create", label: "Create" },
+      { value: "Copy", label: "Copy" },
+      { value: "Extend", label: "Extend" },
       { value: "Edit", label: "Edit" },
       { value: "Disable", label: "Disable" },
       { value: "Unlock", label: "Unlock" },
@@ -152,6 +156,8 @@ export const ENTITY_CONFIGS = {
   "Finished Good": {
     available_request_types: [
       { value: "Create", label: "Create" },
+      { value: "Copy", label: "Copy" },
+      { value: "Extend", label: "Extend" },
       { value: "Edit", label: "Edit" },
       { value: "Disable", label: "Disable" },
       { value: "Unlock", label: "Unlock" },

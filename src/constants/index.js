@@ -4,6 +4,8 @@ export const ENTITIES = ["Customer", "Spare Part", "Finished Good"];
 // Request types
 export const REQUEST_TYPES = [
   { value: "Create", label: "Create" },
+  { value: "Copy", label: "Copy" },
+  { value: "Extend", label: "Extend" },
   { value: "Edit", label: "Edit" },
   { value: "Disable", label: "Disable" },
   { value: "Unlock", label: "Unlock" },

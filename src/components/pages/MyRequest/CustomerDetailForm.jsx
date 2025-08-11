@@ -416,7 +416,45 @@ const CustomerDetailForm = ({
       const sourceData = requestData.sourceCustomerData;
 
       if (requestData?.isCopy) {
-        // For Copy: Only pre-fill Main Customer + Final Customer General
+        // For Copy: Copy everything EXCEPT code (Customer Account + Main Customer), name, address, tax number
+        const preFillData = {
+          // Main Customer section - EXCLUDE these fields for Copy
+          mainCustomerCode: "", // Don't copy code
+          mainCustomerName: "", // Don't copy name
+          company: sourceData.company || "",
+          address: "", // Don't copy address
+          nikNpwp: "", // Don't copy tax number
+
+          // Final Customer section - Copy all other fields
+          customerAccount: "", // Don't copy Customer Account code
+          customerClassificationGroup: sourceData.classificationGroup || "",
+          customerGroup: sourceData.group || "",
+          customerType: sourceData.type || "Organization",
+          generateVirtualAccount: sourceData.generateVirtualAccount || "no",
+          mainCustomer: "", // Don't copy Main Customer name
+          organizationName: "", // Don't copy organization name
+          searchName: "", // Don't copy search name
+
+          // Copy all other fields that exist in sourceData
+          ...Object.keys(sourceData).reduce((acc, key) => {
+            // Skip the excluded fields
+            const excludedFields = [
+              "code",
+              "name",
+              "address",
+              "nikNpwp",
+              "customerAccount",
+            ];
+            if (!excludedFields.includes(key)) {
+              acc[key] = sourceData[key];
+            }
+            return acc;
+          }, {}),
+        };
+
+        setFormData(preFillData);
+      } else if (requestData?.isExtend) {
+        // For Extend: Keep code (Customer Account + Main Customer), name, address, tax number
         const preFillData = {
           // Main Customer section
           mainCustomerCode: sourceData.code || "",
@@ -425,15 +463,17 @@ const CustomerDetailForm = ({
           address: sourceData.address || "",
           nikNpwp: sourceData.nikNpwp || "",
 
-          // Final Customer section - General only
-          customerAccount: "", // Usually empty for new copy
-          customerClassificationGroup: sourceData.classificationGroup || "",
-          customerGroup: sourceData.group || "",
-          customerType: sourceData.type || "Organization",
-          generateVirtualAccount: "no",
+          // Final Customer section - General - Keep existing codes and basic info
+          customerAccount: sourceData.customerAccount || "",
           mainCustomer: sourceData.name || "",
           organizationName: sourceData.name || "",
           searchName: sourceData.searchName || sourceData.name || "",
+
+          // Other fields left empty for user input
+          customerClassificationGroup: "",
+          customerGroup: "",
+          customerType: "Organization",
+          generateVirtualAccount: "no",
         };
 
         setFormData(preFillData);
@@ -995,7 +1035,7 @@ const CustomerDetailForm = ({
                   </Text>
                   <Text variant="caption" color="muted">
                     {requestData?.isCopy || requestData?.requestType === "Copy"
-                      ? "Select Legal Entities to copy this customer to"
+                      ? "Confirm your copy request submission"
                       : "Confirm submission for approval"}
                   </Text>
                 </div>
@@ -1015,13 +1055,23 @@ const CustomerDetailForm = ({
                   requestData?.requestType === "Copy" ? (
                     <>
                       <Text variant="body" className="mb-4">
-                        This customer record will be copied to the selected
+                        Are you sure you want to submit this copy request for
+                        approval?
+                      </Text>
+                      <Text variant="body" color="muted" className="text-sm">
+                        The request will be sent to the approval workflow.
+                      </Text>
+                    </>
+                  ) : requestData?.isExtend ? (
+                    <>
+                      <Text variant="body" className="mb-4">
+                        This customer record will be extended to the selected
                         Legal Entities.
                       </Text>
 
                       <div>
                         <Text variant="body" weight="medium" className="mb-3">
-                          Select Legal Entities:
+                          Select Legal Entities to extend to:
                         </Text>
 
                         <div style={{ position: "relative", zIndex: 9999 }}>
@@ -1041,7 +1091,7 @@ const CustomerDetailForm = ({
                             ]}
                             value={selectedLegalEntities}
                             onChange={setSelectedLegalEntities}
-                            placeholder="Select Legal Entities to copy to..."
+                            placeholder="Select Legal Entities to extend to..."
                             searchable={true}
                             dropdownClassName="!z-[9999] absolute"
                             className="relative"
@@ -1050,7 +1100,7 @@ const CustomerDetailForm = ({
                         </div>
 
                         {selectedLegalEntities.length > 0 && (
-                          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+                          <div className="mt-4 p-4 bg-green-50 rounded-lg">
                             <Text
                               variant="body"
                               weight="medium"
@@ -1063,7 +1113,7 @@ const CustomerDetailForm = ({
                               {selectedLegalEntities.map((entity) => (
                                 <span
                                   key={entity}
-                                  className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium"
+                                  className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium"
                                 >
                                   {entity}
                                 </span>
@@ -1087,19 +1137,13 @@ const CustomerDetailForm = ({
                   variant="outline"
                   onClick={() => setShowSubmitModal(false)}
                 >
-                  Cancel
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={handleSubmitConfirm}
-                  disabled={
-                    (requestData?.isCopy ||
-                      requestData?.requestType === "Copy") &&
-                    selectedLegalEntities.length === 0
-                  }
-                >
                   {requestData?.isCopy || requestData?.requestType === "Copy"
-                    ? `Submit to ${selectedLegalEntities.length} Legal Entities`
+                    ? "No"
+                    : "Cancel"}
+                </Button>
+                <Button variant="primary" onClick={handleSubmitConfirm}>
+                  {requestData?.isCopy || requestData?.requestType === "Copy"
+                    ? "Yes"
                     : "Submit Request"}
                 </Button>
               </div>

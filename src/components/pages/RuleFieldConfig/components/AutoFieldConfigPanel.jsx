@@ -41,6 +41,7 @@ const AutoFieldConfigPanel = ({
     status: "Active",
     autoFillType: "default",
     legalEntities: [],
+    request_type: ["Create", "Copy", "Extend", "Edit"],
     criteriaJson: "",
     configurationJson: "",
   });
@@ -69,6 +70,12 @@ const AutoFieldConfigPanel = ({
         status: config.status || "Active",
         autoFillType: config.type || "default",
         legalEntities: config.legalEntities || [],
+        request_type: config.request_type || [
+          "Create",
+          "Copy",
+          "Extend",
+          "Edit",
+        ],
         criteriaJson: config.criteria
           ? JSON.stringify(config.criteria, null, 2)
           : "",
@@ -179,6 +186,27 @@ const AutoFieldConfigPanel = ({
           }
           label={formData.status}
         />
+      </div>
+
+      <div>
+        <Text variant="body" weight="medium" className="mb-2">
+          Request Types *
+        </Text>
+        <MultiSelect
+          options={[
+            { value: "Create", label: "Create" },
+            { value: "Copy", label: "Copy" },
+            { value: "Extend", label: "Extend" },
+            { value: "Edit", label: "Edit" },
+          ]}
+          value={formData.request_type || ["Create", "Copy", "Extend", "Edit"]}
+          onChange={(values) => handleInputChange("request_type", values)}
+          placeholder="Select Request Types"
+          className="w-full"
+        />
+        <Text variant="caption" color="muted" className="mt-1">
+          Select which request types this auto-field rule applies to
+        </Text>
       </div>
 
       <div>

@@ -17,6 +17,7 @@ const REQUEST_TYPES = [
   { value: "MassCreate", label: "Mass Create Records" },
   { value: "MassEdit", label: "Mass Edit Records" },
   { value: "Copy", label: "Copy Existing Record" },
+  { value: "Extend", label: "Extend Existing Record" },
   { value: "Edit", label: "Edit Existing Record" },
 ];
 

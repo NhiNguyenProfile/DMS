@@ -19,6 +19,7 @@ const ValidationConfigPanel = ({
     ruleDescription: "",
     status: "Active",
     legalEntities: [],
+    request_type: ["Create", "Copy", "Extend", "Edit"],
     validationConfigJson: `[
   {
     "field_name": "CustomerType",
@@ -72,6 +73,12 @@ const ValidationConfigPanel = ({
           ruleDescription: config.ruleDescription || "",
           status: config.status || "Active",
           legalEntities: config.legalEntities || [],
+          request_type: config.request_type || [
+            "Create",
+            "Copy",
+            "Extend",
+            "Edit",
+          ],
           validationConfigJson: config.validationConfig
             ? JSON.stringify(config.validationConfig, null, 2)
             : "",
@@ -161,6 +168,27 @@ const ValidationConfigPanel = ({
           }
           label={formData.status}
         />
+      </div>
+
+      <div>
+        <Text variant="body" weight="medium" className="mb-2">
+          Request Types *
+        </Text>
+        <MultiSelect
+          options={[
+            { value: "Create", label: "Create" },
+            { value: "Copy", label: "Copy" },
+            { value: "Extend", label: "Extend" },
+            { value: "Edit", label: "Edit" },
+          ]}
+          value={formData.request_type || ["Create", "Copy", "Extend", "Edit"]}
+          onChange={(values) => handleInputChange("request_type", values)}
+          placeholder="Select Request Types"
+          className="w-full"
+        />
+        <Text variant="caption" color="muted" className="mt-1">
+          Select which request types this validation rule applies to
+        </Text>
       </div>
 
       <div>
