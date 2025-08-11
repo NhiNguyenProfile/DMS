@@ -10,6 +10,7 @@ import ApprovalTreeSlider from "../MyRequest/ApprovalTreeSlider";
 import ApprovalDetailForm from "./ApprovalDetailForm";
 import SparePartsApprovalDetailForm from "./SparePartsApprovalDetailForm";
 import FinishedGoodsApprovalDetailForm from "./FinishedGoodsApprovalDetailForm";
+import MassApprovalDetailView from "./MassApprovalDetailView";
 
 // Sample approval requests data by entity type
 const APPROVAL_REQUESTS_DATA = {
@@ -32,6 +33,29 @@ const APPROVAL_REQUESTS_DATA = {
       status: "Pending",
       createdDate: "2025-07-25T09:00:00Z",
     },
+    // Mass Approval Requests
+    {
+      id: "MASS-REQ-20250724-001",
+      requestType: "MassCreate",
+      requestTitle: "Mass Create 15 Customers - Approval Required",
+      stepOwner: "You - Sale Admin",
+      currentSteps: "Waiting for Approve",
+      status: "Pending",
+      createdDate: "2025-07-24T14:30:00Z",
+      totalCount: 15,
+      mode: "create",
+    },
+    {
+      id: "MASS-REQ-20250723-002",
+      requestType: "MassEdit",
+      requestTitle: "Mass Edit 8 Customer Records - Approval Required",
+      stepOwner: "Mike - Sales Manager",
+      currentSteps: "Waiting for Approve",
+      status: "Pending",
+      createdDate: "2025-07-23T11:15:00Z",
+      totalCount: 8,
+      mode: "edit",
+    },
   ],
   "Spare Parts": [
     {
@@ -51,6 +75,18 @@ const APPROVAL_REQUESTS_DATA = {
       currentSteps: "Waiting for Approve",
       status: "Pending",
       createdDate: "2025-07-25T08:45:00Z",
+    },
+    // Mass Approval Requests
+    {
+      id: "MASS-REQ-SP-20250724-001",
+      requestType: "MassCreate",
+      requestTitle: "Mass Create 12 Spare Parts - Approval Required",
+      stepOwner: "Tony - Technical Lead",
+      currentSteps: "Waiting for Approve",
+      status: "Pending",
+      createdDate: "2025-07-24T16:30:00Z",
+      totalCount: 12,
+      mode: "create",
     },
   ],
   "Finished Goods": [
@@ -265,6 +301,7 @@ const ApprovalRequestList = ({
   entityType = "Customers",
   hideHeader = false,
   onShowDetail,
+  allowedRequestTypes = null,
 }) => {
   const [requests] = useState(APPROVAL_REQUESTS_DATA[entityType] || []);
   const [searchTerm, setSearchTerm] = useState("");
@@ -283,7 +320,6 @@ const ApprovalRequestList = ({
 
   // Column visibility and filtering
   const [visibleColumns, setVisibleColumns] = useState([
-    "select",
     "id",
     "requestTitle",
     "stepOwner",
@@ -312,7 +348,12 @@ const ApprovalRequestList = ({
         .includes(filterValue.toLowerCase());
     });
 
-    return matchesSearch && matchesColumnFilters;
+    // Filter by allowed request types (for tab filtering)
+    const matchesRequestType = allowedRequestTypes
+      ? allowedRequestTypes.includes(request.requestType)
+      : true;
+
+    return matchesSearch && matchesColumnFilters && matchesRequestType;
   });
 
   // Get visible column definitions
@@ -399,6 +440,26 @@ const ApprovalRequestList = ({
     // Mark request as viewed
     setViewedRequests((prev) => new Set([...prev, request.id]));
 
+    // Check if this is a mass request
+    const isMassRequest =
+      request.requestType === "MassCreate" ||
+      request.requestType === "MassEdit";
+
+    if (isMassRequest) {
+      // For mass requests, show the mass approval detail view
+      if (onShowDetail) {
+        onShowDetail(
+          <MassApprovalDetailView
+            massRequest={request}
+            entityType={entityType}
+            onBack={() => onShowDetail(null)}
+          />
+        );
+      }
+      return;
+    }
+
+    // For regular requests, use existing logic
     const approvalData = APPROVAL_TREES[request.id];
     if (approvalData) {
       // Combine request data with approval data

@@ -3,7 +3,9 @@ import Text from "../../atoms/Text";
 import Input from "../../atoms/Input";
 import EntityCard from "../../atoms/EntityCard";
 import { Search } from "lucide-react";
-import ApprovalRequestList from "./ApprovalRequestList";
+import CustomerApprovalWrapper from "./CustomerApprovalWrapper";
+import SparePartsApprovalWrapper from "./SparePartsApprovalWrapper";
+import FinishedGoodsApprovalWrapper from "./FinishedGoodsApprovalWrapper";
 
 // Sample approval entities
 const APPROVAL_ENTITIES = [
@@ -58,26 +60,11 @@ const Approval = () => {
   if (selectedEntity) {
     switch (selectedEntity.title) {
       case "Customers":
-        return (
-          <ApprovalRequestList
-            onBack={handleBackToEntities}
-            entityType="Customers"
-          />
-        );
+        return <CustomerApprovalWrapper onBack={handleBackToEntities} />;
       case "Spare Parts":
-        return (
-          <ApprovalRequestList
-            onBack={handleBackToEntities}
-            entityType="Spare Parts"
-          />
-        );
+        return <SparePartsApprovalWrapper onBack={handleBackToEntities} />;
       case "Finished Goods":
-        return (
-          <ApprovalRequestList
-            onBack={handleBackToEntities}
-            entityType="Finished Goods"
-          />
-        );
+        return <FinishedGoodsApprovalWrapper onBack={handleBackToEntities} />;
       default:
         return (
           <div>Approval list for {selectedEntity.title} coming soon...</div>
