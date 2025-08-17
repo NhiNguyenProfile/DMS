@@ -208,7 +208,8 @@ const MassApprovalDetailView = ({ massRequest, entityType, onBack }) => {
   const getColumns = () => {
     const baseColumns = [
       { key: "select", label: "" },
-      { key: "status", label: "Status" },
+      { key: "currentStep", label: "Current Step" },
+      { key: "stepOwner", label: "Step Owner" },
     ];
 
     if (entityType === "Customers") {
@@ -260,19 +261,28 @@ const MassApprovalDetailView = ({ massRequest, entityType, onBack }) => {
             }
           />
         );
-      case "status":
+      case "currentStep":
+        // Hard coded current step data - same for all items
         return (
-          <span
-            className={`px-2 py-1 text-xs font-medium rounded ${
-              item.status === "Approved"
-                ? "bg-green-100 text-green-800"
-                : item.status === "Rejected"
-                ? "bg-red-100 text-red-800"
-                : "bg-yellow-100 text-yellow-800"
-            }`}
-          >
-            {item.status}
-          </span>
+          <Text variant="body" className="text-sm text-gray-900">
+            Credit Check
+          </Text>
+        );
+      case "stepOwner":
+        // Hard coded step owner data
+        const stepOwners = [
+          "Alicia - Credit Officer",
+          "James - Sales Manager",
+          "Tony - Head of Division",
+          "Linda - Technical Lead",
+          "Sarah - Quality Manager",
+        ];
+        const randomOwner =
+          stepOwners[Math.floor(Math.random() * stepOwners.length)];
+        return (
+          <Text variant="body" className="text-sm text-gray-700">
+            {randomOwner}
+          </Text>
         );
       case "actions":
         return (

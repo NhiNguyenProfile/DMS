@@ -217,6 +217,32 @@ const SyncHistoryTable = () => {
     return `${diffSecs}s`;
   };
 
+  const handleResync = (sessionId) => {
+    console.log(`Re-syncing session: ${sessionId}`);
+    // Add your re-sync logic here
+    // For example:
+    // - Show confirmation modal
+    // - Call API to restart sync
+    // - Update session status to "Running"
+    // - Refresh the table data
+
+    // Temporary alert for demonstration
+    alert(`Re-sync initiated for session: ${sessionId}`);
+  };
+
+  const handleResyncTask = (taskId) => {
+    console.log(`Re-syncing task: ${taskId}`);
+    // Add your task re-sync logic here
+    // For example:
+    // - Show confirmation modal
+    // - Call API to restart specific task
+    // - Update task status to "Running"
+    // - Refresh the table data
+
+    // Temporary alert for demonstration
+    alert(`Re-sync initiated for task: ${taskId}`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -243,6 +269,7 @@ const SyncHistoryTable = () => {
               <Table.HeaderCell>Duration</Table.HeaderCell>
               <Table.HeaderCell>Progress</Table.HeaderCell>
               <Table.HeaderCell>Status</Table.HeaderCell>
+              <Table.HeaderCell>Actions</Table.HeaderCell>
             </Table.Row>
           </Table.Header>
           <Table.Body>
@@ -298,6 +325,22 @@ const SyncHistoryTable = () => {
                     </Text>
                   </Table.Cell>
                   <Table.Cell>{getStatusBadge(session.status)}</Table.Cell>
+                  <Table.Cell>
+                    {session.status === "Failed" && (
+                      <Button
+                        variant="outline"
+                        size="small"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent row expansion
+                          handleResync(session.id);
+                        }}
+                        className="flex items-center gap-1"
+                      >
+                        <RefreshCw size={14} />
+                        Re-sync
+                      </Button>
+                    )}
+                  </Table.Cell>
                 </Table.Row>
 
                 {/* Expanded Tasks Rows */}
@@ -369,6 +412,22 @@ const SyncHistoryTable = () => {
                             </div>
                           )}
                         </div>
+                      </Table.Cell>
+                      <Table.Cell>
+                        {task.status === "Failed" && (
+                          <Button
+                            variant="outline"
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleResyncTask(task.id);
+                            }}
+                            className="flex items-center gap-1"
+                          >
+                            <RefreshCw size={12} />
+                            Re-sync
+                          </Button>
+                        )}
                       </Table.Cell>
                     </Table.Row>
                   ))}

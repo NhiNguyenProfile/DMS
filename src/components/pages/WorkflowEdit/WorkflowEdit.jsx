@@ -848,16 +848,16 @@ const WorkflowEdit = () => {
                   ? availableRequestTypes
                   : [
                       { value: "Create", label: "Create" },
+                      { value: "Copy", label: "Copy" },
+                      { value: "Extend", label: "Extend" },
                       { value: "Edit", label: "Edit" },
-                      { value: "Disable", label: "Disable" },
-                      { value: "Unlock", label: "Unlock" },
                     ]
               }
               value={
                 formData.request_type ||
                 (availableRequestTypes.length > 0
                   ? availableRequestTypes.map((option) => option.value)
-                  : ["Create", "Edit", "Disable", "Unlock"])
+                  : ["Create", "Copy", "Extend", "Edit"])
               }
               onChange={(values) => handleInputChange("request_type", values)}
               placeholder="Select Request Types"

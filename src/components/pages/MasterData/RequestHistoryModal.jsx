@@ -549,7 +549,16 @@ const RequestHistoryModal = ({
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end p-6 border-t border-gray-200">
+          <div className="flex justify-end gap-3 p-6 border-t border-gray-200">
+            <Button
+              onClick={() => {
+                // Handle export report logic here
+                console.log("Exporting report...");
+                // You can add actual export functionality here
+              }}
+            >
+              Export Report
+            </Button>
             <Button variant="secondary" onClick={onClose}>
               Close
             </Button>

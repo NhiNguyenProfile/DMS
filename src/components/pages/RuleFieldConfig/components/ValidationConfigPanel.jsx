@@ -20,6 +20,8 @@ const ValidationConfigPanel = ({
     status: "Active",
     legalEntities: [],
     request_type: ["Create", "Copy", "Extend", "Edit"],
+    criteria: "",
+    criteriaLogic: "",
     validationConfigJson: `[
   {
     "field_name": "CustomerType",
@@ -64,6 +66,8 @@ const ValidationConfigPanel = ({
           ruleDescription: `Configuration for ${config.field_name}`,
           status: "Active",
           legalEntities: [],
+          criteria: config.criteria || "",
+          criteriaLogic: config.criteriaLogic || "",
           validationConfigJson: JSON.stringify([config], null, 2),
         });
       } else {
@@ -79,6 +83,8 @@ const ValidationConfigPanel = ({
             "Extend",
             "Edit",
           ],
+          criteria: config.criteria || "",
+          criteriaLogic: config.criteriaLogic || "",
           validationConfigJson: config.validationConfig
             ? JSON.stringify(config.validationConfig, null, 2)
             : "",
@@ -216,6 +222,37 @@ const ValidationConfigPanel = ({
       <Text variant="heading" size="md" weight="semibold">
         JSON Configuration
       </Text>
+
+      {/* Criteria Fields */}
+      <div className="grid grid-cols-1 gap-4">
+        <div>
+          <Text variant="body" weight="medium" className="mb-2">
+            Criteria
+          </Text>
+          <Input
+            value={formData.criteria}
+            onChange={(e) => handleInputChange("criteria", e.target.value)}
+            placeholder="Enter criteria for validation"
+          />
+          <Text variant="caption" color="muted" className="mt-1">
+            Define the criteria that must be met for this validation rule
+          </Text>
+        </div>
+
+        <div>
+          <Text variant="body" weight="medium" className="mb-2">
+            Criteria Logic
+          </Text>
+          <Input
+            value={formData.criteriaLogic}
+            onChange={(e) => handleInputChange("criteriaLogic", e.target.value)}
+            placeholder="Enter criteria logic (e.g., AND, OR)"
+          />
+          <Text variant="caption" color="muted" className="mt-1">
+            Define the logical operators for combining multiple criteria
+          </Text>
+        </div>
+      </div>
 
       <div>
         <div className="flex items-center justify-between mb-2">

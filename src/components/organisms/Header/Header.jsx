@@ -38,7 +38,7 @@ const Header = ({
         </div>
 
         {/* Right side - Language Toggle */}
-        <div className="flex items-center space-x-2">
+        {/* <div className="flex items-center space-x-2">
           <button className="px-2 py-1 text-sm font-medium text-blue-600 bg-blue-50 rounded">
             VN
           </button>
@@ -46,7 +46,7 @@ const Header = ({
           <button className="px-2 py-1 text-sm font-medium text-gray-600 hover:text-blue-600">
             EN
           </button>
-        </div>
+        </div> */}
       </div>
     </header>
   );
