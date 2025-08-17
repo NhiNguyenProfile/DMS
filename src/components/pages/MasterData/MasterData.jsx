@@ -5,7 +5,6 @@ import { Globe, Building, Users, Database } from "lucide-react";
 import CountryMasterData from "./components/CountryMasterData";
 import LegalEntityMasterData from "./components/LegalEntityMasterData";
 import DepartmentMasterData from "./components/DepartmentMasterData";
-import MasterDataRecords from "./MasterDataRecords";
 
 const MasterData = () => {
   return (
@@ -46,14 +45,6 @@ const MasterData = () => {
             icon={<Users size={16} />}
           >
             <DepartmentMasterData />
-          </VerticalTabs.Panel>
-
-          <VerticalTabs.Panel
-            tabId="records"
-            label="Records"
-            icon={<Database size={16} />}
-          >
-            <MasterDataRecords />
           </VerticalTabs.Panel>
         </VerticalTabs>
       </div>

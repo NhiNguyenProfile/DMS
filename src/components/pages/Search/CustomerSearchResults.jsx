@@ -265,14 +265,11 @@ const CustomerSearchResults = ({ onBack, country }) => {
     }`;
   };
 
-  // Add New Request functionality
+  // Add New Request functionality - Only Create and Mass Create for main search page
   const REQUEST_TYPES = [
     { value: "Create", label: "Create New Record" },
     { value: "MassCreate", label: "Mass Create Records" },
     { value: "MassEdit", label: "Mass Edit Records" },
-    { value: "Copy", label: "Copy Existing Record" },
-    { value: "Extend", label: "Extend Existing Record" },
-    { value: "Edit", label: "Edit Existing Record" },
   ];
 
   const handleAddRequest = (requestType) => {

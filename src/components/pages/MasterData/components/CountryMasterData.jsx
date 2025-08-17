@@ -169,7 +169,6 @@ const CountryMasterData = () => {
               <Table.HeaderCell>Timezone</Table.HeaderCell>
               <Table.HeaderCell>Legal Entities</Table.HeaderCell>
               <Table.HeaderCell>Last Sync</Table.HeaderCell>
-              <Table.HeaderCell>Sync Status</Table.HeaderCell>
               <Table.HeaderCell>Status</Table.HeaderCell>
             </Table.Row>
           </Table.Header>
@@ -210,12 +209,6 @@ const CountryMasterData = () => {
                     <Text variant="body" className="text-sm">
                       {formatLastSync(country.lastSyncDate)}
                     </Text>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <span className={syncBadge.className}>
-                      {syncBadge.icon}
-                      {country.syncStatus}
-                    </span>
                   </Table.Cell>
                   <Table.Cell>
                     <span className={getStatusBadge(country.status)}>

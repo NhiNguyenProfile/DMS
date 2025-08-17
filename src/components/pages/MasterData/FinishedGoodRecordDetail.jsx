@@ -5,7 +5,7 @@ import Modal from "../../atoms/Modal";
 import { ArrowLeft, History, Plus } from "lucide-react";
 import RequestHistoryModal from "./RequestHistoryModal";
 
-const CustomerRecordDetail = ({ record, onClose }) => {
+const FinishedGoodRecordDetail = ({ record, onClose }) => {
   const [showRequestHistory, setShowRequestHistory] = useState(false);
   const [showCreateRequestModal, setShowCreateRequestModal] = useState(false);
 
@@ -42,10 +42,10 @@ const CustomerRecordDetail = ({ record, onClose }) => {
           </Button>
           <div>
             <Text variant="heading" size="xl" weight="bold" className="mb-1">
-              Customer Details
+              Finished Good Details
             </Text>
             <Text variant="body" color="muted">
-              {record.customerCode} - {record.customerName}
+              {record.productCode} - {record.productName}
             </Text>
           </div>
         </div>
@@ -66,7 +66,7 @@ const CustomerRecordDetail = ({ record, onClose }) => {
         </div>
       </div>
 
-      {/* Customer Information */}
+      {/* Basic Information */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <Text variant="heading" size="lg" weight="semibold" className="mb-4">
           Basic Information
@@ -80,10 +80,10 @@ const CustomerRecordDetail = ({ record, onClose }) => {
               weight="medium"
               className="mb-1"
             >
-              Customer Code
+              Product Code
             </Text>
             <Text variant="body" weight="medium">
-              {record.customerCode}
+              {record.productCode}
             </Text>
           </div>
 
@@ -94,10 +94,10 @@ const CustomerRecordDetail = ({ record, onClose }) => {
               weight="medium"
               className="mb-1"
             >
-              Customer Name
+              Product Name
             </Text>
             <Text variant="body" weight="medium">
-              {record.customerName}
+              {record.productName}
             </Text>
           </div>
 
@@ -108,9 +108,9 @@ const CustomerRecordDetail = ({ record, onClose }) => {
               weight="medium"
               className="mb-1"
             >
-              Customer Type
+              Category
             </Text>
-            <Text variant="body">{record.customerType}</Text>
+            <Text variant="body">{record.category}</Text>
           </div>
 
           <div>
@@ -120,9 +120,9 @@ const CustomerRecordDetail = ({ record, onClose }) => {
               weight="medium"
               className="mb-1"
             >
-              Industry
+              Brand
             </Text>
-            <Text variant="body">{record.industry}</Text>
+            <Text variant="body">{record.brand}</Text>
           </div>
 
           <div>
@@ -132,9 +132,9 @@ const CustomerRecordDetail = ({ record, onClose }) => {
               weight="medium"
               className="mb-1"
             >
-              Tax Code
+              Unit of Measure
             </Text>
-            <Text variant="body">{record.taxCode}</Text>
+            <Text variant="body">{record.unitOfMeasure}</Text>
           </div>
 
           <div>
@@ -146,23 +146,15 @@ const CustomerRecordDetail = ({ record, onClose }) => {
             >
               Status
             </Text>
-            <span
-              className={`px-2 py-1 text-xs font-medium rounded ${
-                record.status === "Active"
-                  ? "bg-green-100 text-green-800"
-                  : "bg-gray-100 text-gray-800"
-              }`}
-            >
-              {record.status}
-            </span>
+            <Text variant="body">{record.status}</Text>
           </div>
         </div>
       </div>
 
-      {/* Contact Information */}
+      {/* Pricing Information */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <Text variant="heading" size="lg" weight="semibold" className="mb-4">
-          Contact Information
+          Pricing Information
         </Text>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -173,79 +165,10 @@ const CustomerRecordDetail = ({ record, onClose }) => {
               weight="medium"
               className="mb-1"
             >
-              Address
-            </Text>
-            <Text variant="body">{record.address}</Text>
-          </div>
-
-          <div>
-            <Text
-              variant="caption"
-              color="muted"
-              weight="medium"
-              className="mb-1"
-            >
-              City
-            </Text>
-            <Text variant="body">{record.city}</Text>
-          </div>
-
-          <div>
-            <Text
-              variant="caption"
-              color="muted"
-              weight="medium"
-              className="mb-1"
-            >
-              Country
-            </Text>
-            <Text variant="body">{record.country}</Text>
-          </div>
-
-          <div>
-            <Text
-              variant="caption"
-              color="muted"
-              weight="medium"
-              className="mb-1"
-            >
-              Phone
-            </Text>
-            <Text variant="body">{record.phone}</Text>
-          </div>
-
-          <div>
-            <Text
-              variant="caption"
-              color="muted"
-              weight="medium"
-              className="mb-1"
-            >
-              Email
-            </Text>
-            <Text variant="body">{record.email}</Text>
-          </div>
-        </div>
-      </div>
-
-      {/* Financial Information */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <Text variant="heading" size="lg" weight="semibold" className="mb-4">
-          Financial Information
-        </Text>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <Text
-              variant="caption"
-              color="muted"
-              weight="medium"
-              className="mb-1"
-            >
-              Credit Limit
+              Unit Price
             </Text>
             <Text variant="body" weight="medium">
-              ${record.creditLimit?.toLocaleString()}
+              ${record.unitPrice?.toLocaleString()}
             </Text>
           </div>
 
@@ -256,9 +179,44 @@ const CustomerRecordDetail = ({ record, onClose }) => {
               weight="medium"
               className="mb-1"
             >
-              Payment Terms
+              Cost
             </Text>
-            <Text variant="body">{record.paymentTerms}</Text>
+            <Text variant="body">${record.cost?.toLocaleString()}</Text>
+          </div>
+        </div>
+      </div>
+
+      {/* Inventory Information */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <Text variant="heading" size="lg" weight="semibold" className="mb-4">
+          Inventory Information
+        </Text>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <Text
+              variant="caption"
+              color="muted"
+              weight="medium"
+              className="mb-1"
+            >
+              Current Stock
+            </Text>
+            <Text variant="body" weight="medium">
+              {record.currentStock?.toLocaleString()}
+            </Text>
+          </div>
+
+          <div>
+            <Text
+              variant="caption"
+              color="muted"
+              weight="medium"
+              className="mb-1"
+            >
+              Minimum Stock Level
+            </Text>
+            <Text variant="body">{record.minStockLevel?.toLocaleString()}</Text>
           </div>
         </div>
       </div>
@@ -305,7 +263,7 @@ const CustomerRecordDetail = ({ record, onClose }) => {
         isOpen={showRequestHistory}
         onClose={handleCloseRequestHistory}
         record={record}
-        entityType="Customer"
+        entityType="FinishedGood"
       />
 
       {/* Create New Request Modal */}
@@ -316,7 +274,8 @@ const CustomerRecordDetail = ({ record, onClose }) => {
       >
         <div className="space-y-4">
           <Text variant="body" color="muted">
-            Select the type of request you want to create for this customer:
+            Select the type of request you want to create for this finished
+            good:
           </Text>
           <div className="grid grid-cols-1 gap-3">
             {DETAIL_REQUEST_TYPES.map((type) => (
@@ -336,4 +295,4 @@ const CustomerRecordDetail = ({ record, onClose }) => {
   );
 };
 
-export default CustomerRecordDetail;
+export default FinishedGoodRecordDetail;

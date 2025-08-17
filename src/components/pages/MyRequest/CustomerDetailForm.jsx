@@ -7,6 +7,7 @@ import MultiSelect from "../../atoms/MultiSelect";
 import Toggle from "../../atoms/Toggle";
 import ObjectSelectModal from "../../atoms/ObjectSelectModal";
 import AddressTable from "../../atoms/AddressTable";
+import TaxTable from "../../atoms/TaxTable";
 import { ArrowLeft, Eye, X } from "lucide-react";
 import ApprovalTreeSlider from "./ApprovalTreeSlider";
 import ConfirmationModal from "../../atoms/ConfirmationModal";
@@ -43,33 +44,6 @@ const MAIN_CUSTOMER_FIELDS = [
     type: "text",
     required: false,
     key: "nikNpwp",
-  },
-];
-
-const TAX_FIELDS = [
-  {
-    label: "Tax Exempt Number",
-    type: "text",
-    required: true,
-    key: "taxExemptNumber",
-  },
-  {
-    label: "Company Name",
-    type: "text",
-    required: true,
-    key: "companyName",
-  },
-  {
-    label: "NIK",
-    type: "text",
-    required: true,
-    key: "nik",
-  },
-  {
-    label: "Non NPWP",
-    type: "yes-no",
-    required: false,
-    key: "nonNpwp",
   },
 ];
 
@@ -378,12 +352,7 @@ const FINAL_CUSTOMER_PAYMENT = [
     required: true,
     key: "salesTaxGroup",
   },
-  {
-    label: "Tax Exempt Number",
-    type: "text",
-    required: true,
-    key: "finalTaxExemptNumber",
-  },
+
   {
     label: "VAS E-Invoice",
     type: "yes-no",
@@ -398,9 +367,10 @@ const CustomerDetailForm = ({
   onViewApproval,
   onSave,
 }) => {
-  const [activeTab, setActiveTab] = useState("main");
+  const [activeTab, setActiveTab] = useState("final");
   const [formData, setFormData] = useState({});
   const [addresses, setAddresses] = useState([]);
+  const [taxRecords, setTaxRecords] = useState([]);
   const [showApprovalSlider, setShowApprovalSlider] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
@@ -550,10 +520,11 @@ const CustomerDetailForm = ({
     }
   }, [requestData]);
 
+  // Dynamic tabs based on whether Main Customer is selected
   const tabs = [
     {
       id: "final",
-      label: "(1) Final Customer",
+      label: "Final Customer",
       sections: [
         { title: "General", fields: FINAL_CUSTOMER_GENERAL },
         { title: "Address", isAddressTable: true },
@@ -561,10 +532,22 @@ const CustomerDetailForm = ({
         { title: "Sales Demographic", fields: FINAL_CUSTOMER_SALES },
         { title: "Credit and Collection", fields: FINAL_CUSTOMER_CREDIT },
         { title: "Payment & Invoice", fields: FINAL_CUSTOMER_PAYMENT },
+        { title: "Tax Exempt Number", isTaxTable: true },
       ],
     },
-    { id: "main", label: "(2) Main Customer", fields: MAIN_CUSTOMER_FIELDS },
-    { id: "tax", label: "(3) Tax", fields: TAX_FIELDS },
+    // Show Main Customer tab logic:
+    // - If NOT in edit mode: always show tab
+    // - If in edit mode: only show if main customer is selected (including "NEW CUSTOMER")
+    ...(requestData?.currentSteps !== "Waiting for Entry" ||
+    formData.mainCustomer
+      ? [
+          {
+            id: "main",
+            label: "Main Customer",
+            fields: MAIN_CUSTOMER_FIELDS,
+          },
+        ]
+      : []),
   ];
 
   const handleInputChange = (key, value) => {
@@ -573,6 +556,16 @@ const CustomerDetailForm = ({
         ...prev,
         [key]: value,
       };
+
+      // If Main Customer is completely cleared in edit mode, switch back to final tab
+      if (
+        key === "mainCustomer" &&
+        !value &&
+        activeTab === "main" &&
+        requestData?.currentSteps === "Waiting for Entry"
+      ) {
+        setActiveTab("final");
+      }
 
       // Handle conditional disable logic - clear disabled fields
       if (key === "customerGroup") {
@@ -778,6 +771,27 @@ const CustomerDetailForm = ({
                   <AddressTable
                     addresses={addresses}
                     onChange={setAddresses}
+                    disabled={requestData?.currentSteps !== "Waiting for Entry"}
+                  />
+                </div>
+              );
+            }
+
+            // Handle Tax Table section
+            if (section.isTaxTable) {
+              return (
+                <div key={index} className="space-y-4">
+                  <Text
+                    variant="heading"
+                    size="lg"
+                    weight="semibold"
+                    className="border-b border-gray-200 pb-2"
+                  >
+                    {section.title}
+                  </Text>
+                  <TaxTable
+                    taxRecords={taxRecords}
+                    onChange={setTaxRecords}
                     disabled={requestData?.currentSteps !== "Waiting for Entry"}
                   />
                 </div>

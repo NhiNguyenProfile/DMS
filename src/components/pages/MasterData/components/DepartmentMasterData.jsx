@@ -275,7 +275,6 @@ const DepartmentMasterData = () => {
               <Table.HeaderCell>Head of Dept</Table.HeaderCell>
               <Table.HeaderCell>Employees</Table.HeaderCell>
               <Table.HeaderCell>Last Sync</Table.HeaderCell>
-              <Table.HeaderCell>Sync Status</Table.HeaderCell>
               <Table.HeaderCell>Status</Table.HeaderCell>
             </Table.Row>
           </Table.Header>
@@ -311,12 +310,6 @@ const DepartmentMasterData = () => {
                     <Text variant="body" className="text-sm">
                       {formatLastSync(dept.lastSyncDate)}
                     </Text>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <span className={syncBadge.className}>
-                      {syncBadge.icon}
-                      {dept.syncStatus}
-                    </span>
                   </Table.Cell>
                   <Table.Cell>
                     <span className={getStatusBadge(dept.status)}>

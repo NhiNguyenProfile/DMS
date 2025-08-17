@@ -3,6 +3,7 @@ import Text from "../../atoms/Text";
 import Button from "../../atoms/Button";
 import Input from "../../atoms/Input";
 import Select from "../../atoms/Select";
+import TaxTable from "../../atoms/TaxTable";
 import { ArrowLeft, Eye, Edit, Check, X } from "lucide-react";
 import ApprovalTreeSlider from "../MyRequest/ApprovalTreeSlider";
 import ConfirmationModal from "../../atoms/ConfirmationModal";
@@ -42,47 +43,6 @@ const MAIN_CUSTOMER_FIELDS = [
   },
 ];
 
-const TAX_FIELDS = [
-  {
-    label: "Country/Region",
-    type: "select",
-    options: ["IDN", "VNM"],
-    required: true,
-    key: "countryRegion",
-  },
-  {
-    label: "Tax Exempt Number",
-    type: "text",
-    required: true,
-    key: "taxExemptNumber",
-  },
-  {
-    label: "Company",
-    type: "select",
-    options: ["uab", "wel", "wir"],
-    required: true,
-    key: "taxCompany",
-  },
-  {
-    label: "Company Name",
-    type: "text",
-    required: true,
-    key: "companyName",
-  },
-  {
-    label: "NIK",
-    type: "text",
-    required: true,
-    key: "nik",
-  },
-  {
-    label: "Non NPWP",
-    type: "yes-no",
-    required: false,
-    key: "nonNpwp",
-  },
-];
-
 // Simplified Final Customer fields for approval view
 const FINAL_CUSTOMER_GENERAL = [
   {
@@ -115,8 +75,9 @@ const FINAL_CUSTOMER_GENERAL = [
 ];
 
 const ApprovalDetailForm = ({ requestData, onBack, onViewApproval }) => {
-  const [activeTab, setActiveTab] = useState("main");
+  const [activeTab, setActiveTab] = useState("final");
   const [formData, setFormData] = useState({});
+  const [taxRecords, setTaxRecords] = useState([]);
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [showApprovalSlider, setShowApprovalSlider] = useState(false);
   const [showApproveModal, setShowApproveModal] = useState(false);
@@ -125,11 +86,13 @@ const ApprovalDetailForm = ({ requestData, onBack, onViewApproval }) => {
   const tabs = [
     {
       id: "final",
-      label: "(1) Final Customer",
-      sections: [{ title: "General", fields: FINAL_CUSTOMER_GENERAL }],
+      label: "Final Customer",
+      sections: [
+        { title: "General", fields: FINAL_CUSTOMER_GENERAL },
+        { title: "Tax Exempt Number", isTaxTable: true },
+      ],
     },
-    { id: "main", label: "(2) Main Customer", fields: MAIN_CUSTOMER_FIELDS },
-    { id: "tax", label: "(3) Tax", fields: TAX_FIELDS },
+    { id: "main", label: "Main Customer", fields: MAIN_CUSTOMER_FIELDS },
   ];
 
   const renderField = (field) => {
@@ -187,21 +150,44 @@ const ApprovalDetailForm = ({ requestData, onBack, onViewApproval }) => {
     if (currentTab.sections) {
       return (
         <div className="space-y-8">
-          {currentTab.sections.map((section, index) => (
-            <div key={index} className="space-y-4">
-              <Text
-                variant="heading"
-                size="lg"
-                weight="semibold"
-                className="border-b border-gray-200 pb-2"
-              >
-                {section.title}
-              </Text>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {section.fields.map((field) => renderField(field))}
+          {currentTab.sections.map((section, index) => {
+            // Handle Tax Table section
+            if (section.isTaxTable) {
+              return (
+                <div key={index} className="space-y-4">
+                  <Text
+                    variant="heading"
+                    size="lg"
+                    weight="semibold"
+                    className="border-b border-gray-200 pb-2"
+                  >
+                    {section.title}
+                  </Text>
+                  <TaxTable
+                    taxRecords={taxRecords}
+                    onChange={setTaxRecords}
+                    disabled={true}
+                  />
+                </div>
+              );
+            }
+
+            return (
+              <div key={index} className="space-y-4">
+                <Text
+                  variant="heading"
+                  size="lg"
+                  weight="semibold"
+                  className="border-b border-gray-200 pb-2"
+                >
+                  {section.title}
+                </Text>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {section.fields.map((field) => renderField(field))}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       );
     }

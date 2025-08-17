@@ -38,6 +38,40 @@ const ApprovalTreeSlider = ({
 
   if (!isOpen || !requestData) return null;
 
+  // Generate workflow name based on request data
+  const getWorkflowName = () => {
+    if (requestData.workflowName) {
+      return requestData.workflowName;
+    }
+
+    // Extract entity from request ID or use default mapping
+    let entity = "Customer"; // default
+    let requestType = "Create"; // default
+
+    // Try to determine entity from request ID pattern or other data
+    if (requestData.requestId) {
+      // You can customize this logic based on your request ID patterns
+      if (
+        requestData.requestId.includes("SPARE") ||
+        requestData.entity === "SpareParts"
+      ) {
+        entity = "Spare Parts";
+      } else if (
+        requestData.requestId.includes("FINISHED") ||
+        requestData.entity === "FinishedGoods"
+      ) {
+        entity = "Finished Goods";
+      }
+    }
+
+    // Try to get request type from requestData
+    if (requestData.requestType) {
+      requestType = requestData.requestType;
+    }
+
+    return `${requestType} - Standard - ${entity}`;
+  };
+
   const getStatusIcon = (status) => {
     switch (status) {
       case "Approved":
@@ -196,7 +230,7 @@ const ApprovalTreeSlider = ({
               Approval Tree
             </Text>
             <Text variant="caption" color="muted" className="mt-1">
-              {requestData.requestId}
+              {getWorkflowName()}
             </Text>
           </div>
           <Button variant="ghost" size="small" onClick={onClose}>

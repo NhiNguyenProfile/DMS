@@ -241,7 +241,6 @@ const LegalEntityMasterData = () => {
               <Table.HeaderCell>Tax Code</Table.HeaderCell>
               <Table.HeaderCell>Departments</Table.HeaderCell>
               <Table.HeaderCell>Last Sync</Table.HeaderCell>
-              <Table.HeaderCell>Sync Status</Table.HeaderCell>
               <Table.HeaderCell>Status</Table.HeaderCell>
             </Table.Row>
           </Table.Header>
@@ -282,12 +281,6 @@ const LegalEntityMasterData = () => {
                     <Text variant="body" className="text-sm">
                       {formatLastSync(entity.lastSyncDate)}
                     </Text>
-                  </Table.Cell>
-                  <Table.Cell>
-                    <span className={syncBadge.className}>
-                      {syncBadge.icon}
-                      {entity.syncStatus}
-                    </span>
                   </Table.Cell>
                   <Table.Cell>
                     <span className={getStatusBadge(entity.status)}>

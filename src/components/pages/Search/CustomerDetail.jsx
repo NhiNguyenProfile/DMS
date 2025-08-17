@@ -5,7 +5,8 @@ import Input from "../../atoms/Input";
 import Select from "../../atoms/Select";
 import Toggle from "../../atoms/Toggle";
 import AddressTable from "../../atoms/AddressTable";
-import { ArrowLeft, History } from "lucide-react";
+import Modal from "../../atoms/Modal";
+import { ArrowLeft, History, Plus } from "lucide-react";
 import RequestHistoryModal from "../MasterData/RequestHistoryModal";
 import EntityStepDetailModal from "../MasterData/EntityStepDetailModal";
 
@@ -14,6 +15,7 @@ const CustomerDetail = ({ customer, onBack }) => {
   const [showStepDetail, setShowStepDetail] = useState(false);
   const [selectedStepData, setSelectedStepData] = useState(null);
   const [selectedRequestData, setSelectedRequestData] = useState(null);
+  const [showCreateRequestModal, setShowCreateRequestModal] = useState(false);
 
   // Mock form data based on customer - giống CustomerDetailForm
   const [formData, setFormData] = useState({
@@ -65,6 +67,20 @@ const CustomerDetail = ({ customer, onBack }) => {
     setShowStepDetail(true);
   };
 
+  // Create New Request functionality - Only for detail page (4 types)
+  const DETAIL_REQUEST_TYPES = [
+    { value: "Copy", label: "Copy Existing Record" },
+    { value: "Extend", label: "Extend Existing Record" },
+    { value: "Edit", label: "Edit Existing Record" },
+  ];
+
+  const handleCreateRequest = (requestType) => {
+    setShowCreateRequestModal(false);
+
+    // Show warning modal instead of navigating to request creation
+    alert(`No suitable workflow available to perform ${requestType} action.`);
+  };
+
   const handleCloseStepDetail = () => {
     setShowStepDetail(false);
     setSelectedStepData(null);
@@ -113,11 +129,20 @@ const CustomerDetail = ({ customer, onBack }) => {
           </div>
         </div>
 
-        {/* View Request History Button */}
-        <Button variant="outline" onClick={handleViewRequestHistory}>
-          <History size={16} className="mr-2" />
-          View Request History
-        </Button>
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleViewRequestHistory}>
+            <History size={16} className="mr-2" />
+            View Request History
+          </Button>
+          <Button
+            variant="primary"
+            onClick={() => setShowCreateRequestModal(true)}
+          >
+            <Plus size={16} className="mr-2" />
+            Create New Request
+          </Button>
+        </div>
       </div>
 
       {/* Customer Information Form - giống CustomerDetailForm */}
@@ -374,6 +399,31 @@ const CustomerDetail = ({ customer, onBack }) => {
           entityType="Customer"
         />
       )}
+
+      {/* Create New Request Modal */}
+      <Modal
+        isOpen={showCreateRequestModal}
+        onClose={() => setShowCreateRequestModal(false)}
+        title="Create New Request"
+      >
+        <div className="space-y-4">
+          <Text variant="body" color="muted">
+            Select the type of request you want to create for this customer:
+          </Text>
+          <div className="grid grid-cols-1 gap-3">
+            {DETAIL_REQUEST_TYPES.map((type) => (
+              <Button
+                key={type.value}
+                variant="outline"
+                onClick={() => handleCreateRequest(type.value)}
+                className="justify-start"
+              >
+                {type.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
