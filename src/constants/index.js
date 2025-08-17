@@ -128,7 +128,7 @@ export const ASSIGNED_TYPES = [
   { value: "User", label: "User" },
   { value: "Group", label: "Group" },
   { value: "Request Owner", label: "Request Owner" },
-  { value: "Head of Department", label: "Head of Department" },
+  { value: "Approver", label: "Approver" },
 ];
 
 // Mail Recipients - Accounts with name and email

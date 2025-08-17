@@ -1010,7 +1010,7 @@ const SparePartsRequestList = ({
             </Button>
             {selectedPart && (
               <Button variant="primary" onClick={handleSendRequest}>
-                Send Request
+                Confirm to continue
               </Button>
             )}
           </div>

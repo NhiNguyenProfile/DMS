@@ -15,6 +15,8 @@ const BulkCreatePage = ({ mode = "create", onBack, onSendBulkRequest }) => {
   const [showImportModal, setShowImportModal] = useState(false);
   const [importFile, setImportFile] = useState(null);
   const [showSearchModal, setShowSearchModal] = useState(false);
+  const [packageTitle, setPackageTitle] = useState("");
+  const [showPackageTitleModal, setShowPackageTitleModal] = useState(false);
 
   const handleAddManually = () => {
     if (mode === "edit") {
@@ -140,14 +142,18 @@ const BulkCreatePage = ({ mode = "create", onBack, onSendBulkRequest }) => {
 
   const handleSendMassRequest = () => {
     if (customers.length === 0) return;
+    setShowPackageTitleModal(true);
+  };
 
+  const handleConfirmSendRequest = () => {
     const massRequest = {
       id: `MASS-REQ-${Date.now()}`,
       requestType: mode === "edit" ? "MassEdit" : "MassCreate",
       requestTitle:
-        mode === "edit"
+        packageTitle ||
+        (mode === "edit"
           ? `Mass Edit ${customers.length} Customers`
-          : `Mass Create ${customers.length} Customers`,
+          : `Mass Create ${customers.length} Customers`),
       stepOwner: "You - Sale Admin",
       currentSteps: "Waiting for Approval",
       status: "Pending",
@@ -155,11 +161,14 @@ const BulkCreatePage = ({ mode = "create", onBack, onSendBulkRequest }) => {
       customers: customers,
       totalCount: customers.length,
       mode: mode,
+      packageTitle: packageTitle,
     };
 
     if (onSendBulkRequest) {
       onSendBulkRequest(massRequest);
     }
+    setShowPackageTitleModal(false);
+    setPackageTitle("");
   };
 
   const mockRequestData = {
@@ -276,10 +285,20 @@ const BulkCreatePage = ({ mode = "create", onBack, onSendBulkRequest }) => {
       {customers.length > 0 && (
         <div className="px-6 pb-6">
           <div className="bg-white rounded-lg border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
               <Text variant="heading" size="lg" weight="semibold">
-                Customers to Create ({customers.length})
+                Customers to {mode === "edit" ? "Edit" : "Create"} (
+                {customers.length})
               </Text>
+              <Button
+                variant="primary"
+                onClick={handleSendMassRequest}
+                disabled={customers.length === 0}
+              >
+                {mode === "edit"
+                  ? `Send Mass Edit Request (${customers.length})`
+                  : `Send Mass Request (${customers.length})`}
+              </Button>
             </div>
 
             <div className="overflow-x-auto">
@@ -361,19 +380,6 @@ const BulkCreatePage = ({ mode = "create", onBack, onSendBulkRequest }) => {
                   })}
                 </Table.Body>
               </Table>
-            </div>
-
-            {/* Send Request Button */}
-            <div className="p-6 border-t border-gray-200 flex justify-end">
-              <Button
-                variant="primary"
-                onClick={handleSendMassRequest}
-                disabled={customers.length === 0}
-              >
-                {mode === "edit"
-                  ? `Send Mass Edit Request (${customers.length} customers)`
-                  : `Send Mass Request (${customers.length} customers)`}
-              </Button>
             </div>
           </div>
         </div>
@@ -471,6 +477,54 @@ const BulkCreatePage = ({ mode = "create", onBack, onSendBulkRequest }) => {
         onSelect={handleSelectExistingCustomer}
         searchPlaceholder="Search customers..."
       />
+
+      {/* Package Title Modal */}
+      <Modal
+        isOpen={showPackageTitleModal}
+        onClose={() => setShowPackageTitleModal(false)}
+        title="Package Title"
+        size="md"
+      >
+        <div className="space-y-4">
+          <Text variant="body" color="muted">
+            Enter a title for this{" "}
+            {mode === "edit" ? "mass edit" : "mass create"} package:
+          </Text>
+
+          <div>
+            <Text variant="body" weight="medium" className="mb-2">
+              Package Title *
+            </Text>
+            <Input
+              value={packageTitle}
+              onChange={(e) => setPackageTitle(e.target.value)}
+              placeholder={`Enter package title for ${
+                mode === "edit" ? "mass edit" : "mass create"
+              }...`}
+              className="w-full"
+              autoFocus
+            />
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setShowPackageTitleModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleConfirmSendRequest}
+              disabled={!packageTitle.trim()}
+            >
+              {mode === "edit"
+                ? `Send Mass Edit Request (${customers.length})`
+                : `Send Mass Request (${customers.length})`}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

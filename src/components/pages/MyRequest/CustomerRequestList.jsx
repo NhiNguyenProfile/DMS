@@ -1531,7 +1531,7 @@ const CustomerRequestList = ({
             </Button>
             {selectedCustomer && (
               <Button variant="primary" onClick={handleSendRequest}>
-                Send Request
+                Confirm to continue
               </Button>
             )}
           </div>

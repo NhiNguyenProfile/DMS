@@ -856,7 +856,7 @@ const FinishedGoodsRequestList = ({
             </Button>
             {selectedGoods && (
               <Button variant="primary" onClick={handleSendRequest}>
-                Send Request
+                Confirm to continue
               </Button>
             )}
           </div>

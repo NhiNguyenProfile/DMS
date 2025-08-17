@@ -305,7 +305,7 @@ const ApprovalDetailForm = ({ requestData, onBack, onViewApproval }) => {
           <Button
             variant="outline"
             onClick={handleReject}
-            className="text-red-600 border-red-300 hover:bg-red-50"
+            className="text-red-600 border-red-300 hover:bg-red-500"
           >
             <X size={16} className="mr-2" />
             Reject

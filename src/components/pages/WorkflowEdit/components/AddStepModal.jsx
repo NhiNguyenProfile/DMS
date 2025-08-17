@@ -709,12 +709,12 @@ const AddStepModal = ({
             approvedAt: isBeforeCurrentStep ? new Date().toISOString() : null,
           },
         ];
-      } else if (step.assigned_type === "Head of Department") {
-        // Head of Department - special assignee type
+      } else if (step.assigned_type === "Approver") {
+        // Approver - special assignee type
         owners = [
           {
-            name: "Head of Department",
-            title: "Department Manager",
+            name: "Approver",
+            title: "Approver",
             avatarUrl: null,
             status: isBeforeCurrentStep
               ? "Approved"
@@ -969,10 +969,8 @@ const AddStepModal = ({
           </Form.Item>
         </Col>
 
-        {/* Only show Assignee if not Request Owner or Head of Department */}
-        {!["Request Owner", "Head of Department"].includes(
-          stepData.assigned_type
-        ) && (
+        {/* Only show Assignee if not Request Owner or Approver */}
+        {!["Request Owner", "Approver"].includes(stepData.assigned_type) && (
           <Col span={12}>
             <Form.Item
               label="Assignee"

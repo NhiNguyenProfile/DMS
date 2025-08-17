@@ -364,7 +364,7 @@ const MassApprovalDetailView = ({ massRequest, entityType, onBack }) => {
                 variant="outline"
                 size="small"
                 onClick={handleMassApprove}
-                className="flex items-center gap-1 text-green-600 border-green-300 hover:bg-green-50"
+                className="flex items-center gap-1 text-white border-none bg-emerald-600 hover:bg-emerald-700"
               >
                 <CheckCircle size={16} />
                 Approve Selected
@@ -373,7 +373,7 @@ const MassApprovalDetailView = ({ massRequest, entityType, onBack }) => {
                 variant="outline"
                 size="small"
                 onClick={handleMassRequestUpdate}
-                className="flex items-center gap-1 text-blue-600 border-blue-300 hover:bg-blue-50"
+                className="flex items-center gap-1 text-white border-none bg-blue-600 hover:bg-blue-700"
               >
                 <Edit size={16} />
                 Request Update
@@ -382,7 +382,7 @@ const MassApprovalDetailView = ({ massRequest, entityType, onBack }) => {
                 variant="outline"
                 size="small"
                 onClick={handleMassReject}
-                className="flex items-center gap-1 text-red-600 border-red-300 hover:bg-red-50"
+                className="flex items-center gap-1 text-white bg-red-600 border-none hover:bg-red-700"
               >
                 <XCircle size={16} />
                 Reject Selected
