@@ -63,7 +63,7 @@ const Sidebar = ({ isOpen = true, onToggle, className = "", ...props }) => {
   ];
 
   const sidebarClass = clsx(
-    "fixed left-0 top-0 h-full bg-white transition-transform duration-300 ease-in-out z-50 w-64",
+    "fixed left-0 top-0 h-full bg-white transition-transform duration-300 ease-in-out z-50 w-60",
     {
       // Desktop: always visible, Mobile: toggle based on isOpen
       "translate-x-0": true, // Always visible on desktop
@@ -87,11 +87,11 @@ const Sidebar = ({ isOpen = true, onToggle, className = "", ...props }) => {
       <div className={sidebarClass} {...props}>
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-gray-200">
-          <div className="flex items-center space-x-2">
-            <Menu size={20} />
-            <Text variant="heading" size="lg" weight="bold">
+          <div className="w-full flex justify-center items-center space-x-2">
+            <img src="/images/logo.svg" className="h-16 w-16" />
+            {/* <Text variant="heading" size="lg" weight="bold">
               DMS
-            </Text>
+            </Text> */}
           </div>
           <Button
             variant="ghost"
@@ -104,7 +104,7 @@ const Sidebar = ({ isOpen = true, onToggle, className = "", ...props }) => {
         </div>
 
         {/* Navigation */}
-        <nav className="p-4 space-y-1">
+        <nav className="space-y-1">
           {menuItems.map((item) => (
             <SidebarItem
               key={item.id}
@@ -117,9 +117,9 @@ const Sidebar = ({ isOpen = true, onToggle, className = "", ...props }) => {
         </nav>
 
         {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-[18px] border-t border-gray-200">
+        <div className="absolute bottom-0 left-0 right-0 p-[18px]">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+            <div className="w-8 h-8 bg-sky-600 rounded-full flex items-center justify-center">
               <Text variant="body" size="small" color="white" weight="medium">
                 U
               </Text>

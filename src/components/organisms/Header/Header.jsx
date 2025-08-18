@@ -11,10 +11,17 @@ const Header = ({
 }) => {
   const { currentRoute } = useRouter();
   const currentRouteInfo = ROUTES[currentRoute] || { breadcrumb: title };
-  const headerClass = clsx("bg-white px-4 py-5", className);
+  const headerClass = clsx(
+    "bg-white px-4 py-5 bg-cover bg-center bg-no-repeat mx-4 rounded-lg",
+    className
+  );
+
+  const headerStyle = {
+    backgroundImage: "url('/images/header-v2.svg')",
+  };
 
   return (
-    <header className={headerClass} {...props}>
+    <header className={headerClass} style={headerStyle} {...props}>
       <div className="flex items-center justify-between">
         {/* Left side - Breadcrumb */}
         <div className="flex items-center space-x-4">
@@ -28,10 +35,10 @@ const Header = ({
           </Button>
 
           {/* Breadcrumb */}
-          <div className="flex items-center space-x-2 text-sm text-gray-500">
+          <div className="flex items-center space-x-2 text-sm text-white/80">
             <span>Overview</span>
             <ChevronRight size={16} />
-            <span className="font-medium text-gray-900">
+            <span className="font-medium text-white">
               {currentRouteInfo.breadcrumb}
             </span>
           </div>

@@ -14,9 +14,9 @@ const SidebarItem = ({
   ...props
 }) => {
   const itemClass = clsx(
-    "flex items-center w-full px-4 py-3 text-left transition-colors duration-200 rounded-lg group",
+    "flex items-center w-full pl-4 pr-2 py-3 text-left transition-colors duration-200 rounded-r-lg group",
     {
-      "bg-blue-600 text-white": isActive,
+      "bg-[#EBFFD0] text-lime-700": isActive,
       "text-gray-700 hover:bg-gray-100": !isActive,
     },
     className
@@ -26,7 +26,7 @@ const SidebarItem = ({
     <button className={itemClass} onClick={onClick} {...props}>
       <div
         className={clsx("mr-3", {
-          "text-white": isActive,
+          "text-lime-800": isActive,
           "text-gray-500 group-hover:text-gray-700": !isActive,
         })}
       >
@@ -36,7 +36,7 @@ const SidebarItem = ({
         variant="body"
         size="medium"
         className={clsx("flex-1 text-left", {
-          "text-white": isActive,
+          "text-lime-800": isActive,
           "text-gray-700": !isActive,
         })}
       >
