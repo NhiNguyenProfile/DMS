@@ -265,7 +265,7 @@ const AdminPermissions = () => {
       <div className="flex items-center justify-between">
         <div>
           <Text variant="heading" size="lg" weight="semibold">
-            Admin Permissions
+            Administrator Permissions
           </Text>
           <Text variant="body" color="muted" className="mt-1">
             Manage administrator accounts and roles

@@ -1,16 +1,28 @@
-import { useState } from "react";
-import Text from "../../atoms/Text";
 import Tabs from "../../atoms/Tabs";
-import { Shield, Settings } from "lucide-react";
-import RolePermissions from "./components/RolePermissions";
+import { Settings, Users } from "lucide-react";
 import AdminPermissions from "./components/AdminPermissions";
+import BusinessUserPermissions from "./components/BusinessUserPermissions";
 
 const PermissionsContent = () => {
   return (
     <div className="space-y-6">
       {/* Tab Navigation */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <Tabs defaultTab="role-permissions" variant="default">
+        <Tabs defaultTab="admin-permissions" variant="default">
+          <Tabs.Panel
+            tabId="admin-permissions"
+            label="Administrator"
+            icon={<Settings size={16} />}
+          >
+            <AdminPermissions />
+          </Tabs.Panel>
+          <Tabs.Panel
+            tabId="business-user-permissions"
+            label="Business User"
+            icon={<Users size={16} />}
+          >
+            <BusinessUserPermissions />
+          </Tabs.Panel>
           {/* TO-DO */}
           {/* <Tabs.Panel
             tabId="role-permissions"
@@ -19,13 +31,6 @@ const PermissionsContent = () => {
           >
             <RolePermissions />
           </Tabs.Panel> */}
-          <Tabs.Panel
-            tabId="admin-permissions"
-            label="Admin Permissions"
-            icon={<Settings size={16} />}
-          >
-            <AdminPermissions />
-          </Tabs.Panel>
         </Tabs>
       </div>
     </div>
