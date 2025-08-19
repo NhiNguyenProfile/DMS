@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Text from "../../../atoms/Text";
 import Button from "../../../atoms/Button";
 import Input from "../../../atoms/Input";
@@ -13,6 +13,8 @@ import {
   Trash2,
   Users,
   Shield,
+  ChevronDown,
+  User,
 } from "lucide-react";
 
 // Legal entities
@@ -38,6 +40,64 @@ const REQUEST_TYPES = [
   { value: "Extend", label: "Extend" },
 ];
 
+// Available users for selection with avatar and department
+const AVAILABLE_USERS = [
+  {
+    id: 1,
+    username: "john.doe",
+    fullName: "John Doe",
+    email: "john.doe@deheus.com",
+    department: "Sales",
+    avatar:
+      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face",
+  },
+  {
+    id: 2,
+    username: "jane.smith",
+    fullName: "Jane Smith",
+    email: "jane.smith@deheus.com",
+    department: "Operations",
+    avatar:
+      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=32&h=32&fit=crop&crop=face",
+  },
+  {
+    id: 3,
+    username: "mike.wilson",
+    fullName: "Mike Wilson",
+    email: "mike.wilson@deheus.com",
+    department: "Credit",
+    avatar:
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=32&h=32&fit=crop&crop=face",
+  },
+  {
+    id: 4,
+    username: "sarah.johnson",
+    fullName: "Sarah Johnson",
+    email: "sarah.johnson@deheus.com",
+    department: "Finance",
+    avatar:
+      "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=32&h=32&fit=crop&crop=face",
+  },
+  {
+    id: 5,
+    username: "david.brown",
+    fullName: "David Brown",
+    email: "david.brown@deheus.com",
+    department: "HR",
+    avatar:
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=32&h=32&fit=crop&crop=face",
+  },
+  {
+    id: 6,
+    username: "lisa.chen",
+    fullName: "Lisa Chen",
+    email: "lisa.chen@deheus.com",
+    department: "IT",
+    avatar:
+      "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=32&h=32&fit=crop&crop=face",
+  },
+];
+
 // Sample business users data
 const SAMPLE_BUSINESS_USERS = [
   {
@@ -46,6 +106,7 @@ const SAMPLE_BUSINESS_USERS = [
     fullName: "John Doe",
     email: "john.doe@deheus.com",
     legalEntity: "DHV",
+    legalEntities: ["DHV", "DHBH"],
     department: "Sales",
     entityPermissions: {
       Customer: ["Create", "Edit", "Copy"],
@@ -61,6 +122,7 @@ const SAMPLE_BUSINESS_USERS = [
     fullName: "Jane Smith",
     email: "jane.smith@deheus.com",
     legalEntity: "DHBH",
+    legalEntities: ["DHBH"],
     department: "Operations",
     entityPermissions: {
       Customer: ["Edit", "Copy"],
@@ -76,6 +138,7 @@ const SAMPLE_BUSINESS_USERS = [
     fullName: "Mike Wilson",
     email: "mike.wilson@deheus.com",
     legalEntity: "DHHP",
+    legalEntities: ["DHHP", "DHV"],
     department: "Credit",
     entityPermissions: {
       Customer: ["Create", "Edit", "Copy", "Extend"],
@@ -86,6 +149,164 @@ const SAMPLE_BUSINESS_USERS = [
   },
 ];
 
+// UserSelect Component
+const UserSelect = ({
+  value,
+  onChange,
+  error,
+  placeholder,
+  disabled = false,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const dropdownRef = useRef(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+  const selectedUser = AVAILABLE_USERS.find(
+    (user) =>
+      user.username === value?.username ||
+      user.email === value?.email ||
+      user.id === value?.id
+  );
+
+  const filteredUsers = AVAILABLE_USERS.filter(
+    (user) =>
+      user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.department.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleUserSelect = (user) => {
+    onChange({
+      username: user.username,
+      fullName: user.fullName,
+      email: user.email,
+      department: user.department,
+    });
+    setIsOpen(false);
+    setSearchTerm("");
+  };
+
+  const UserOption = ({ user }) => (
+    <div
+      className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+      onClick={() => handleUserSelect(user)}
+    >
+      <img
+        src={user.avatar}
+        alt={user.fullName}
+        className="w-10 h-10 rounded-full object-cover"
+      />
+      <div className="flex-1">
+        <Text variant="body" weight="medium">
+          {user.fullName}
+        </Text>
+        <Text variant="caption" color="muted">
+          {user.username} • {user.email}
+        </Text>
+        <Text variant="caption" color="muted" className="text-xs">
+          {user.department}
+        </Text>
+      </div>
+    </div>
+  );
+
+  const UserDisplay = () => {
+    if (!selectedUser) {
+      return (
+        <div className="flex items-center gap-3 p-3 border border-gray-300 rounded-md bg-gray-50">
+          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+            <User size={20} className="text-gray-400" />
+          </div>
+          <Text variant="body" color="muted">
+            {placeholder}
+          </Text>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center gap-3 p-3 border border-gray-300 rounded-md bg-white">
+        <img
+          src={selectedUser.avatar}
+          alt={selectedUser.fullName}
+          className="w-10 h-10 rounded-full object-cover"
+        />
+        <div className="flex-1">
+          <Text variant="body" weight="medium">
+            {selectedUser.fullName}
+          </Text>
+          <Text variant="caption" color="muted">
+            {selectedUser.username} • {selectedUser.email}
+          </Text>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <div
+        className={`cursor-pointer ${
+          disabled ? "cursor-not-allowed opacity-50" : ""
+        } ${error ? "ring-2 ring-red-500" : ""}`}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+      >
+        <UserDisplay />
+        <ChevronDown
+          size={16}
+          className={`absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
+        />
+      </div>
+
+      {isOpen && !disabled && (
+        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-80 overflow-hidden">
+          {/* Search */}
+          <div className="p-3 border-b border-gray-200">
+            <Input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search users..."
+              className="text-sm"
+            />
+          </div>
+
+          {/* User List */}
+          <div className="max-h-60 overflow-y-auto">
+            {filteredUsers.length > 0 ? (
+              filteredUsers.map((user) => (
+                <UserOption key={user.id} user={user} />
+              ))
+            ) : (
+              <div className="p-4 text-center">
+                <Text variant="body" color="muted">
+                  No users found
+                </Text>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const BusinessUserPermissions = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLegalEntity, setSelectedLegalEntity] = useState("");
@@ -93,10 +314,12 @@ const BusinessUserPermissions = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [formData, setFormData] = useState({
+    selectedUser: null,
     username: "",
     fullName: "",
     email: "",
     legalEntity: "",
+    legalEntities: [], // Array for multiple legal entities
     department: "",
     entityPermissions: {},
   });
@@ -119,10 +342,12 @@ const BusinessUserPermissions = () => {
   const handleAddUser = () => {
     setEditingUser(null);
     setFormData({
+      selectedUser: null,
       username: "",
       fullName: "",
       email: "",
       legalEntity: "",
+      legalEntities: [],
       department: "",
       entityPermissions: {},
     });
@@ -132,11 +357,24 @@ const BusinessUserPermissions = () => {
 
   const handleEditUser = (user) => {
     setEditingUser(user);
+    // Find the corresponding user from AVAILABLE_USERS for editing
+    const availableUser = AVAILABLE_USERS.find(
+      (u) => u.username === user.username || u.email === user.email
+    );
     setFormData({
+      selectedUser: availableUser
+        ? {
+            username: availableUser.username,
+            fullName: availableUser.fullName,
+            email: availableUser.email,
+            department: availableUser.department,
+          }
+        : null,
       username: user.username,
       fullName: user.fullName,
       email: user.email,
       legalEntity: user.legalEntity,
+      legalEntities: user.legalEntities || [user.legalEntity].filter(Boolean), // Convert single to array or use existing array
       department: user.department,
       entityPermissions: user.entityPermissions || {},
     });
@@ -146,6 +384,25 @@ const BusinessUserPermissions = () => {
 
   const handleDeleteUser = (userId) => {
     setBusinessUsers((prev) => prev.filter((user) => user.id !== userId));
+  };
+
+  const handleUserSelect = (userData) => {
+    setFormData((prev) => ({
+      ...prev,
+      selectedUser: userData,
+      username: userData.username,
+      fullName: userData.fullName,
+      email: userData.email,
+      department: userData.department,
+    }));
+    // Clear user-related errors
+    setErrors((prev) => ({
+      ...prev,
+      username: "",
+      fullName: "",
+      email: "",
+      department: "",
+    }));
   };
 
   const handleInputChange = (field, value) => {
@@ -222,26 +479,12 @@ const BusinessUserPermissions = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.username.trim()) {
-      newErrors.username = "Username is required";
+    if (!formData.selectedUser) {
+      newErrors.username = "Please select a user";
     }
 
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = "Full name is required";
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = "Email is invalid";
-    }
-
-    if (!formData.legalEntity) {
-      newErrors.legalEntity = "Legal entity is required";
-    }
-
-    if (!formData.department.trim()) {
-      newErrors.department = "Department is required";
+    if (!formData.legalEntities || formData.legalEntities.length === 0) {
+      newErrors.legalEntities = "At least one legal entity is required";
     }
 
     setErrors(newErrors);
@@ -262,6 +505,9 @@ const BusinessUserPermissions = () => {
     const cleanedFormData = {
       ...formData,
       entityPermissions: cleanedEntityPermissions,
+      // Keep backward compatibility with single legalEntity
+      legalEntity:
+        formData.legalEntities.length > 0 ? formData.legalEntities[0] : "",
     };
 
     if (editingUser) {
@@ -355,6 +601,7 @@ const BusinessUserPermissions = () => {
             <Table.Row>
               <Table.HeaderCell>User</Table.HeaderCell>
               <Table.HeaderCell>Department</Table.HeaderCell>
+              <Table.HeaderCell>Legal Entities</Table.HeaderCell>
               <Table.HeaderCell>Entity Permissions</Table.HeaderCell>
               <Table.HeaderCell>Actions</Table.HeaderCell>
             </Table.Row>
@@ -374,6 +621,20 @@ const BusinessUserPermissions = () => {
                 </Table.Cell>
                 <Table.Cell>
                   <Text variant="body">{user.department}</Text>
+                </Table.Cell>
+                <Table.Cell>
+                  <div className="flex flex-wrap gap-1">
+                    {(
+                      user.legalEntities || [user.legalEntity].filter(Boolean)
+                    ).map((entity, index) => (
+                      <span
+                        key={index}
+                        className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                      >
+                        {entity}
+                      </span>
+                    ))}
+                  </div>
                 </Table.Cell>
                 <Table.Cell>
                   <Text
@@ -436,54 +697,19 @@ const BusinessUserPermissions = () => {
 
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+            <div className="md:col-span-2">
               <Text variant="body" weight="medium" className="mb-2">
-                Username *
+                Select User *
               </Text>
-              <Input
-                value={formData.username}
-                onChange={(e) => handleInputChange("username", e.target.value)}
-                placeholder="Enter username"
-                error={!!errors.username}
+              <UserSelect
+                value={formData.selectedUser}
+                onChange={handleUserSelect}
+                placeholder="Select a user account"
+                error={!!errors.username || !!errors.fullName || !!errors.email}
               />
-              {errors.username && (
+              {(errors.username || errors.fullName || errors.email) && (
                 <Text variant="caption" color="error" className="mt-1">
-                  {errors.username}
-                </Text>
-              )}
-            </div>
-
-            <div>
-              <Text variant="body" weight="medium" className="mb-2">
-                Full Name *
-              </Text>
-              <Input
-                value={formData.fullName}
-                onChange={(e) => handleInputChange("fullName", e.target.value)}
-                placeholder="Enter full name"
-                error={!!errors.fullName}
-              />
-              {errors.fullName && (
-                <Text variant="caption" color="error" className="mt-1">
-                  {errors.fullName}
-                </Text>
-              )}
-            </div>
-
-            <div>
-              <Text variant="body" weight="medium" className="mb-2">
-                Email *
-              </Text>
-              <Input
-                type="email"
-                value={formData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-                placeholder="Enter email address"
-                error={!!errors.email}
-              />
-              {errors.email && (
-                <Text variant="caption" color="error" className="mt-1">
-                  {errors.email}
+                  {errors.username || errors.fullName || errors.email}
                 </Text>
               )}
             </div>
@@ -497,12 +723,33 @@ const BusinessUserPermissions = () => {
                 onChange={(e) =>
                   handleInputChange("department", e.target.value)
                 }
-                placeholder="Enter department"
-                error={!!errors.department}
+                placeholder="Department will be auto-filled"
+                disabled={true}
+                className="bg-gray-50"
               />
               {errors.department && (
                 <Text variant="caption" color="error" className="mt-1">
                   {errors.department}
+                </Text>
+              )}
+            </div>
+
+            <div>
+              <Text variant="body" weight="medium" className="mb-2">
+                Legal Entity Permission *
+              </Text>
+              <MultiSelect
+                value={formData.legalEntities}
+                onChange={(values) =>
+                  handleInputChange("legalEntities", values)
+                }
+                options={LEGAL_ENTITIES}
+                placeholder="Select legal entities"
+                error={!!errors.legalEntities}
+              />
+              {errors.legalEntities && (
+                <Text variant="caption" color="error" className="mt-1">
+                  {errors.legalEntities}
                 </Text>
               )}
             </div>
