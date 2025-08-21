@@ -382,16 +382,13 @@ const AutoFieldConfigPanel = ({
                     handleInputChange(
                       "configurationJson",
                       JSON.stringify(
-                        {
-                          type: formData.autoFillType,
-                          fields: [
-                            {
-                              fieldKey: "",
-                              fieldName: "",
-                              value: "",
-                            },
-                          ],
-                        },
+                        [
+                          {
+                            field_name: "CustomerType",
+                            operator: "DEFAULT",
+                            value: "Person",
+                          },
+                        ],
                         null,
                         2
                       )
@@ -410,16 +407,13 @@ const AutoFieldConfigPanel = ({
                 handleInputChange(
                   "configurationJson",
                   JSON.stringify(
-                    {
-                      type: formData.autoFillType,
-                      fields: [
-                        {
-                          fieldKey: "",
-                          fieldName: "",
-                          value: "",
-                        },
-                      ],
-                    },
+                    [
+                      {
+                        field_name: "CustomerType",
+                        operator: "DEFAULT",
+                        value: "Person",
+                      },
+                    ],
                     null,
                     2
                   )
@@ -436,30 +430,13 @@ const AutoFieldConfigPanel = ({
           onChange={(e) =>
             handleInputChange("configurationJson", e.target.value)
           }
-          placeholder={`{
-  "type": "default",
-  "fieldKey": "country",
-  "fieldName": "Country",
-  "value": "VN"
-}
-
-or for dependent fields:
-
-{
-  "type": "dependent",
-  "fieldKey": "region",
-  "fieldName": "Region",
-  "value": "Miền Bắc"
-}
-
-or for system/API:
-
-{
-  "type": "system",
-  "fieldKey": "createdBy",
-  "fieldName": "Created By",
-  "method": "currentUser"
-}`}
+          placeholder={`[
+    {
+      "field_name": "CustomerType",
+      "operator": "DEFAULT",
+      "value": "Person"
+    }
+]`}
         />
         {errors.configurationJson && (
           <Text variant="caption" color="error" className="mt-1">

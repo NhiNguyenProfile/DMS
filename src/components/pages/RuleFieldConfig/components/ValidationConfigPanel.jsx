@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import Text from "../../../atoms/Text";
 import Button from "../../../atoms/Button";
 import Input from "../../../atoms/Input";
+import Select from "../../../atoms/Select";
 import MultiSelect from "../../../atoms/MultiSelect";
 import Toggle from "../../../atoms/Toggle";
 import Tabs, { TabPanel } from "../../../atoms/Tabs";
@@ -18,28 +19,24 @@ const ValidationConfigPanel = ({
     ruleName: "",
     ruleDescription: "",
     status: "Active",
+    validationType: "default",
     legalEntities: [],
     request_type: ["Create", "Copy", "Extend", "Edit"],
     criteria: "",
     criteriaLogic: "",
     validationConfigJson: `[
-  {
-    "field_name": "CustomerType",
-    "validations": "[{ 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'} ]"
-  },
-  {
-    "field_name": "Organizationname",
-    "validations": "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'},{ 'type': 'MAXLENGTH', 'operator': 'DEFAULT', 'message': 'tối đa 10 ký tự', 'value': '10'} ]"
-  },
-  {
-    "field_name": "Salary",
-    "validations": "[ {'type': 'MAX', 'operator': 'DEFAULT', 'message': 'MAX 10', 'value': '10'}, {'type': 'MIN', 'operator': 'DEFAULT', 'message': 'MIN 1', 'value': '1'}]"
-  },
-  {
-    "field_name": "Country",
-    "validations": "[{'type': 'DISPLAYMODE', 'operator': 'DEFAULT', 'message': '', 'value': 'DISABLE'}]"
-  }
-]`,
+    {
+      "field_name": "CustomerName",
+      "operator": "REQUIRED",
+      "value": true
+    },
+    {
+      "field_name": "CustomerName",
+      "operator": "MINLENGTH",
+      "value": 5
+    }
+]
+`,
   });
 
   const [errors, setErrors] = useState({});
@@ -65,6 +62,7 @@ const ValidationConfigPanel = ({
           ruleName: config.field_name || "",
           ruleDescription: `Configuration for ${config.field_name}`,
           status: "Active",
+          validationType: config.type || "default",
           legalEntities: [],
           criteria: config.criteria || "",
           criteriaLogic: config.criteriaLogic || "",
@@ -76,6 +74,7 @@ const ValidationConfigPanel = ({
           ruleName: config.ruleName || "",
           ruleDescription: config.ruleDescription || "",
           status: config.status || "Active",
+          validationType: config.type || "default",
           legalEntities: config.legalEntities || [],
           request_type: config.request_type || [
             "Create",
@@ -131,6 +130,7 @@ const ValidationConfigPanel = ({
       // Prepare final data for JSON mode only
       const finalData = {
         ...formData,
+        type: formData.validationType,
         validationConfig: parsedConfig,
         parsedValidationConfig: parsedConfig,
       };
@@ -223,36 +223,84 @@ const ValidationConfigPanel = ({
         JSON Configuration
       </Text>
 
-      {/* Criteria Fields */}
-      <div className="grid grid-cols-1 gap-4">
-        <div>
-          <Text variant="body" weight="medium" className="mb-2">
-            Criteria
+      {/* Validation Type Selector */}
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <Text variant="body" weight="medium">
+            Validation Type *
           </Text>
-          <Input
-            value={formData.criteria}
-            onChange={(e) => handleInputChange("criteria", e.target.value)}
-            placeholder="Enter criteria for validation"
-          />
-          <Text variant="caption" color="muted" className="mt-1">
-            Define the criteria that must be met for this validation rule
-          </Text>
+          <div className="group relative">
+            <Info
+              size={16}
+              className="text-gray-400 hover:text-gray-600 cursor-help"
+            />
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+              Choose between default validation or dependent validation logic
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+            </div>
+          </div>
         </div>
-
-        <div>
-          <Text variant="body" weight="medium" className="mb-2">
-            Criteria Logic
-          </Text>
-          <Input
-            value={formData.criteriaLogic}
-            onChange={(e) => handleInputChange("criteriaLogic", e.target.value)}
-            placeholder="Enter criteria logic (e.g., AND, OR)"
-          />
-          <Text variant="caption" color="muted" className="mt-1">
-            Define the logical operators for combining multiple criteria
-          </Text>
-        </div>
+        <Select
+          options={[
+            {
+              value: "default",
+              label: "Default Validation - Standard validation rules",
+            },
+            {
+              value: "dependent",
+              label:
+                "Dependent Validation - Conditional logic based on criteria",
+            },
+          ]}
+          value={formData.validationType}
+          onChange={(value) => {
+            handleInputChange("validationType", value);
+            // Clear criteria when switching to default
+            if (value === "default") {
+              handleInputChange("criteria", "");
+              handleInputChange("criteriaLogic", "");
+            }
+          }}
+        />
+        <Text variant="caption" color="muted" className="mt-1">
+          Select the type of validation logic to apply
+        </Text>
       </div>
+
+      {/* Criteria Fields - Only show for dependent type */}
+      {formData.validationType === "dependent" && (
+        <div className="grid grid-cols-1 gap-4">
+          <div>
+            <Text variant="body" weight="medium" className="mb-2">
+              Criteria
+            </Text>
+            <Input
+              value={formData.criteria}
+              onChange={(e) => handleInputChange("criteria", e.target.value)}
+              placeholder="Enter criteria for validation"
+            />
+            <Text variant="caption" color="muted" className="mt-1">
+              Define the criteria that must be met for this validation rule
+            </Text>
+          </div>
+
+          <div>
+            <Text variant="body" weight="medium" className="mb-2">
+              Criteria Logic
+            </Text>
+            <Input
+              value={formData.criteriaLogic}
+              onChange={(e) =>
+                handleInputChange("criteriaLogic", e.target.value)
+              }
+              placeholder="Enter criteria logic (e.g., AND, OR)"
+            />
+            <Text variant="caption" color="muted" className="mt-1">
+              Define the logical operators for combining multiple criteria
+            </Text>
+          </div>
+        </div>
+      )}
 
       <div>
         <div className="flex items-center justify-between mb-2">
@@ -280,24 +328,14 @@ const ValidationConfigPanel = ({
                 JSON.stringify(
                   [
                     {
-                      field_name: "CustomerType",
-                      validations:
-                        "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'} ]",
+                      field_name: "CustomerName",
+                      operator: "REQUIRED",
+                      value: true,
                     },
                     {
-                      field_name: "Organizationname",
-                      validations:
-                        "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'},{ 'type': 'MAXLENGTH', 'operator': 'DEFAULT', 'message': 'tối đa 10 ký tự', 'value': '10'} ]",
-                    },
-                    {
-                      field_name: "Salary",
-                      validations:
-                        "[ {'type': 'MAX', 'operator': 'DEFAULT', 'message': 'MAX 10', 'value': '10'}, {'type': 'MIN', 'operator': 'DEFAULT', 'message': 'MIN 1', 'value': '1'}]",
-                    },
-                    {
-                      field_name: "Country",
-                      validations:
-                        "[ {'type': 'DISPLAYMODE', 'operator': 'DEFAULT', 'message': '', 'value': 'DISABLE'}]",
+                      field_name: "CustomerName",
+                      operator: "MINLENGTH",
+                      value: 5,
                     },
                   ],
                   null,
@@ -316,23 +354,18 @@ const ValidationConfigPanel = ({
             handleInputChange("validationConfigJson", e.target.value)
           }
           placeholder={`[
-  {
-    "field_name": "CustomerType",
-    "validations": "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'} ]"
-  },
-  {
-    "field_name": "Organizationname",
-    "validations": "[ { 'type': 'REQUIRE', 'operator': 'DEFAULT', 'message': 'bắt buộc điền', 'value': 'true'},{ 'type': 'MAXLENGTH', 'operator': 'DEFAULT', 'message': 'tối đa 10 ký tự', 'value': '10'} ]"
-  },
-  {
-    "field_name": "Salary",
-    "validations": "[ {'type': 'MAX', 'operator': 'DEFAULT', 'message': 'MAX 10', 'value': '10'}, {'type': 'MIN', 'operator': 'DEFAULT', 'message': 'MIN 1', 'value': '1'}]"
-  },
-  {
-    "field_name": "Country",
-    "validations": "[{'type': 'DEFAULT', 'operator': 'DEFAULT', 'message': '', 'value': 'VN'}, {'type': 'DISPLAYMODE', 'operator': 'DEFAULT', 'message': '', 'value': 'DISABLE'}]"
-  }
-]`}
+    {
+      "field_name": "CustomerName",
+      "operator": "REQUIRED",
+      "value": true
+    },
+    {
+      "field_name": "CustomerName",
+      "operator": "MINLENGTH",
+      "value": 5
+    }
+  ]
+`}
         />
         {errors.validationConfigJson && (
           <Text variant="caption" color="error" className="mt-1">
