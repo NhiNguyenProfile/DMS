@@ -3,11 +3,12 @@ import Text from "../../atoms/Text";
 import Button from "../../atoms/Button";
 import EntityCard from "../../atoms/EntityCard";
 import Tabs from "../../atoms/Tabs";
-import { ArrowLeft, Workflow, Users, GitBranch } from "lucide-react";
+import { ArrowLeft, Workflow, Users, GitBranch, Shield } from "lucide-react";
 import { ENTITIES } from "../../../constants";
 import WorkflowsContent from "./WorkflowsContentNew";
 import GroupConfig from "./components/GroupConfig";
 import HierarchyConfig from "./components/HierarchyConfig";
+import LegalEntityByPassConfig from "./components/LegalEntityByPassConfig";
 
 const WorkflowWizard = () => {
   const [selectedEntity, setSelectedEntity] = useState("");
@@ -70,6 +71,16 @@ const WorkflowWizard = () => {
             >
               <div className="mt-4">
                 <HierarchyConfig />
+              </div>
+            </Tabs.Panel>
+
+            <Tabs.Panel
+              tabId="legal-entity-bypass-config"
+              label="Legal Entity By Pass Config"
+              icon={<Shield size={16} />}
+            >
+              <div className="mt-4">
+                <LegalEntityByPassConfig />
               </div>
             </Tabs.Panel>
           </Tabs>

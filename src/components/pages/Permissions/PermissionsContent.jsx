@@ -1,7 +1,8 @@
 import Tabs from "../../atoms/Tabs";
-import { Settings, Users } from "lucide-react";
+import { Settings, Shield, Users } from "lucide-react";
 import AdminPermissions from "./components/AdminPermissions";
 import BusinessUserPermissions from "./components/BusinessUserPermissions";
+import PermissionGroupConfig from "./components/PermissionGroupConfig";
 
 const PermissionsContent = () => {
   return (
@@ -31,6 +32,13 @@ const PermissionsContent = () => {
           >
             <RolePermissions />
           </Tabs.Panel> */}
+          <Tabs.Panel
+            tabId="group-permissions"
+            label="Group Configuration"
+            icon={<Shield size={16} />}
+          >
+            <PermissionGroupConfig />
+          </Tabs.Panel>
         </Tabs>
       </div>
     </div>
