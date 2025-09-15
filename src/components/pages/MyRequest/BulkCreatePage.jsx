@@ -4,7 +4,7 @@ import Button from "../../atoms/Button";
 import Table from "../../atoms/Table";
 import Modal from "../../atoms/Modal";
 import Input from "../../atoms/Input";
-import ObjectSelectModal from "../../atoms/ObjectSelectModal";
+import AdvancedObjectSelectModal from "../../atoms/AdvancedObjectSelectModal";
 import { ArrowLeft, Upload, Download, Plus, Edit, Trash2 } from "lucide-react";
 import CustomerDetailForm from "./CustomerDetailForm";
 
@@ -34,15 +34,17 @@ const BulkCreatePage = ({ mode = "create", onBack, onSendBulkRequest }) => {
     setShowDetailForm(true);
   };
 
-  const handleSelectExistingCustomer = (selectedCustomer) => {
-    // Add selected customer to the list for editing
-    const customerForEdit = {
-      ...selectedCustomer,
-      id: `MASS-EDIT-${Date.now()}-${customers.length + 1}`,
-      status: "Draft",
-    };
+  const handleSelectExistingCustomer = (selectedCustomers) => {
+    // Add selected customers to the list for editing
+    const customersForEdit = selectedCustomers.map(
+      (selectedCustomer, index) => ({
+        ...selectedCustomer,
+        id: `MASS-EDIT-${Date.now()}-${customers.length + index + 1}`,
+        status: "Draft",
+      })
+    );
 
-    setCustomers((prev) => [...prev, customerForEdit]);
+    setCustomers((prev) => [...prev, ...customersForEdit]);
     setShowSearchModal(false);
   };
 
@@ -424,11 +426,12 @@ const BulkCreatePage = ({ mode = "create", onBack, onSendBulkRequest }) => {
       </Modal>
 
       {/* Customer Search Modal for Edit Mode */}
-      <ObjectSelectModal
+      <AdvancedObjectSelectModal
         isOpen={showSearchModal}
         onClose={() => setShowSearchModal(false)}
-        title="Select Customer to Edit"
-        data={[
+        title="Select Customers to Edit"
+        allData={[
+          // DHV Legal Entity
           {
             customerAccount: "FE100001",
             organizationName: "ABC Company Ltd.",
@@ -438,26 +441,89 @@ const BulkCreatePage = ({ mode = "create", onBack, onSendBulkRequest }) => {
             nikNpwp: "01.234.567.8-901.000",
             customerGroup: "LOC_EXT",
             customerType: "Organization",
+            legalEntity: "DHV",
+            customerClassificationGroup: "External",
+            searchName: "ABC Company",
           },
           {
             customerAccount: "FE100002",
             organizationName: "XYZ Corporation",
             mainCustomer: "FE005678M",
-            company: "PBH",
+            company: "DHV",
             address: "456 Corporate Ave, Surabaya",
             nikNpwp: "02.345.678.9-012.000",
             customerGroup: "AQTP",
             customerType: "Organization",
+            legalEntity: "DHV",
+            customerClassificationGroup: "Dealer",
+            searchName: "XYZ Corp",
           },
           {
             customerAccount: "FE100003",
             organizationName: "DEF Industries",
             mainCustomer: "FE009012M",
-            company: "PHP",
+            company: "DHV",
             address: "789 Industrial Blvd, Bandung",
             nikNpwp: "03.456.789.0-123.000",
             customerGroup: "LSTP",
             customerType: "Organization",
+            legalEntity: "DHV",
+            customerClassificationGroup: "External",
+            searchName: "DEF Industries",
+          },
+          // PBH Legal Entity
+          {
+            customerAccount: "PB200001",
+            organizationName: "Global Trading Co.",
+            mainCustomer: "PB001234M",
+            company: "PBH",
+            address: "100 Trade Center, Jakarta",
+            nikNpwp: "04.567.890.1-234.000",
+            customerGroup: "LOC_EXT",
+            customerType: "Organization",
+            legalEntity: "PBH",
+            customerClassificationGroup: "External",
+            searchName: "Global Trading",
+          },
+          {
+            customerAccount: "PB200002",
+            organizationName: "Tech Solutions Ltd.",
+            mainCustomer: "PB005678M",
+            company: "PBH",
+            address: "200 Tech Park, Surabaya",
+            nikNpwp: "05.678.901.2-345.000",
+            customerGroup: "AQTP",
+            customerType: "Organization",
+            legalEntity: "PBH",
+            customerClassificationGroup: "Dealer",
+            searchName: "Tech Solutions",
+          },
+          // PHP Legal Entity
+          {
+            customerAccount: "PH300001",
+            organizationName: "Manufacturing Corp.",
+            mainCustomer: "PH001234M",
+            company: "PHP",
+            address: "300 Industrial Zone, Bandung",
+            nikNpwp: "06.789.012.3-456.000",
+            customerGroup: "LSTP",
+            customerType: "Organization",
+            legalEntity: "PHP",
+            customerClassificationGroup: "External",
+            searchName: "Manufacturing Corp",
+          },
+          {
+            customerAccount: "PH300002",
+            organizationName: "Export Import Co.",
+            mainCustomer: "PH005678M",
+            company: "PHP",
+            address: "400 Port Area, Jakarta",
+            nikNpwp: "07.890.123.4-567.000",
+            customerGroup: "LOC_EXT",
+            customerType: "Organization",
+            legalEntity: "PHP",
+            customerClassificationGroup: "Dealer",
+            searchName: "Export Import",
           },
         ]}
         columns={[
@@ -473,9 +539,14 @@ const BulkCreatePage = ({ mode = "create", onBack, onSendBulkRequest }) => {
           "mainCustomer",
           "company",
           "customerGroup",
+          "searchName",
+        ]}
+        legalEntities={[
+          { value: "DHV", label: "DHV" },
+          { value: "PBH", label: "PBH" },
+          { value: "PHP", label: "PHP" },
         ]}
         onSelect={handleSelectExistingCustomer}
-        searchPlaceholder="Search customers..."
       />
 
       {/* Package Title Modal */}

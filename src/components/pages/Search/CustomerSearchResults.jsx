@@ -2,14 +2,23 @@ import { useState, useEffect } from "react";
 import Text from "../../atoms/Text";
 import Button from "../../atoms/Button";
 import Input from "../../atoms/Input";
-import Table from "../../atoms/Table";
 import Modal from "../../atoms/Modal";
+import Select from "../../atoms/Select";
+import Checkbox from "../../atoms/Checkbox";
 import ColumnVisibilityFilter from "../../atoms/ColumnVisibilityFilter";
-import { Search as SearchIcon, ArrowLeft, Loader2, Plus } from "lucide-react";
+import {
+  Search as SearchIcon,
+  ArrowLeft,
+  Loader2,
+  Plus,
+  Filter,
+  X,
+} from "lucide-react";
 import CustomerDetail from "./CustomerDetail";
 
-// Sample customer records data
-const CUSTOMER_RECORDS = [
+// Sample customer records data with legal entities
+const ALL_CUSTOMER_RECORDS = [
+  // DHV Legal Entity
   {
     customerAccount: "FE016977",
     customerName: "Trần Mạnh Hiệp",
@@ -21,6 +30,7 @@ const CUSTOMER_RECORDS = [
     currency: "VND",
     segment: "Feed - Miền Bắc",
     emailAddress: "hieptm@gmail.com",
+    legalEntity: "DHV",
   },
   {
     customerAccount: "FE017112",
@@ -33,6 +43,7 @@ const CUSTOMER_RECORDS = [
     currency: "USD",
     segment: "Feed - Miền Trung",
     emailAddress: "hong.le@reseller.com",
+    legalEntity: "DHV",
   },
   {
     customerAccount: "FE016580",
@@ -45,6 +56,7 @@ const CUSTOMER_RECORDS = [
     currency: "VND",
     segment: "Feed - Miền Nam",
     emailAddress: "dungnv@dealer.vn",
+    legalEntity: "DHV",
   },
   {
     customerAccount: "FE017215",
@@ -57,6 +69,7 @@ const CUSTOMER_RECORDS = [
     currency: "VND",
     segment: "Feed - Miền Bắc",
     emailAddress: "namdv@dealer.vn",
+    legalEntity: "DHV",
   },
   {
     customerAccount: "FE017350",
@@ -69,6 +82,61 @@ const CUSTOMER_RECORDS = [
     currency: "USD",
     segment: "Feed - Miền Trung",
     emailAddress: "info@minhlong.com",
+    legalEntity: "DHV",
+  },
+  // PBH Legal Entity
+  {
+    customerAccount: "PB200001",
+    customerName: "Global Trading Co.",
+    classification: "External",
+    group: "LOC_EXT",
+    type: "Company",
+    mainCustomer: "PB001234M",
+    city: "Jakarta",
+    currency: "IDR",
+    segment: "Trading - Indonesia",
+    emailAddress: "contact@globaltrading.id",
+    legalEntity: "PBH",
+  },
+  {
+    customerAccount: "PB200002",
+    customerName: "Tech Solutions Ltd.",
+    classification: "Dealer",
+    group: "AQTP",
+    type: "Company",
+    mainCustomer: "PB005678M",
+    city: "Surabaya",
+    currency: "IDR",
+    segment: "Technology - Indonesia",
+    emailAddress: "info@techsolutions.id",
+    legalEntity: "PBH",
+  },
+  // PHP Legal Entity
+  {
+    customerAccount: "PH300001",
+    customerName: "Manufacturing Corp.",
+    classification: "External",
+    group: "LSTP",
+    type: "Company",
+    mainCustomer: "PH001234M",
+    city: "Bandung",
+    currency: "IDR",
+    segment: "Manufacturing - Indonesia",
+    emailAddress: "sales@manufacturing.id",
+    legalEntity: "PHP",
+  },
+  {
+    customerAccount: "PH300002",
+    customerName: "Export Import Co.",
+    classification: "Dealer",
+    group: "LOC_EXT",
+    type: "Company",
+    mainCustomer: "PH005678M",
+    city: "Jakarta",
+    currency: "USD",
+    segment: "Import Export - Indonesia",
+    emailAddress: "trade@exportimport.id",
+    legalEntity: "PHP",
   },
 ];
 
@@ -107,6 +175,16 @@ const ALL_CUSTOMER_COLUMNS = [
 ];
 
 const CustomerSearchResults = ({ onBack, country }) => {
+  // New advanced search states
+  const [selectedLegalEntity, setSelectedLegalEntity] = useState("");
+  const [showFilterSidebar, setShowFilterSidebar] = useState(false);
+  const [sidebarFilters, setSidebarFilters] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+
+  // Legacy states (keeping for compatibility)
   const [searchTerm, setSearchTerm] = useState("");
   const [searchWithDynamic365, setSearchWithDynamic365] = useState(false);
   const [showDynamic365Modal, setShowDynamic365Modal] = useState(false);
@@ -134,33 +212,151 @@ const CustomerSearchResults = ({ onBack, country }) => {
     "mainCustomer",
   ]);
 
-  // Toggle filter row
-  const [showColumnFilters, setShowColumnFilters] = useState(false);
   // State for each column filter
   const [columnFilters, setColumnFilters] = useState({});
 
-  // Filter records based on search term and column filters
-  const filteredRecords = CUSTOMER_RECORDS.filter((record) => {
-    // Search term filter (giữ nguyên)
-    const matchesSearch =
-      record.customerAccount.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.classification.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.segment.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      record.emailAddress.toLowerCase().includes(searchTerm.toLowerCase());
+  // Legal entities
+  const legalEntities = [
+    { value: "DHV", label: "DHV" },
+    { value: "PBH", label: "PBH" },
+    { value: "PHP", label: "PHP" },
+  ];
 
-    // Column filters
-    const matchesColumnFilters = visibleColumns.every((colKey) => {
-      const filterValue = columnFilters[colKey] || "";
-      if (!filterValue) return true;
-      return String(record[colKey])
-        .toLowerCase()
-        .includes(filterValue.toLowerCase());
+  // Advanced search functions
+  const handleSearch = async () => {
+    setIsLoading(true);
+    setHasSearched(true);
+
+    // Simulate loading
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+
+    applyFilters();
+    setIsLoading(false);
+  };
+
+  const applyFilters = () => {
+    let filtered = [...ALL_CUSTOMER_RECORDS];
+
+    // Filter by legal entity
+    if (selectedLegalEntity) {
+      filtered = filtered.filter(
+        (item) => item.legalEntity === selectedLegalEntity
+      );
+    }
+
+    // Apply column filters
+    Object.entries(columnFilters).forEach(([column, filterValue]) => {
+      if (filterValue.trim()) {
+        filtered = filtered.filter((item) =>
+          item[column]
+            ?.toString()
+            .toLowerCase()
+            .includes(filterValue.toLowerCase())
+        );
+      }
     });
 
-    return matchesSearch && matchesColumnFilters;
-  });
+    // Apply sidebar filters
+    sidebarFilters.forEach((filter) => {
+      if (filter.value.trim()) {
+        filtered = filtered.filter((item) =>
+          item[filter.field]
+            ?.toString()
+            .toLowerCase()
+            .includes(filter.value.toLowerCase())
+        );
+      }
+    });
+
+    setFilteredData(filtered);
+  };
+
+  const handleColumnFilterChange = (column, value) => {
+    setColumnFilters((prev) => ({
+      ...prev,
+      [column]: value,
+    }));
+
+    // Auto-apply column filters (keep this for column filters)
+    if (hasSearched) {
+      setTimeout(() => applyFilters(), 300); // Debounce
+    }
+  };
+
+  const addSidebarFilter = () => {
+    setSidebarFilters((prev) => [
+      ...prev,
+      { field: "", value: "", id: Date.now() },
+    ]);
+  };
+
+  const updateSidebarFilter = (id, field, value) => {
+    setSidebarFilters((prev) =>
+      prev.map((filter) =>
+        filter.id === id ? { ...filter, [field]: value } : filter
+      )
+    );
+
+    // Remove auto-apply for sidebar filters - only apply when clicking Apply button
+  };
+
+  const removeSidebarFilter = (id) => {
+    setSidebarFilters((prev) => prev.filter((filter) => filter.id !== id));
+
+    // Remove auto-apply for sidebar filters - only apply when clicking Apply button
+  };
+
+  const handleSelectItem = (item) => {
+    setSelectedItems((prev) => {
+      const isSelected = prev.some(
+        (selected) => selected.customerAccount === item.customerAccount
+      );
+      if (isSelected) {
+        return prev.filter(
+          (selected) => selected.customerAccount !== item.customerAccount
+        );
+      } else {
+        return [...prev, item];
+      }
+    });
+  };
+
+  const handleSelectAll = () => {
+    // Get currently visible items that are selected
+    const visibleSelectedItems = selectedItems.filter((selectedItem) =>
+      filteredData.some(
+        (filteredItem) =>
+          filteredItem.customerAccount === selectedItem.customerAccount
+      )
+    );
+
+    // Get items from other legal entities (not currently visible)
+    const otherLegalEntityItems = selectedItems.filter(
+      (selectedItem) =>
+        !filteredData.some(
+          (filteredItem) =>
+            filteredItem.customerAccount === selectedItem.customerAccount
+        )
+    );
+
+    if (visibleSelectedItems.length === filteredData.length) {
+      // Unselect all visible items, keep items from other legal entities
+      setSelectedItems(otherLegalEntityItems);
+    } else {
+      // Select all visible items, plus keep items from other legal entities
+      const newSelectedItems = [...otherLegalEntityItems, ...filteredData];
+      // Remove duplicates based on customerAccount
+      const uniqueItems = newSelectedItems.filter(
+        (item, index, self) =>
+          index ===
+          self.findIndex((t) => t.customerAccount === item.customerAccount)
+      );
+      setSelectedItems(uniqueItems);
+    }
+  };
+
+  // Legacy filter for compatibility (will be replaced by new logic)
+  const filteredRecords = hasSearched ? filteredData : [];
 
   // Get visible column definitions
   const visibleColumnDefs = ALL_CUSTOMER_COLUMNS.filter((col) =>
@@ -307,128 +503,405 @@ const CustomerSearchResults = ({ onBack, country }) => {
         </div>
       </div>
 
-      {/* Search and Controls */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <div className="relative max-w-md">
-            <SearchIcon
-              size={20}
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+      {/* Advanced Search Controls */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <div className="flex gap-4 items-end mb-4 justify-between">
+          <div className="flex gap-4 items-end">
+            {/* Legal Entity Select */}
+            <div className="max-w-52 w-full">
+              <Text variant="body" weight="medium" className="mb-2">
+                Legal Entity
+              </Text>
+              <Select
+                value={selectedLegalEntity}
+                onChange={setSelectedLegalEntity}
+                options={legalEntities}
+                placeholder="Select Legal Entity"
+              />
+            </div>
+
+            {/* Filter Button */}
+            <Button
+              variant="outline"
+              onClick={() => setShowFilterSidebar(!showFilterSidebar)}
+              className="flex items-center gap-2"
+            >
+              <Filter size={16} />
+              Filter
+            </Button>
+
+            {/* Column Visibility */}
+            <ColumnVisibilityFilter
+              columns={ALL_CUSTOMER_COLUMNS}
+              visibleColumns={visibleColumns}
+              onVisibilityChange={setVisibleColumns}
+              buttonText="Columns"
             />
-            <Input
-              placeholder="Search customers..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+
+            {/* Search Button */}
+            <Button
+              variant="primary"
+              onClick={handleSearch}
+              disabled={isLoading}
+              className="flex items-center gap-2 py-[10px]"
+            >
+              {isLoading ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                <SearchIcon size={16} />
+              )}
+              Search
+            </Button>
           </div>
-          <Button
-            variant={showColumnFilters ? "primary" : "outline"}
-            size="sm"
-            onClick={() => setShowColumnFilters((v) => !v)}
-          >
-            {showColumnFilters ? "Hide Filters" : "Show Filters"}
-          </Button>
+          <div className="flex gap-4 items-end">
+            {/* Add New Request */}
+            <Button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 whitespace-nowrap py-[10px]"
+            >
+              <Plus size={16} />
+              Add New Request
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 whitespace-nowrap"
-          >
-            <Plus size={16} />
-            Add New Request
-          </Button>
-          <ColumnVisibilityFilter
-            columns={ALL_CUSTOMER_COLUMNS}
-            visibleColumns={visibleColumns}
-            onVisibilityChange={setVisibleColumns}
-            buttonText="Columns"
-          />
-        </div>
+
+        {/* Selected Items Counter */}
+        {selectedItems.length > 0 && (
+          <div className="flex items-center justify-between bg-blue-50 rounded-lg p-3">
+            <Text variant="body" color="muted">
+              {selectedItems.length} item(s) selected from multiple legal
+              entities
+            </Text>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedItems([])}
+            >
+              Clear Selection
+            </Button>
+          </div>
+        )}
       </div>
 
-      {/* Results Table */}
-      <div className="w-full bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="w-full overflow-x-auto">
-          <div
-            className={`min-w-[${Math.max(
-              800,
-              visibleColumnDefs.length * 150
-            )}px]`}
-          >
-            <Table>
-              <Table.Header>
-                <Table.Row>
-                  {visibleColumnDefs.map((column) => (
-                    <Table.HeaderCell key={column.key}>
-                      {column.label}
-                    </Table.HeaderCell>
-                  ))}
-                </Table.Row>
-                {/* Filter row */}
-                {showColumnFilters && (
-                  <Table.Row>
-                    {visibleColumnDefs.map((column) => (
-                      <Table.HeaderCell key={column.key}>
-                        <Input
-                          placeholder={`Filter ${column.label}`}
-                          value={columnFilters[column.key] || ""}
-                          onChange={(e) =>
-                            setColumnFilters((prev) => ({
-                              ...prev,
-                              [column.key]: e.target.value,
-                            }))
-                          }
-                          className="w-full text-xs px-2 py-1"
+      {/* Main Content Container */}
+      <div className="flex">
+        {/* Results Table */}
+        <div
+          className={` bg-white rounded-lg border border-gray-200 overflow-hidden ${
+            showFilterSidebar ? "flex-1 mr-6 overflow-x-scroll" : "w-full"
+          }`}
+        >
+          {!hasSearched ? (
+            <div className="flex items-center justify-center h-64 text-gray-500">
+              <div className="text-center">
+                <SearchIcon size={48} className="mx-auto mb-4 text-gray-300" />
+                <Text variant="body" size="lg">
+                  Select filters and click Search to view data
+                </Text>
+              </div>
+            </div>
+          ) : isLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <Loader2
+                  size={48}
+                  className="mx-auto mb-4 animate-spin text-blue-500"
+                />
+                <Text variant="body" size="lg">
+                  Loading data...
+                </Text>
+              </div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto max-w-full">
+              <table
+                className="w-full table-auto"
+                style={{
+                  minWidth: `${Math.max(
+                    800,
+                    visibleColumnDefs.filter((col) =>
+                      visibleColumns.includes(col.key)
+                    ).length * 150
+                  )}px`,
+                }}
+              >
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left">
+                      <Checkbox
+                        checked={(() => {
+                          const visibleSelectedItems = selectedItems.filter(
+                            (selectedItem) =>
+                              filteredData.some(
+                                (filteredItem) =>
+                                  filteredItem.customerAccount ===
+                                  selectedItem.customerAccount
+                              )
+                          );
+                          return (
+                            visibleSelectedItems.length ===
+                              filteredData.length && filteredData.length > 0
+                          );
+                        })()}
+                        indeterminate={(() => {
+                          const visibleSelectedItems = selectedItems.filter(
+                            (selectedItem) =>
+                              filteredData.some(
+                                (filteredItem) =>
+                                  filteredItem.customerAccount ===
+                                  selectedItem.customerAccount
+                              )
+                          );
+                          return (
+                            visibleSelectedItems.length > 0 &&
+                            visibleSelectedItems.length < filteredData.length
+                          );
+                        })()}
+                        onChange={handleSelectAll}
+                      />
+                    </th>
+                    {visibleColumnDefs
+                      .filter((column) => visibleColumns.includes(column.key))
+                      .map((column) => (
+                        <th
+                          key={column.key}
+                          className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                        >
+                          <div className="space-y-2">
+                            <div>{column.label}</div>
+                            <Input
+                              value={columnFilters[column.key] || ""}
+                              onChange={(e) =>
+                                handleColumnFilterChange(
+                                  column.key,
+                                  e.target.value
+                                )
+                              }
+                              placeholder={`Filter ${column.label}`}
+                              size="small"
+                              className="text-xs"
+                            />
+                          </div>
+                        </th>
+                      ))}
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredData.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={visibleColumnDefs.length + 1}
+                        className="px-6 py-12 text-center text-gray-500"
+                      >
+                        <SearchIcon
+                          size={48}
+                          className="mx-auto mb-4 text-gray-300"
                         />
-                      </Table.HeaderCell>
-                    ))}
-                  </Table.Row>
-                )}
-              </Table.Header>
-              <Table.Body>
-                {filteredRecords.map((record, index) => (
-                  <Table.Row
-                    key={index}
-                    className="hover:bg-blue-50 cursor-pointer transition-colors"
-                    onClick={() => handleCustomerClick(record)}
-                  >
-                    {visibleColumnDefs.map((column) => (
-                      <Table.Cell key={column.key}>
-                        {renderCellContent(record, column.key)}
-                      </Table.Cell>
-                    ))}
-                  </Table.Row>
-                ))}
-              </Table.Body>
-            </Table>
-          </div>
+                        <Text variant="body" size="lg">
+                          No data found with current filters
+                        </Text>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredData.map((record, index) => (
+                      <tr
+                        key={index}
+                        className="hover:bg-blue-50 transition-colors"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <Checkbox
+                            checked={selectedItems.some(
+                              (item) =>
+                                item.customerAccount === record.customerAccount
+                            )}
+                            onChange={() => handleSelectItem(record)}
+                          />
+                        </td>
+                        {visibleColumnDefs
+                          .filter((column) =>
+                            visibleColumns.includes(column.key)
+                          )
+                          .map((column) => (
+                            <td
+                              key={column.key}
+                              className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 cursor-pointer"
+                              onClick={() => handleCustomerClick(record)}
+                            >
+                              {renderCellContent(record, column.key)}
+                            </td>
+                          ))}
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
-      </div>
 
-      {/* No results */}
-      {filteredRecords.length === 0 && searchTerm && (
-        <div className="text-center py-12">
-          <Text variant="body" color="muted" className="mb-4">
-            No customer records found matching "{searchTerm}"
-          </Text>
-          <Button
-            variant="outline"
-            onClick={() => setShowDynamic365Modal(true)}
-            className="mt-2"
-          >
-            Search on Dynamic 365
-          </Button>
-        </div>
-      )}
+        {/* Filter Sidebar */}
+        {showFilterSidebar && (
+          <div className="w-96 bg-white rounded-lg border border-gray-200">
+            <div className="flex flex-col h-full">
+              {/* Sidebar Header */}
+              <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                <Text variant="heading" size="md" weight="semibold">
+                  Advanced Filters
+                </Text>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={addSidebarFilter}
+                    className="flex items-center gap-1"
+                  >
+                    <Plus size={14} />
+                    Add Filter
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowFilterSidebar(false)}
+                    className="flex items-center gap-1"
+                  >
+                    <X size={16} />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Sidebar Content */}
+              <div className="flex-1 max-h-96 overflow-y-auto p-4">
+                <div className="space-y-4">
+                  {sidebarFilters.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <Filter
+                        size={48}
+                        className="mx-auto mb-4 text-gray-300"
+                      />
+                      <Text variant="body" color="muted">
+                        No filters added yet
+                      </Text>
+                      <Text
+                        variant="body"
+                        color="muted"
+                        className="text-sm mt-1"
+                      >
+                        Click "Add Filter" to create your first filter
+                      </Text>
+                    </div>
+                  ) : (
+                    sidebarFilters.map((filter) => (
+                      <div
+                        key={filter.id}
+                        className="bg-gray-50 border border-gray-200 rounded-lg p-4"
+                      >
+                        <div className="space-y-3">
+                          <div>
+                            <Text
+                              variant="body"
+                              weight="medium"
+                              className="mb-2 text-sm"
+                            >
+                              Field
+                            </Text>
+                            <Select
+                              value={filter.field}
+                              onChange={(value) =>
+                                updateSidebarFilter(filter.id, "field", value)
+                              }
+                              options={ALL_CUSTOMER_COLUMNS.map((col) => ({
+                                value: col.key,
+                                label: col.label,
+                              }))}
+                              placeholder="Select Field"
+                              size="small"
+                            />
+                          </div>
+                          <div>
+                            <Text
+                              variant="body"
+                              weight="medium"
+                              className="mb-2 text-sm"
+                            >
+                              Value (contains)
+                            </Text>
+                            <Input
+                              value={filter.value}
+                              onChange={(e) =>
+                                updateSidebarFilter(
+                                  filter.id,
+                                  "value",
+                                  e.target.value
+                                )
+                              }
+                              placeholder="Enter filter value"
+                              size="small"
+                            />
+                          </div>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeSidebarFilter(filter.id)}
+                            className="w-full text-red-600 hover:text-red-700 hover:border-red-300 flex items-center justify-center gap-2"
+                          >
+                            <X size={14} />
+                            Remove Filter
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              {/* Sidebar Footer */}
+              <div className="border-t border-gray-200 p-4">
+                <div className="flex gap-2">
+                  <Button
+                    variant="primary"
+                    onClick={() => {
+                      if (hasSearched) {
+                        applyFilters();
+                      }
+                    }}
+                    disabled={!hasSearched}
+                    className="flex-1"
+                  >
+                    Apply Filters
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSidebarFilters([]);
+                      if (hasSearched) {
+                        applyFilters();
+                      }
+                    }}
+                    size="sm"
+                  >
+                    Clear All
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Summary */}
-      <div className="bg-gray-50 rounded-lg p-4">
-        <Text variant="body" color="muted" className="text-sm">
-          Showing {filteredRecords.length} of {CUSTOMER_RECORDS.length} customer
-          records
-        </Text>
-      </div>
+      {hasSearched && (
+        <div className="bg-gray-50 rounded-lg p-4">
+          <Text variant="body" color="muted" className="text-sm">
+            Showing {filteredData.length} of {ALL_CUSTOMER_RECORDS.length}{" "}
+            customer records
+            {selectedItems.length > 0 && (
+              <span className="ml-2 text-blue-600 font-medium">
+                • {selectedItems.length} selected
+              </span>
+            )}
+          </Text>
+        </div>
+      )}
 
       {/* Dynamic 365 Confirmation Modal */}
       <Modal

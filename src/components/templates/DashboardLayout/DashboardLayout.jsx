@@ -28,7 +28,7 @@ const DashboardLayout = ({
       {/* Main Content Area */}
       <div className="lg:ml-60 flex-1 flex min-h-screen">
         {/* Center Content */}
-        <div className="flex-1 flex flex-col gap-2 pt-2">
+        <div className="w-full flex-1 flex flex-col gap-2 pt-2">
           {/* Header */}
           <Header title={currentRouteInfo.title} onMenuToggle={toggleSidebar} />
 

@@ -1,8 +1,10 @@
 import Tabs from "../../atoms/Tabs";
-import { Settings, Shield, Users } from "lucide-react";
+import { Settings, Shield, Users, Crown, UserCheck } from "lucide-react";
 import AdminPermissions from "./components/AdminPermissions";
-import BusinessUserPermissions from "./components/BusinessUserPermissions";
-import PermissionGroupConfig from "./components/PermissionGroupConfig";
+import PrivilegeConfig from "./components/PrivilegeConfig";
+import DutiesConfig from "./components/DutiesConfig";
+import RolesConfig from "./components/RolesConfig";
+import GroupAccess from "./components/GroupAccess";
 
 const PermissionsContent = () => {
   return (
@@ -18,26 +20,32 @@ const PermissionsContent = () => {
             <AdminPermissions />
           </Tabs.Panel>
           <Tabs.Panel
-            tabId="business-user-permissions"
-            label="Business User"
+            tabId="privilege-config"
+            label="Privilege Config"
             icon={<Users size={16} />}
           >
-            <BusinessUserPermissions />
+            <PrivilegeConfig />
           </Tabs.Panel>
-          {/* TO-DO */}
-          {/* <Tabs.Panel
-            tabId="role-permissions"
-            label="Department Permissions"
-            icon={<Shield size={16} />}
-          >
-            <RolePermissions />
-          </Tabs.Panel> */}
           <Tabs.Panel
-            tabId="group-permissions"
-            label="Group Configuration"
+            tabId="duties-config"
+            label="Duties Config"
             icon={<Shield size={16} />}
           >
-            <PermissionGroupConfig />
+            <DutiesConfig />
+          </Tabs.Panel>
+          <Tabs.Panel
+            tabId="roles-config"
+            label="Roles Config"
+            icon={<Crown size={16} />}
+          >
+            <RolesConfig />
+          </Tabs.Panel>
+          <Tabs.Panel
+            tabId="group-access"
+            label="Group Access"
+            icon={<UserCheck size={16} />}
+          >
+            <GroupAccess />
           </Tabs.Panel>
         </Tabs>
       </div>

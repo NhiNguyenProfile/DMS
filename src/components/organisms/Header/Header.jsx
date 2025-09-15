@@ -1,7 +1,19 @@
 import clsx from "clsx";
 import Button from "../../atoms/Button";
+import Select from "../../atoms/Select";
 import { Menu, ChevronRight } from "lucide-react";
 import { useRouter, ROUTES } from "../../../hooks/useRouter.jsx";
+import { useState } from "react";
+
+// Legal entities options
+const LEGAL_ENTITIES = [
+  { value: "DHV", label: "DHV" },
+  { value: "DHBH", label: "DHBH" },
+  { value: "DHHP", label: "DHHP" },
+  { value: "DHHY", label: "DHHY" },
+  { value: "DHGC", label: "DHGC" },
+  { value: "DHGD", label: "DHGD" },
+];
 
 const Header = ({
   title = "Dashboard",
@@ -11,6 +23,7 @@ const Header = ({
 }) => {
   const { currentRoute } = useRouter();
   const currentRouteInfo = ROUTES[currentRoute] || { breadcrumb: title };
+  const [selectedLegalEntity, setSelectedLegalEntity] = useState("DHV");
   const headerClass = clsx(
     "bg-white px-4 py-5 bg-cover bg-center bg-no-repeat mx-4 rounded-lg",
     className
@@ -44,15 +57,15 @@ const Header = ({
           </div>
         </div>
 
-        {/* Right side - Language Toggle */}
+        {/* Right side - Legal Entity Selector */}
         {/* <div className="flex items-center space-x-2">
-          <button className="px-2 py-1 text-sm font-medium text-blue-600 bg-blue-50 rounded">
-            VN
-          </button>
-          <span className="text-gray-400">|</span>
-          <button className="px-2 py-1 text-sm font-medium text-gray-600 hover:text-blue-600">
-            EN
-          </button>
+          <Select
+            options={LEGAL_ENTITIES}
+            value={selectedLegalEntity}
+            onChange={setSelectedLegalEntity}
+            className="w-24 text-sm"
+            size="small"
+          />
         </div> */}
       </div>
     </header>
