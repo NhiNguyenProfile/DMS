@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import Text from "../../../atoms/Text";
 import Button from "../../../atoms/Button";
 import Input from "../../../atoms/Input";
-import Modal from "../../../atoms/Modal";
 import AccountDetail from "./AccountDetail";
+import GroupDetail from "./GroupDetail";
 import { Search as SearchIcon, Plus, Edit, Trash2, User } from "lucide-react";
 
 // Sample accounts data
@@ -15,13 +15,22 @@ const SAMPLE_ACCOUNTS = [
     email: "john.doe@example.com",
     department: "Sales",
     status: "Active",
-    legalEntities: ["Entity A", "Entity B"],
-    roles: [
-      { id: 1, name: "Sales Manager", description: "Manages sales operations" },
+    roleAssignments: [
+      {
+        id: 1,
+        roleId: 1,
+        roleName: "Sales Manager",
+        roleDescription: "Manages sales operations",
+        allLegal: false,
+        legalEntities: [1, 2], // DHV, DHBH
+      },
       {
         id: 2,
-        name: "Account Manager",
-        description: "Manages customer accounts",
+        roleId: 2,
+        roleName: "Account Manager",
+        roleDescription: "Manages customer accounts",
+        allLegal: false,
+        legalEntities: [3], // DHHP
       },
     ],
     createdAt: "2024-01-15",
@@ -33,12 +42,14 @@ const SAMPLE_ACCOUNTS = [
     email: "sarah.j@example.com",
     department: "Operations",
     status: "Active",
-    legalEntities: ["Entity A"],
-    roles: [
+    roleAssignments: [
       {
         id: 3,
-        name: "Operations Manager",
-        description: "Manages warehouse operations",
+        roleId: 3,
+        roleName: "Operations Manager",
+        roleDescription: "Manages warehouse operations",
+        allLegal: true,
+        legalEntities: [],
       },
     ],
     createdAt: "2024-01-20",
@@ -50,12 +61,14 @@ const SAMPLE_ACCOUNTS = [
     email: "mike.c@example.com",
     department: "Finance",
     status: "Inactive",
-    legalEntities: ["Entity C"],
-    roles: [
+    roleAssignments: [
       {
         id: 4,
-        name: "Finance Officer",
-        description: "Manages financial operations",
+        roleId: 4,
+        roleName: "Finance Officer",
+        roleDescription: "Manages financial operations",
+        allLegal: false,
+        legalEntities: [6], // DHGD
       },
     ],
     createdAt: "2024-02-01",
@@ -65,7 +78,7 @@ const SAMPLE_ACCOUNTS = [
 const AccountAccess = () => {
   const [accounts, setAccounts] = useState(SAMPLE_ACCOUNTS);
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentView, setCurrentView] = useState("list"); // "list" or "detail"
+  const [currentView, setCurrentView] = useState("list"); // "list", "detail", or "group"
   const [selectedAccount, setSelectedAccount] = useState(null);
 
   // Filter accounts based on search term
@@ -78,8 +91,7 @@ const AccountAccess = () => {
   );
 
   const handleAddAccount = () => {
-    setSelectedAccount(null);
-    setCurrentView("detail");
+    setCurrentView("group");
   };
 
   const handleEditAccount = (account) => {
@@ -106,6 +118,21 @@ const AccountAccess = () => {
     setSelectedAccount(account);
     setCurrentView("detail");
   };
+
+  // Show group detail view
+  if (currentView === "group") {
+    return (
+      <GroupDetail
+        onBack={() => setCurrentView("list")}
+        onSave={(groupData) => {
+          console.log("AccountAccess onSave called with:", groupData);
+          // Xử lý lưu group ở đây nếu cần
+          setCurrentView("list");
+          console.log("setCurrentView('list') called");
+        }}
+      />
+    );
+  }
 
   // Show detail view
   if (currentView === "detail") {
@@ -147,10 +174,10 @@ const AccountAccess = () => {
             Manage user accounts with roles and legal entity access
           </Text>
         </div>
-        {/* <Button onClick={handleAddAccount}>
+        <Button onClick={handleAddAccount}>
           <Plus size={16} className="mr-2" />
-          Configure New Account
-        </Button> */}
+          Mass Configure Accounts
+        </Button>
       </div>
 
       {/* Search */}
@@ -244,33 +271,16 @@ const AccountAccess = () => {
                       <Text variant="body">{account.department}</Text>
                     </td>
                     <td className="px-6 py-4">
-                      <div>
-                        <Text variant="caption" color="muted">
-                          Legal Entities ({account.legalEntities.length})
+                      <div className="text-start flex gap-2 items-center">
+                        <Text variant="body" weight="medium">
+                          {account.roleAssignments?.length || 0}
                         </Text>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {account.legalEntities.map((entity, index) => (
-                            <span
-                              key={index}
-                              className="inline-block px-1.5 py-0.5 bg-blue-100 text-blue-600 text-xs rounded"
-                            >
-                              {entity}
-                            </span>
-                          ))}
-                        </div>
-                        <Text variant="caption" color="muted" className="mt-2">
-                          Roles ({account.roles.length})
+                        <Text variant="body" color="muted">
+                          {account.roleAssignments?.length === 1
+                            ? "role"
+                            : "roles"}{" "}
+                          assigned
                         </Text>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {account.roles.map((role, index) => (
-                            <span
-                              key={index}
-                              className="inline-block px-1.5 py-0.5 bg-green-100 text-green-600 text-xs rounded"
-                            >
-                              {role.name}
-                            </span>
-                          ))}
-                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

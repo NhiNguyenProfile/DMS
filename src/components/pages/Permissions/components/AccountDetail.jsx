@@ -1,10 +1,9 @@
-import React, { useState } from "react";
-import { ArrowLeft, Plus, Save, Trash2, Building, Shield } from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, Plus, Save, Shield, Search } from "lucide-react";
 import Text from "../../../atoms/Text";
 import Button from "../../../atoms/Button";
-import Input from "../../../atoms/Input";
 import Modal from "../../../atoms/Modal";
-import SearchableSelect from "../../../atoms/SearchableSelect";
+import MultiSelect from "../../../atoms/MultiSelect";
 
 // Define available roles outside of component
 const DEFAULT_AVAILABLE_ROLES = [
@@ -61,8 +60,8 @@ const DEFAULT_AVAILABLE_ROLES = [
 ];
 
 export default function AccountDetail({ account, onBack, onSave }) {
-  // State for managing lists of roles and legal entities
-  const [availableRoles, setAvailableRoles] = useState(DEFAULT_AVAILABLE_ROLES);
+  // Available roles for selection
+  const availableRoles = DEFAULT_AVAILABLE_ROLES;
 
   const [formData, setFormData] = useState(() => ({
     username: account?.username || "",
@@ -70,322 +69,292 @@ export default function AccountDetail({ account, onBack, onSave }) {
     email: account?.email || "",
     department: account?.department || "",
     status: account?.status || "Active",
-    legalEntities: account?.legalEntities || [], // Array of legal entity values (e.g., ["DHV", "DHBH"])
-    roles:
-      account?.roles?.map((role) => {
-        // If it's existing data, get role from DEFAULT_AVAILABLE_ROLES to ensure complete information
-        const fullRoleData = DEFAULT_AVAILABLE_ROLES.find(
-          (r) => r.id === role.id
-        );
-        if (fullRoleData) {
-          return {
-            ...fullRoleData,
-            privilegeCount: fullRoleData.privileges.length,
-          };
-        }
-        return role;
-      }) || [],
+    // New structure: array of role-legal entity assignments
+    roleAssignments: account?.roleAssignments || [], // [{ roleId, roleName, roleDescription, allLegal, legalEntities }]
   }));
 
   const LEGAL_ENTITIES = [
-    { value: "DHV", label: "DHV" },
-    { value: "DHBH", label: "DHBH" },
-    { value: "DHHP", label: "DHHP" },
-    { value: "DHHY", label: "DHHY" },
-    { value: "DHGC", label: "DHGC" },
-    { value: "DHGD", label: "DHGD" },
+    { id: 1, code: "DHV", name: "De Heus Vietnam" },
+    { id: 2, code: "DHBH", name: "De Heus Entity 2" },
+    { id: 3, code: "DHHP", name: "De Heus Entity 3" },
+    { id: 4, code: "DHHY", name: "De Heus Entity 4" },
+    { id: 5, code: "DHGC", name: "De Heus Entity 5" },
+    { id: 6, code: "DHGD", name: "De Heus Entity 6" },
   ];
-  const [legalEntities, setLegalEntities] = useState(LEGAL_ENTITIES);
-
-  const [errors, setErrors] = useState({});
-  const [selectedRole, setSelectedRole] = useState("");
-  const [selectedEntity, setSelectedEntity] = useState("");
 
   // Modal states
-  const [showAddRoleModal, setShowAddRoleModal] = useState(false);
-  const [showAddEntityModal, setShowAddEntityModal] = useState(false);
-  const [newRoleData, setNewRoleData] = useState({ name: "", description: "" });
-  const [newEntityData, setNewEntityData] = useState({ name: "", code: "" });
+  const [showAddRoleAssignmentModal, setShowAddRoleAssignmentModal] =
+    useState(false);
+  const [showEditRoleAssignmentModal, setShowEditRoleAssignmentModal] =
+    useState(false);
+  const [editingRoleAssignment, setEditingRoleAssignment] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [addRoleAssignmentForm, setAddRoleAssignmentForm] = useState({
+    selectedRoleId: "",
+    allLegal: false,
+    legalEntities: [],
+  });
 
-  // Handle adding a new role
-  const handleAddNewRole = () => {
-    if (!newRoleData.name) return;
-
-    const newRole = {
-      id: Math.max(...availableRoles.map((r) => r.id)) + 1,
-      name: newRoleData.name,
-      description: newRoleData.description,
-      duties: [], // New role starts with no duties
-      entities: [], // No entities initially
-      privileges: [], // No privileges initially
-      privilegeCount: 0,
-    };
-
-    setAvailableRoles((prev) => [...prev, newRole]);
-    setNewRoleData({ name: "", description: "" });
-    setShowAddRoleModal(false);
+  // Handle opening add role assignment modal
+  const handleOpenAddRoleAssignmentModal = () => {
+    setShowAddRoleAssignmentModal(true);
+    setAddRoleAssignmentForm({
+      selectedRoleId: "",
+      allLegal: false,
+      legalEntities: [],
+    });
   };
 
-  // Handle adding a new legal entity
-  const handleAddNewEntity = () => {
-    if (!newEntityData.name || !newEntityData.code) return;
+  // Handle adding a role assignment
+  const handleAddRoleAssignment = () => {
+    if (!addRoleAssignmentForm.selectedRoleId) return;
 
-    const newEntity = {
-      id: Math.max(...legalEntities.map((e) => e.id)) + 1,
-      name: newEntityData.name,
-      code: newEntityData.code,
-    };
-
-    setLegalEntities((prev) => [...prev, newEntity]);
-    setNewEntityData({ name: "", code: "" });
-    setShowAddEntityModal(false);
-  };
-
-  // Handle adding a role
-  const handleAddRole = () => {
-    if (!selectedRole) return;
-
-    const roleToAdd = availableRoles.find((role) => role.id === selectedRole);
-    if (roleToAdd && !formData.roles.some((r) => r.id === roleToAdd.id)) {
-      // Clone role để đảm bảo có đầy đủ thông tin
-      const roleWithData = {
-        ...roleToAdd,
-        privilegeCount: roleToAdd.privileges.length,
-      };
-
-      setFormData((prev) => ({
-        ...prev,
-        roles: [...prev.roles, roleWithData],
-      }));
+    // Check if role already exists
+    if (
+      formData.roleAssignments.find(
+        (ra) => ra.roleId === parseInt(addRoleAssignmentForm.selectedRoleId)
+      )
+    ) {
+      alert("This role is already assigned to this user");
+      return;
     }
-    setSelectedRole("");
-  };
 
-  // Handle removing a role
-  const handleRemoveRole = (roleId) => {
-    setFormData((prev) => ({
-      ...prev,
-      roles: prev.roles.filter((role) => role.id !== roleId),
-    }));
-  };
-
-  // Handle adding a legal entity
-  const handleAddEntity = () => {
-    if (!selectedEntity) return;
-
-    // selectedEntity sẽ là value (ví dụ: "DHV")
-    const entityToAdd = LEGAL_ENTITIES.find(
-      (entity) => entity.value === selectedEntity
+    const role = availableRoles.find(
+      (r) => r.id === parseInt(addRoleAssignmentForm.selectedRoleId)
     );
 
-    if (entityToAdd && !formData.legalEntities.includes(selectedEntity)) {
-      setFormData((prev) => ({
-        ...prev,
-        legalEntities: [...prev.legalEntities, selectedEntity],
-      }));
-    }
-    setSelectedEntity("");
-  };
+    const newRoleAssignment = {
+      id: Date.now(),
+      roleId: role.id,
+      roleName: role.name,
+      roleDescription: role.description,
+      allLegal: addRoleAssignmentForm.allLegal,
+      legalEntities: addRoleAssignmentForm.allLegal
+        ? []
+        : addRoleAssignmentForm.legalEntities,
+    };
 
-  // Handle removing a legal entity
-  const handleRemoveEntity = (entityValue) => {
     setFormData((prev) => ({
       ...prev,
-      legalEntities: prev.legalEntities.filter(
-        (value) => value !== entityValue
+      roleAssignments: [...prev.roleAssignments, newRoleAssignment],
+    }));
+    setShowAddRoleAssignmentModal(false);
+  };
+
+  // Handle removing a role assignment
+  const handleRemoveRoleAssignment = (roleAssignmentId) => {
+    setFormData((prev) => ({
+      ...prev,
+      roleAssignments: prev.roleAssignments.filter(
+        (ra) => ra.id !== roleAssignmentId
       ),
     }));
   };
 
-  // Handle form submission
-  const handleSubmit = () => {
-    // Validate form
-    const newErrors = {};
-    if (!formData.username) newErrors.username = "Username is required";
-    if (!formData.fullName) newErrors.fullName = "Full name is required";
-    if (!formData.email) newErrors.email = "Email is required";
-    if (!formData.department) newErrors.department = "Department is required";
+  // Handle editing role assignment legal entities
+  const handleEditRoleAssignment = (roleAssignment) => {
+    setEditingRoleAssignment(roleAssignment);
+    setShowEditRoleAssignmentModal(true);
+  };
 
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
+  const handleSaveRoleAssignmentLegalEntities = (
+    roleAssignmentId,
+    allLegal,
+    legalEntities
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      roleAssignments: prev.roleAssignments.map((ra) =>
+        ra.id === roleAssignmentId
+          ? { ...ra, allLegal, legalEntities: allLegal ? [] : legalEntities }
+          : ra
+      ),
+    }));
+    setShowEditRoleAssignmentModal(false);
+    setEditingRoleAssignment(null);
+  };
+
+  // Format legal entities display
+  const formatLegalEntitiesDisplay = (roleAssignment) => {
+    if (roleAssignment.allLegal) {
+      return (
+        <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+          All legal
+        </span>
+      );
     }
 
+    if (roleAssignment.legalEntities.length === 0) {
+      return (
+        <span className="text-gray-400 text-sm">No entities selected</span>
+      );
+    }
+
+    const entities = roleAssignment.legalEntities
+      .map((id) => LEGAL_ENTITIES.find((le) => le.id === id)?.code)
+      .filter(Boolean);
+
+    if (entities.length <= 3) {
+      return (
+        <div className="flex flex-wrap gap-1">
+          {entities.map((code) => (
+            <span
+              key={code}
+              className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
+            >
+              {code}
+            </span>
+          ))}
+        </div>
+      );
+    }
+
+    const displayEntities = entities.slice(0, 3);
+    const remainingCount = entities.length - 3;
+
+    return (
+      <div className="flex flex-wrap gap-1">
+        {displayEntities.map((code) => (
+          <span
+            key={code}
+            className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full"
+          >
+            {code}
+          </span>
+        ))}
+        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+          +{remainingCount}
+        </span>
+      </div>
+    );
+  };
+
+  // Handle form submission
+  const handleSubmit = () => {
+    // Show confirmation modal instead of saving directly
+    setShowConfirmModal(true);
+  };
+
+  // Handle confirm save
+  const handleConfirmSave = () => {
+    // No validation needed for account info since it's read-only
+    // Just validate that we have role assignments if needed
     onSave({
       ...formData,
       id: account?.id || Date.now(),
       createdAt: account?.createdAt || new Date().toISOString().split("T")[0],
     });
+    setShowConfirmModal(false);
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" onClick={onBack}>
-            <ArrowLeft size={16} />
-          </Button>
-          <div>
-            <Text variant="h3" weight="semibold">
-              {account ? "Edit Account Access" : "Configure New Account"}
-            </Text>
-            <Text variant="body" color="muted">
-              Configure account access, roles, and legal entities
-            </Text>
+    <>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" onClick={onBack}>
+              <ArrowLeft size={16} />
+            </Button>
+            <div>
+              <Text variant="h3" weight="semibold">
+                {account ? "Edit Account Access" : "Configure New Account"}
+              </Text>
+              <Text variant="body" color="muted">
+                Configure account access, roles, and legal entities
+              </Text>
+            </div>
           </div>
+          <Button onClick={handleSubmit}>
+            <Save size={16} className="mr-2" />
+            {account ? "Update Access" : "Save Access"}
+          </Button>
         </div>
-        <Button onClick={handleSubmit}>
-          <Save size={16} className="mr-2" />
-          {account ? "Update Access" : "Save Access"}
-        </Button>
-      </div>
 
-      <div className="grid grid-cols-2 gap-6">
-        {/* Account Information Section */}
-        <div className="space-y-4">
-          <Text variant="h4" weight="semibold">
+        {/* Account Information Section - Profile Style */}
+        <div className="mb-6">
+          <Text variant="h4" weight="semibold" className="mb-4">
             Account Information
           </Text>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Username <span className="text-red-500">*</span>
-              </label>
-              <Input
-                value={formData.username}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, username: e.target.value }))
-                }
-                error={errors.username}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Full Name <span className="text-red-500">*</span>
-              </label>
-              <Input
-                value={formData.fullName}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, fullName: e.target.value }))
-                }
-                error={errors.fullName}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Email <span className="text-red-500">*</span>
-              </label>
-              <Input
-                type="email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData((prev) => ({ ...prev, email: e.target.value }))
-                }
-                error={errors.email}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Department <span className="text-red-500">*</span>
-              </label>
-              <Input
-                value={formData.department}
-                onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    department: e.target.value,
-                  }))
-                }
-                error={errors.department}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Status
-              </label>
-              <SearchableSelect
-                value={formData.status}
-                onChange={(value) =>
-                  setFormData((prev) => ({ ...prev, status: value }))
-                }
-                options={[
-                  { value: "Active", label: "Active" },
-                  { value: "Inactive", label: "Inactive" },
-                ]}
-              />
-            </div>
-          </div>
-        </div>
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="flex items-start gap-4">
+              {/* Avatar */}
+              <div className="w-16 h-16 bg-blue-500 text-white rounded-full flex items-center justify-center text-xl font-semibold flex-shrink-0">
+                {formData.fullName
+                  ? formData.fullName
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .toUpperCase()
+                  : "N/A"}
+              </div>
 
-        {/* Legal Entities Section */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <Text
-              variant="h4"
-              weight="semibold"
-              className="flex items-center gap-2"
-            >
-              <Building size={20} />
-              Legal Entities
-            </Text>
-          </div>
-          <div className="flex gap-2">
-            <SearchableSelect
-              value={selectedEntity}
-              onChange={setSelectedEntity}
-              options={legalEntities.filter(
-                (entity) => !formData.legalEntities.includes(entity.value)
-              )}
-              placeholder="Select legal entity..."
-              className="flex-1"
-            />
-            <Button onClick={handleAddEntity} disabled={!selectedEntity}>
-              <Plus size={16} className="mr-2" />
-              Add
-            </Button>
-          </div>
-          <div className="space-y-2">
-            {formData.legalEntities.map((entityValue, index) => {
-              const entity = LEGAL_ENTITIES.find(
-                (e) => e.value === entityValue
-              );
-              if (!entity) return null; // Skip if entity not found
-
-              return (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <div className="flex-1">
-                    <Text variant="body" weight="medium">
-                      {entity.label}
-                    </Text>
-                    <Text variant="caption" color="muted">
-                      {entity.value}
+              {/* Account Details */}
+              <div className="flex-1 grid grid-cols-2 gap-4">
+                <div>
+                  <Text variant="caption" color="muted" className="mb-1">
+                    Full Name
+                  </Text>
+                  <Text variant="body" weight="medium">
+                    {formData.fullName || "N/A"}
+                  </Text>
+                </div>
+                <div>
+                  <Text variant="caption" color="muted" className="mb-1">
+                    Username
+                  </Text>
+                  <Text variant="body" weight="medium">
+                    {formData.username || "N/A"}
+                  </Text>
+                </div>
+                <div>
+                  <Text variant="caption" color="muted" className="mb-1">
+                    Email
+                  </Text>
+                  <Text variant="body" weight="medium">
+                    {formData.email || "N/A"}
+                  </Text>
+                </div>
+                <div>
+                  <Text variant="caption" color="muted" className="mb-1">
+                    Department
+                  </Text>
+                  <Text variant="body" weight="medium">
+                    {formData.department || "N/A"}
+                  </Text>
+                </div>
+                <div>
+                  <Text variant="caption" color="muted" className="mb-1">
+                    Status
+                  </Text>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        formData.status === "Active"
+                          ? "bg-green-500"
+                          : "bg-gray-400"
+                      }`}
+                    ></span>
+                    <Text
+                      variant="body"
+                      weight="medium"
+                      className={
+                        formData.status === "Active"
+                          ? "text-green-600"
+                          : "text-gray-500"
+                      }
+                    >
+                      {formData.status}
                     </Text>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="small"
-                    onClick={() => handleRemoveEntity(entity.value)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 size={16} />
-                  </Button>
                 </div>
-              );
-            })}
-            {formData.legalEntities.length === 0 && (
-              <Text variant="body" color="muted" className="text-center py-4">
-                No legal entities assigned
-              </Text>
-            )}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Roles Section */}
-        <div className="space-y-4 col-span-2">
+        {/* Role Assignments Section */}
+        <div className="space-y-4">
           <div className="flex items-center justify-between">
             <Text
               variant="h4"
@@ -393,139 +362,424 @@ export default function AccountDetail({ account, onBack, onSave }) {
               className="flex items-center gap-2"
             >
               <Shield size={20} />
-              Roles
+              Role Assignments
             </Text>
-          </div>
-          <div className="flex gap-2">
-            <SearchableSelect
-              value={selectedRole}
-              onChange={setSelectedRole}
-              options={availableRoles
-                .filter((role) => !formData.roles.some((r) => r.id === role.id))
-                .map((role) => ({
-                  value: role.id,
-                  label: role.name,
-                }))}
-              placeholder="Select role..."
-              className="flex-1"
-              onAddNew={() => setShowAddRoleModal(true)}
-            />
-            <Button onClick={handleAddRole} disabled={!selectedRole}>
+            <Button onClick={handleOpenAddRoleAssignmentModal}>
               <Plus size={16} className="mr-2" />
-              Add
+              Add Role Assignment
             </Button>
           </div>
-          <div className="space-y-2">
-            {formData.roles.map((role) => {
-              // Ensure we have all role data
-              const fullRoleData =
-                availableRoles.find((r) => r.id === role.id) || role;
 
-              return (
-                <div
-                  key={role.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <div className="flex-1">
-                    <Text variant="body" weight="medium">
-                      {fullRoleData.name}
-                    </Text>
-                    <Text variant="caption" color="muted">
-                      {fullRoleData.description}
-                    </Text>
-                    <div className="mt-2">
-                      <Text variant="caption" color="muted" className="text-xs">
-                        {fullRoleData.duties?.length || 0} duties •{" "}
-                        {fullRoleData.privileges?.length || 0} privileges
+          {/* Role Assignments Table */}
+          <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Role
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Legal Entities
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {formData.roleAssignments.length === 0 ? (
+                  <tr>
+                    <td colSpan="3" className="px-6 py-8 text-center">
+                      <Shield
+                        size={48}
+                        className="mx-auto text-gray-300 mb-4"
+                      />
+                      <Text variant="body" color="muted">
+                        No role assignments configured
                       </Text>
-                      <div className="flex flex-wrap gap-1 mt-1">
-                        {fullRoleData.entities
-                          ?.slice(0, 3)
-                          .map((entity, index) => (
-                            <span
-                              key={index}
-                              className="inline-block px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded"
-                            >
-                              {entity}
-                            </span>
-                          ))}
-                        {(fullRoleData.entities?.length || 0) > 3 && (
-                          <span className="inline-block px-1.5 py-0.5 bg-blue-100 text-blue-700 text-xs rounded">
-                            +{fullRoleData.entities.length - 3} more
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="small"
-                    onClick={() => handleRemoveRole(role.id)}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 size={16} />
-                  </Button>
-                </div>
-              );
-            })}
-            {formData.roles.length === 0 && (
-              <Text variant="body" color="muted" className="text-center py-4">
-                No roles assigned
-              </Text>
-            )}
+                      <Text variant="caption" color="muted" className="mt-1">
+                        Click "Add Role Assignment" to get started
+                      </Text>
+                    </td>
+                  </tr>
+                ) : (
+                  formData.roleAssignments.map((roleAssignment) => (
+                    <tr key={roleAssignment.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">
+                        <div>
+                          <Text variant="body" weight="medium">
+                            {roleAssignment.roleName}
+                          </Text>
+                          <Text variant="caption" color="muted">
+                            {roleAssignment.roleDescription}
+                          </Text>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div
+                          className="cursor-pointer hover:bg-gray-100 p-2 rounded"
+                          onClick={() =>
+                            handleEditRoleAssignment(roleAssignment)
+                          }
+                        >
+                          {formatLegalEntitiesDisplay(roleAssignment)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="small"
+                            onClick={() =>
+                              handleEditRoleAssignment(roleAssignment)
+                            }
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            Edit
+                          </Button>
+                          <span className="text-gray-300">·</span>
+                          <Button
+                            variant="ghost"
+                            size="small"
+                            onClick={() =>
+                              handleRemoveRoleAssignment(roleAssignment.id)
+                            }
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
 
-      {/* Add Role Modal */}
+      {/* Add Role Assignment Modal */}
       <Modal
-        isOpen={showAddRoleModal}
-        onClose={() => setShowAddRoleModal(false)}
-        title="Add New Role"
+        isOpen={showAddRoleAssignmentModal}
+        onClose={() => setShowAddRoleAssignmentModal(false)}
+        title="Add Role Assignment"
+        size="medium"
+        className="max-w-5xl"
       >
         <div className="space-y-4">
+          {/* Role Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Role Name <span className="text-red-500">*</span>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Select Role <span className="text-red-500">*</span>
             </label>
-            <Input
-              value={newRoleData.name}
-              onChange={(e) =>
-                setNewRoleData((prev) => ({ ...prev, name: e.target.value }))
-              }
-              placeholder="Enter role name"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Description
-            </label>
-            <textarea
-              value={newRoleData.description}
-              onChange={(e) =>
-                setNewRoleData((prev) => ({
+            <RoleSearchSelect
+              selectedRoleId={addRoleAssignmentForm.selectedRoleId}
+              onChange={(roleId) =>
+                setAddRoleAssignmentForm((prev) => ({
                   ...prev,
-                  description: e.target.value,
+                  selectedRoleId: roleId,
                 }))
               }
-              placeholder="Enter role description"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              rows={3}
+              availableRoles={availableRoles.filter(
+                (role) =>
+                  !formData.roleAssignments.find((ra) => ra.roleId === role.id)
+              )}
             />
           </div>
-          <div className="flex justify-end gap-3 pt-4">
+
+          {/* Legal Entity Settings */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Legal Entity Access <span className="text-red-500">*</span>
+            </label>
+
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="add-all-legal"
+                  checked={addRoleAssignmentForm.allLegal}
+                  onChange={(e) =>
+                    setAddRoleAssignmentForm((prev) => ({
+                      ...prev,
+                      allLegal: e.target.checked,
+                      legalEntities: e.target.checked ? [] : prev.legalEntities,
+                    }))
+                  }
+                  className="rounded border-gray-300"
+                />
+                <label htmlFor="add-all-legal" className="text-sm font-medium">
+                  All Legal Entities
+                </label>
+              </div>
+
+              {!addRoleAssignmentForm.allLegal && (
+                <div className="ml-6">
+                  <Text variant="caption" color="muted" className="mb-2">
+                    Select specific legal entities:
+                  </Text>
+                  <MultiSelect
+                    value={addRoleAssignmentForm.legalEntities}
+                    onChange={(entities) =>
+                      setAddRoleAssignmentForm((prev) => ({
+                        ...prev,
+                        legalEntities: entities,
+                      }))
+                    }
+                    options={LEGAL_ENTITIES.map((entity) => ({
+                      value: entity.id,
+                      label: `${entity.code} - ${entity.name}`,
+                    }))}
+                    placeholder="Select legal entities..."
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
             <Button
               variant="outline"
-              onClick={() => setShowAddRoleModal(false)}
+              onClick={() => setShowAddRoleAssignmentModal(false)}
             >
               Cancel
             </Button>
-            <Button onClick={handleAddNewRole} disabled={!newRoleData.name}>
-              Add Role
+            <Button
+              onClick={handleAddRoleAssignment}
+              disabled={
+                !addRoleAssignmentForm.selectedRoleId ||
+                (!addRoleAssignmentForm.allLegal &&
+                  addRoleAssignmentForm.legalEntities.length === 0)
+              }
+            >
+              Add Role Assignment
             </Button>
           </div>
         </div>
       </Modal>
-    </div>
+
+      {/* Edit Role Assignment Legal Entities Modal */}
+      <Modal
+        isOpen={showEditRoleAssignmentModal}
+        onClose={() => setShowEditRoleAssignmentModal(false)}
+        title="Edit Legal Entities"
+        size="medium"
+      >
+        {editingRoleAssignment && (
+          <EditRoleAssignmentLegalEntitiesForm
+            roleAssignment={editingRoleAssignment}
+            legalEntities={LEGAL_ENTITIES}
+            onSave={handleSaveRoleAssignmentLegalEntities}
+            onCancel={() => setShowEditRoleAssignmentModal(false)}
+          />
+        )}
+      </Modal>
+
+      {/* Confirmation Modal */}
+      <Modal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        title="Confirm Update"
+        size="small"
+        className="max-w-lg"
+      >
+        <div className="space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
+              <Shield size={20} />
+            </div>
+            <div>
+              <Text variant="body" weight="medium" className="mb-2">
+                Update Account Access
+              </Text>
+              <Text variant="body" color="muted">
+                Are you sure you want to update the access permissions for{" "}
+                <span className="font-medium">{formData.fullName}</span>? This
+                will modify their role assignments and legal entity access.
+              </Text>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="outline"
+              onClick={() => setShowConfirmModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmSave}>Confirm Update</Button>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 }
+
+// Role Search Select Component
+const RoleSearchSelect = ({ selectedRoleId, onChange, availableRoles }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredRoles = availableRoles.filter(
+    (role) =>
+      role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      role.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const selectedRole = availableRoles.find(
+    (role) => role.id.toString() === selectedRoleId
+  );
+
+  const handleSelectRole = (roleId) => {
+    onChange(roleId.toString());
+    setIsOpen(false);
+    setSearchTerm("");
+  };
+
+  return (
+    <div className="relative">
+      <div
+        className="w-full px-3 py-2 border border-gray-300 rounded-md cursor-pointer bg-white min-h-[38px] flex items-center justify-between focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500"
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div className="flex-1">
+          {selectedRole ? (
+            <div>
+              <span className="font-medium">{selectedRole.name}</span>
+              <span className="ml-2 text-sm text-gray-500">
+                {selectedRole.privilegeCount} privileges
+              </span>
+            </div>
+          ) : (
+            <span className="text-gray-400">Choose a role...</span>
+          )}
+        </div>
+        <Search size={16} className="text-gray-400 flex-shrink-0" />
+      </div>
+
+      {isOpen && (
+        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
+          <div className="p-2 border-b border-gray-200">
+            <div className="relative">
+              <Search
+                size={16}
+                className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400"
+              />
+              <input
+                type="text"
+                placeholder="Search roles..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-8 pr-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                autoFocus
+              />
+            </div>
+          </div>
+
+          <div className="max-h-64 overflow-y-auto">
+            {filteredRoles.length === 0 ? (
+              <div className="p-3 text-center text-gray-500 text-sm">
+                No roles found
+              </div>
+            ) : (
+              filteredRoles.map((role) => (
+                <div
+                  key={role.id}
+                  className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                  onClick={() => handleSelectRole(role.id)}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-medium">{role.name}</span>
+                  </div>
+                  <div className="text-sm text-gray-600 mb-1">
+                    {role.description}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {role.privilegeCount} privileges
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Edit Role Assignment Legal Entities Form Component
+const EditRoleAssignmentLegalEntitiesForm = ({
+  roleAssignment,
+  legalEntities,
+  onSave,
+  onCancel,
+}) => {
+  const [allLegal, setAllLegal] = useState(roleAssignment.allLegal);
+  const [selectedEntities, setSelectedEntities] = useState(
+    roleAssignment.legalEntities
+  );
+
+  const handleSave = () => {
+    onSave(roleAssignment.id, allLegal, selectedEntities);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <Text variant="body" weight="medium" className="mb-3">
+          {roleAssignment.roleName}
+        </Text>
+
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="edit-all-legal"
+              checked={allLegal}
+              onChange={(e) => {
+                setAllLegal(e.target.checked);
+                if (e.target.checked) {
+                  setSelectedEntities([]);
+                }
+              }}
+              className="rounded border-gray-300"
+            />
+            <label htmlFor="edit-all-legal" className="text-sm font-medium">
+              All Legal Entities
+            </label>
+          </div>
+
+          {!allLegal && (
+            <div className="ml-6">
+              <Text variant="caption" color="muted" className="mb-2">
+                Select specific legal entities:
+              </Text>
+              <MultiSelect
+                value={selectedEntities}
+                onChange={setSelectedEntities}
+                options={legalEntities.map((entity) => ({
+                  value: entity.id,
+                  label: `${entity.code} - ${entity.name}`,
+                }))}
+                placeholder="Select legal entities..."
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+        <Button variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSave}
+          disabled={!allLegal && selectedEntities.length === 0}
+        >
+          Apply
+        </Button>
+      </div>
+    </div>
+  );
+};

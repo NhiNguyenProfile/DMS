@@ -1,22 +1,20 @@
 import React, { useState } from "react";
 import Text from "../../../atoms/Text";
 import Button from "../../../atoms/Button";
-import Input from "../../../atoms/Input";
 import Tabs from "../../../atoms/Tabs";
 import Modal from "../../../atoms/Modal";
 import MultiSelect from "../../../atoms/MultiSelect";
 import {
   ArrowLeft,
-  Settings,
   Users,
-  Shield,
   Search,
   Plus,
-  X,
-  Upload,
   UserPlus,
-  Trash2,
+  Shield,
+  X,
+  AlertTriangle,
 } from "lucide-react";
+import Input from "../../../atoms/Input";
 
 // Sample directory users
 const SAMPLE_USERS = [
@@ -132,6 +130,8 @@ const GroupDetail = ({ group, onBack, onSave }) => {
   const [showAddRoleModal, setShowAddRoleModal] = useState(false);
   const [showEditLegalModal, setShowEditLegalModal] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
+  const [showGrantPermissionModal, setShowGrantPermissionModal] =
+    useState(false);
   const [addRoleForm, setAddRoleForm] = useState({
     selectedRoleId: "",
     allLegal: false,
@@ -296,6 +296,13 @@ const GroupDetail = ({ group, onBack, onSave }) => {
   };
 
   const handleSave = () => {
+    // If this is a new group (not editing), show confirmation modal
+    if (!group) {
+      setShowGrantPermissionModal(true);
+      return;
+    }
+
+    // For existing groups, proceed with normal save
     const newErrors = {};
 
     // Validate required fields
@@ -314,6 +321,25 @@ const GroupDetail = ({ group, onBack, onSave }) => {
       description: formData.description.trim(),
       status: formData.status,
     });
+  };
+
+  const handleConfirmGrantPermission = () => {
+    console.log("handleConfirmGrantPermission called");
+    console.log("formData.groupName:", formData.groupName);
+
+    console.log("About to close modal and call onSave");
+    setShowGrantPermissionModal(false);
+
+    // Grant permissions and go back to list - no validation needed for grant permission
+    onSave({
+      ...group,
+      groupName: formData.groupName.trim() || "Grant Permission Session",
+      description: formData.description.trim(),
+      status: formData.status,
+      members: selectedMembers,
+      roles: selectedRoles,
+    });
+    console.log("onSave called");
   };
 
   return (
@@ -338,7 +364,7 @@ const GroupDetail = ({ group, onBack, onSave }) => {
             Cancel
           </Button>
           <Button onClick={handleSave}>
-            {group ? "Update Group" : "Create Group"}
+            {group ? "Update Group" : "Grant Permission"}
           </Button>
         </div>
       </div>
@@ -346,111 +372,6 @@ const GroupDetail = ({ group, onBack, onSave }) => {
       {/* Tabs */}
       <div className="bg-white rounded-lg border border-gray-200">
         <Tabs defaultTab="general" variant="default">
-          <Tabs.Panel
-            tabId="general"
-            label="General"
-            icon={<Settings size={16} />}
-          >
-            <div className="p-6 space-y-6">
-              {/* Group Name */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Group Name <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  type="text"
-                  value={formData.groupName}
-                  onChange={(e) =>
-                    handleInputChange("groupName", e.target.value)
-                  }
-                  placeholder="Enter unique group name"
-                  className={errors.groupName ? "border-red-500" : ""}
-                />
-                {errors.groupName && (
-                  <Text variant="caption" className="text-red-500 mt-1">
-                    {errors.groupName}
-                  </Text>
-                )}
-                <Text variant="caption" color="muted" className="mt-1">
-                  Must be unique across all groups
-                </Text>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description <span className="text-gray-400">(Optional)</span>
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) =>
-                    handleInputChange("description", e.target.value)
-                  }
-                  placeholder="Brief description of this group's purpose"
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                />
-                <Text variant="caption" color="muted" className="mt-1">
-                  Help others understand what this group is for
-                </Text>
-              </div>
-
-              {/* Status Toggle */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Group Status
-                </label>
-                <div className="flex items-center gap-3">
-                  <Text
-                    variant="body"
-                    className={
-                      formData.status === "Inactive"
-                        ? "text-gray-900"
-                        : "text-gray-500"
-                    }
-                  >
-                    Inactive
-                  </Text>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleInputChange(
-                        "status",
-                        formData.status === "Active" ? "Inactive" : "Active"
-                      )
-                    }
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                      formData.status === "Active"
-                        ? "bg-green-500"
-                        : "bg-gray-300"
-                    }`}
-                  >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        formData.status === "Active"
-                          ? "translate-x-6"
-                          : "translate-x-1"
-                      }`}
-                    />
-                  </button>
-                  <Text
-                    variant="body"
-                    className={
-                      formData.status === "Active"
-                        ? "text-gray-900"
-                        : "text-gray-500"
-                    }
-                  >
-                    Active
-                  </Text>
-                </div>
-                <Text variant="caption" color="muted" className="mt-1">
-                  Inactive groups cannot be assigned new members or roles
-                </Text>
-              </div>
-            </div>
-          </Tabs.Panel>
-
           <Tabs.Panel
             tabId="members"
             label="Members"
@@ -724,6 +645,7 @@ const GroupDetail = ({ group, onBack, onSave }) => {
         onClose={() => setShowAddRoleModal(false)}
         title="Add Role"
         size="medium"
+        className="max-w-5xl"
       >
         <div className="space-y-4">
           {/* Role Selection */}
@@ -829,6 +751,86 @@ const GroupDetail = ({ group, onBack, onSave }) => {
           />
         )}
       </Modal>
+
+      {/* Grant Permission Confirmation Modal */}
+      <Modal
+        isOpen={showGrantPermissionModal}
+        onClose={() => setShowGrantPermissionModal(false)}
+        title="Grant Permission"
+        size="medium"
+        className="max-w-4xl"
+      >
+        <div className="space-y-4">
+          {/* Warning Icon and Message */}
+          <div className="flex items-start gap-3">
+            <div className="flex-shrink-0">
+              <AlertTriangle size={24} className="text-amber-500" />
+            </div>
+            <div className="flex-1">
+              <Text variant="body" weight="medium" className="mb-2">
+                Are you sure you want to grant permissions to the selected
+                members?
+              </Text>
+              <Text variant="body" color="muted" className="mb-4">
+                This action will assign the configured roles and permissions to
+                all selected members.
+              </Text>
+            </div>
+          </div>
+
+          {/* Warning Box */}
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex items-start gap-2">
+              <AlertTriangle
+                size={16}
+                className="text-red-500 flex-shrink-0 mt-0.5"
+              />
+              <div>
+                <Text
+                  variant="body"
+                  weight="medium"
+                  className="text-red-800 mb-1"
+                >
+                  Warning: Permission Override
+                </Text>
+                <Text variant="caption" className="text-red-700">
+                  The new permissions will override any existing permissions
+                  that these users currently have. This action cannot be undone
+                  automatically.
+                </Text>
+              </div>
+            </div>
+          </div>
+
+          {/* Members and Roles Count Info */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
+            <Text variant="body" className="text-blue-800">
+              <strong>{selectedMembers.length}</strong> members will be affected
+              by this change.
+            </Text>
+            <Text variant="body" className="text-blue-800">
+              <strong>{selectedRoles.length}</strong> roles will be assigned to
+              each member.
+            </Text>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="outline"
+              onClick={() => setShowGrantPermissionModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmGrantPermission}
+              className="bg-red-600 hover:bg-red-700 text-white"
+            >
+              Yes, Grant Permissions
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
@@ -925,20 +927,27 @@ const RoleSearchSelect = ({ selectedRoleId, onChange, availableRoles }) => {
   );
 };
 
-// Edit Legal Entities Form Component
-const EditLegalEntitiesForm = ({ role, legalEntities, onSave, onCancel }) => {
-  const [allLegal, setAllLegal] = useState(role.allLegal);
-  const [selectedEntities, setSelectedEntities] = useState(role.legalEntities);
+// Edit User Access Legal Entities Form Component
+const EditUserAccessLegalEntitiesForm = ({
+  userAccess,
+  legalEntities,
+  onSave,
+  onCancel,
+}) => {
+  const [allLegal, setAllLegal] = useState(userAccess.allLegal);
+  const [selectedEntities, setSelectedEntities] = useState(
+    userAccess.legalEntities
+  );
 
   const handleSave = () => {
-    onSave(role.roleId, allLegal, selectedEntities);
+    onSave(userAccess.id, allLegal, selectedEntities);
   };
 
   return (
     <div className="space-y-4">
       <div>
         <Text variant="body" weight="medium" className="mb-3">
-          {role.roleName}
+          {userAccess.userName} - {userAccess.roleName}
         </Text>
 
         <div className="space-y-4">
