@@ -13,6 +13,8 @@ const ObjectSelectModal = ({
   data,
   searchFields,
   selectedValue,
+  selectedItems = [], // Add this to track selected items
+  showEntities = false, // Add this to control entities display
 }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredData, setFilteredData] = useState(data || []);
@@ -20,18 +22,23 @@ const ObjectSelectModal = ({
   useEffect(() => {
     if (!data) return;
 
+    // Filter out selected items and apply search
+    const availableData = data.filter(
+      (item) => !selectedItems.some((selected) => selected.id === item.id)
+    );
+
     if (!searchTerm.trim()) {
-      setFilteredData(data);
+      setFilteredData(availableData);
       return;
     }
 
-    const filtered = data.filter((item) =>
+    const filtered = availableData.filter((item) =>
       searchFields.some((field) =>
         item[field]?.toString().toLowerCase().includes(searchTerm.toLowerCase())
       )
     );
     setFilteredData(filtered);
-  }, [searchTerm, data, searchFields]);
+  }, [searchTerm, data, searchFields, selectedItems]);
 
   const handleSelect = (item) => {
     onSelect(item);
@@ -98,7 +105,9 @@ const ObjectSelectModal = ({
                       colSpan={columns.length + 1}
                       className="px-6 py-8 text-center text-gray-500"
                     >
-                      No data found
+                      {searchTerm.trim()
+                        ? "No data found"
+                        : "No items available for selection"}
                     </td>
                   </tr>
                 ) : (
@@ -110,14 +119,29 @@ const ObjectSelectModal = ({
                       {columns.map((column) => (
                         <td
                           key={column.key}
-                          className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 min-w-0"
+                          className="px-6 py-4 text-sm text-gray-900"
                         >
-                          <div
-                            className="truncate max-w-xs"
-                            title={item[column.key]}
-                          >
-                            {item[column.key]}
-                          </div>
+                          {column.key === "description" ? (
+                            <div className="space-y-1">
+                              <div>{item[column.key]}</div>
+                              {showEntities && item.entities && (
+                                <div className="flex flex-wrap gap-1">
+                                  {item.entities.map((entity, i) => (
+                                    <span
+                                      key={i}
+                                      className="inline-block px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded"
+                                    >
+                                      {entity}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="truncate max-w-xs" title={item[column.key]}>
+                              {item[column.key]}
+                            </div>
+                          )}
                         </td>
                       ))}
                       <td className="px-6 py-4 whitespace-nowrap text-center">

@@ -5,6 +5,7 @@ import PrivilegeConfig from "./components/PrivilegeConfig";
 import DutiesConfig from "./components/DutiesConfig";
 import RolesConfig from "./components/RolesConfig";
 import GroupAccess from "./components/GroupAccess";
+import AccountAccess from "./components/AccountAccess";
 
 const PermissionsContent = () => {
   return (
@@ -42,10 +43,10 @@ const PermissionsContent = () => {
           </Tabs.Panel>
           <Tabs.Panel
             tabId="group-access"
-            label="Group Access"
+            label="Business User Access"
             icon={<UserCheck size={16} />}
           >
-            <GroupAccess />
+            <AccountAccess />
           </Tabs.Panel>
         </Tabs>
       </div>
