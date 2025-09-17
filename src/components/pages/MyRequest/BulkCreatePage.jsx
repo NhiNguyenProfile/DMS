@@ -5,6 +5,7 @@ import Table from "../../atoms/Table";
 import Modal from "../../atoms/Modal";
 import Input from "../../atoms/Input";
 import AdvancedObjectSelectModal from "../../atoms/AdvancedObjectSelectModal";
+import FieldSelectionModal from "../../atoms/FieldSelectionModal";
 import { ArrowLeft, Upload, Download, Plus, Edit, Trash2 } from "lucide-react";
 import CustomerDetailForm from "./CustomerDetailForm";
 
@@ -17,6 +18,7 @@ const BulkCreatePage = ({ mode = "create", onBack, onSendBulkRequest }) => {
   const [showSearchModal, setShowSearchModal] = useState(false);
   const [packageTitle, setPackageTitle] = useState("");
   const [showPackageTitleModal, setShowPackageTitleModal] = useState(false);
+  const [showFieldSelectionModal, setShowFieldSelectionModal] = useState(false);
 
   const handleAddManually = () => {
     if (mode === "edit") {
@@ -76,21 +78,15 @@ const BulkCreatePage = ({ mode = "create", onBack, onSendBulkRequest }) => {
   };
 
   const handleDownloadTemplate = () => {
-    // Create CSV template
-    const headers = [
-      "Main Customer Code",
-      "Main Customer Name",
-      "Company",
-      "Address",
-      "NIK/NPWP",
-      "Customer Classification Group",
-      "Customer Group",
-      "Customer Type",
-      "Organization Name",
-      "Search Name",
-    ];
+    // Show field selection modal instead of directly downloading
+    setShowFieldSelectionModal(true);
+  };
 
+  const handleFieldSelectionConfirm = (selectedFields) => {
+    // Generate CSV with selected fields
+    const headers = selectedFields.map((field) => field.label);
     const csvContent = headers.join(",") + "\n";
+
     const blob = new Blob([csvContent], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -237,37 +233,13 @@ const BulkCreatePage = ({ mode = "create", onBack, onSendBulkRequest }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Button
-              variant="outline"
-              onClick={() => setShowImportModal(true)}
-              className="h-24 flex-col gap-2"
-            >
-              <Upload size={24} />
-              <div className="text-center">
-                <div className="font-medium">Import Excel</div>
-                <div className="text-xs text-gray-500">
-                  Upload CSV/Excel file
-                </div>
-              </div>
-            </Button>
-
-            <Button
-              variant="outline"
-              onClick={handleDownloadTemplate}
-              className="h-24 flex-col gap-2"
-            >
-              <Download size={24} />
-              <div className="text-center">
-                <div className="font-medium">Download Template</div>
-                <div className="text-xs text-gray-500">Get CSV template</div>
-              </div>
-            </Button>
-
-            <Button
               variant="primary"
               onClick={handleAddManually}
-              className="h-24 flex-col gap-2"
+              className="h-14 flex gap-2"
             >
-              <Plus size={24} />
+              <div className="w-6 h-6 rounded-full bg-white flex items-center text-sky-500 justify-center">
+                1
+              </div>
               <div className="text-center">
                 <div className="font-medium">
                   {mode === "edit" ? "Select Customer" : "Add Manually"}
@@ -276,6 +248,34 @@ const BulkCreatePage = ({ mode = "create", onBack, onSendBulkRequest }) => {
                   {mode === "edit"
                     ? "Choose existing customer"
                     : "Create one by one"}
+                </div>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleDownloadTemplate}
+              className="h-14 flex gap-2"
+            >
+              <div className="w-6 h-6 rounded-full !text-sky-500 bg-sky-100 flex items-center justify-center">
+                2
+              </div>
+              <div className="text-center">
+                <div className="font-medium">Download Template</div>
+                <div className="text-xs text-gray-500">Get CSV template</div>
+              </div>
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowImportModal(true)}
+              className="h-14 flex gap-2"
+            >
+              <div className="w-6 h-6 rounded-full bg-sky-100 !text-sky-500 flex items-center justify-center">
+                3
+              </div>
+              <div className="text-center">
+                <div className="font-medium">Import Excel</div>
+                <div className="text-xs text-gray-500">
+                  Upload CSV/Excel file
                 </div>
               </div>
             </Button>
@@ -596,6 +596,14 @@ const BulkCreatePage = ({ mode = "create", onBack, onSendBulkRequest }) => {
           </div>
         </div>
       </Modal>
+
+      {/* Field Selection Modal */}
+      <FieldSelectionModal
+        isOpen={showFieldSelectionModal}
+        onClose={() => setShowFieldSelectionModal(false)}
+        onConfirm={handleFieldSelectionConfirm}
+        title="Select Fields for CSV Template"
+      />
     </div>
   );
 };

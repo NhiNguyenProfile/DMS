@@ -9,6 +9,7 @@ import WorkflowEdit from "./components/pages/WorkflowEdit";
 import Permissions from "./components/pages/Permissions";
 import MasterData from "./components/pages/MasterData";
 import SyncHistory from "./components/pages/SyncHistory";
+import TestFieldSelection from "./components/pages/TestFieldSelection";
 
 function AppContent() {
   const { currentRoute } = useRouter();
@@ -33,6 +34,8 @@ function AppContent() {
         return <MasterData />;
       case "sync-history":
         return <SyncHistory />;
+      // case "test-field-selection":
+      //   return <TestFieldSelection />;
       default:
         return <MyRequest />;
     }
