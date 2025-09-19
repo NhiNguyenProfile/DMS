@@ -177,7 +177,7 @@ const ALL_CUSTOMER_COLUMNS = [
 const CustomerSearchResults = ({ onBack, country }) => {
   // New advanced search states
   const [selectedLegalEntity, setSelectedLegalEntity] = useState("");
-  const [showFilterSidebar, setShowFilterSidebar] = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
   const [sidebarFilters, setSidebarFilters] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -222,17 +222,37 @@ const CustomerSearchResults = ({ onBack, country }) => {
     { value: "PHP", label: "PHP" },
   ];
 
-  // Advanced search functions
-  const handleSearch = async () => {
+  // Initialize filters for all columns
+  const initializeAllFilters = () => {
+    return ALL_CUSTOMER_COLUMNS.map((col, index) => ({
+      field: col.key,
+      value: "",
+      id: index + 1,
+      label: col.label,
+      fieldLabel: col.label,
+    }));
+  };
+
+  // Initialize filters when modal opens
+  const handleOpenFilterModal = () => {
+    setSidebarFilters(initializeAllFilters());
+    setShowFilterModal(true);
+  };
+
+  // Handle apply filters from modal - replaces search function
+  const handleApplyFilters = async () => {
+    setShowFilterModal(false);
     setIsLoading(true);
     setHasSearched(true);
 
-    // Simulate loading
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    // Simulate loading for 2 seconds
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     applyFilters();
     setIsLoading(false);
   };
+
+  // Removed handleSearch - replaced by handleApplyFilters
 
   const applyFilters = () => {
     let filtered = [...ALL_CUSTOMER_RECORDS];
@@ -283,27 +303,12 @@ const CustomerSearchResults = ({ onBack, country }) => {
     }
   };
 
-  const addSidebarFilter = () => {
-    setSidebarFilters((prev) => [
-      ...prev,
-      { field: "", value: "", id: Date.now() },
-    ]);
-  };
-
   const updateSidebarFilter = (id, field, value) => {
     setSidebarFilters((prev) =>
       prev.map((filter) =>
         filter.id === id ? { ...filter, [field]: value } : filter
       )
     );
-
-    // Remove auto-apply for sidebar filters - only apply when clicking Apply button
-  };
-
-  const removeSidebarFilter = (id) => {
-    setSidebarFilters((prev) => prev.filter((filter) => filter.id !== id));
-
-    // Remove auto-apply for sidebar filters - only apply when clicking Apply button
   };
 
   const handleSelectItem = (item) => {
@@ -507,23 +512,10 @@ const CustomerSearchResults = ({ onBack, country }) => {
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex gap-4 items-end mb-4 justify-between">
           <div className="flex gap-4 items-end">
-            {/* Legal Entity Select */}
-            <div className="max-w-52 w-full">
-              <Text variant="body" weight="medium" className="mb-2">
-                Legal Entity
-              </Text>
-              <Select
-                value={selectedLegalEntity}
-                onChange={setSelectedLegalEntity}
-                options={legalEntities}
-                placeholder="Select Legal Entity"
-              />
-            </div>
-
             {/* Filter Button */}
             <Button
               variant="outline"
-              onClick={() => setShowFilterSidebar(!showFilterSidebar)}
+              onClick={handleOpenFilterModal}
               className="flex items-center gap-2"
             >
               <Filter size={16} />
@@ -537,21 +529,6 @@ const CustomerSearchResults = ({ onBack, country }) => {
               onVisibilityChange={setVisibleColumns}
               buttonText="Columns"
             />
-
-            {/* Search Button */}
-            <Button
-              variant="primary"
-              onClick={handleSearch}
-              disabled={isLoading}
-              className="flex items-center gap-2 py-[10px]"
-            >
-              {isLoading ? (
-                <Loader2 size={16} className="animate-spin" />
-              ) : (
-                <SearchIcon size={16} />
-              )}
-              Search
-            </Button>
           </div>
           <div className="flex gap-4 items-end">
             {/* Add New Request */}
@@ -584,13 +561,9 @@ const CustomerSearchResults = ({ onBack, country }) => {
       </div>
 
       {/* Main Content Container */}
-      <div className="flex">
+      <div className="w-full">
         {/* Results Table */}
-        <div
-          className={` bg-white rounded-lg border border-gray-200 overflow-hidden ${
-            showFilterSidebar ? "flex-1 mr-6 overflow-x-scroll" : "w-full"
-          }`}
-        >
+        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden w-full">
           {!hasSearched ? (
             <div className="flex items-center justify-center h-64 text-gray-500">
               <div className="text-center">
@@ -738,154 +711,6 @@ const CustomerSearchResults = ({ onBack, country }) => {
             </div>
           )}
         </div>
-
-        {/* Filter Sidebar */}
-        {showFilterSidebar && (
-          <div className="w-96 bg-white rounded-lg border border-gray-200">
-            <div className="flex flex-col h-full">
-              {/* Sidebar Header */}
-              <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                <Text variant="heading" size="md" weight="semibold">
-                  Advanced Filters
-                </Text>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={addSidebarFilter}
-                    className="flex items-center gap-1"
-                  >
-                    <Plus size={14} />
-                    Add Filter
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowFilterSidebar(false)}
-                    className="flex items-center gap-1"
-                  >
-                    <X size={16} />
-                  </Button>
-                </div>
-              </div>
-
-              {/* Sidebar Content */}
-              <div className="flex-1 max-h-96 overflow-y-auto p-4">
-                <div className="space-y-4">
-                  {sidebarFilters.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <Filter
-                        size={48}
-                        className="mx-auto mb-4 text-gray-300"
-                      />
-                      <Text variant="body" color="muted">
-                        No filters added yet
-                      </Text>
-                      <Text
-                        variant="body"
-                        color="muted"
-                        className="text-sm mt-1"
-                      >
-                        Click "Add Filter" to create your first filter
-                      </Text>
-                    </div>
-                  ) : (
-                    sidebarFilters.map((filter) => (
-                      <div
-                        key={filter.id}
-                        className="bg-gray-50 border border-gray-200 rounded-lg p-4"
-                      >
-                        <div className="space-y-3">
-                          <div>
-                            <Text
-                              variant="body"
-                              weight="medium"
-                              className="mb-2 text-sm"
-                            >
-                              Field
-                            </Text>
-                            <Select
-                              value={filter.field}
-                              onChange={(value) =>
-                                updateSidebarFilter(filter.id, "field", value)
-                              }
-                              options={ALL_CUSTOMER_COLUMNS.map((col) => ({
-                                value: col.key,
-                                label: col.label,
-                              }))}
-                              placeholder="Select Field"
-                              size="small"
-                            />
-                          </div>
-                          <div>
-                            <Text
-                              variant="body"
-                              weight="medium"
-                              className="mb-2 text-sm"
-                            >
-                              Value (contains)
-                            </Text>
-                            <Input
-                              value={filter.value}
-                              onChange={(e) =>
-                                updateSidebarFilter(
-                                  filter.id,
-                                  "value",
-                                  e.target.value
-                                )
-                              }
-                              placeholder="Enter filter value"
-                              size="small"
-                            />
-                          </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => removeSidebarFilter(filter.id)}
-                            className="w-full text-red-600 hover:text-red-700 hover:border-red-300 flex items-center justify-center gap-2"
-                          >
-                            <X size={14} />
-                            Remove Filter
-                          </Button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* Sidebar Footer */}
-              <div className="border-t border-gray-200 p-4">
-                <div className="flex gap-2">
-                  <Button
-                    variant="primary"
-                    onClick={() => {
-                      if (hasSearched) {
-                        applyFilters();
-                      }
-                    }}
-                    disabled={!hasSearched}
-                    className="flex-1"
-                  >
-                    Apply Filters
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setSidebarFilters([]);
-                      if (hasSearched) {
-                        applyFilters();
-                      }
-                    }}
-                    size="sm"
-                  >
-                    Clear All
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Summary */}
@@ -1016,6 +841,94 @@ const CustomerSearchResults = ({ onBack, country }) => {
                 {type.label}
               </Button>
             ))}
+          </div>
+        </div>
+      </Modal>
+
+      {/* Filter Modal */}
+      <Modal
+        isOpen={showFilterModal}
+        onClose={() => setShowFilterModal(false)}
+        title="Advanced Filters"
+        size="large"
+        className="max-w-xl"
+      >
+        <div className="space-y-6">
+          {/* Legal Entity Selection */}
+          <div>
+            <Text variant="body" weight="medium" className="mb-2">
+              Legal Entity
+            </Text>
+            <Select
+              value={selectedLegalEntity}
+              onChange={setSelectedLegalEntity}
+              options={legalEntities}
+              placeholder="Select Legal Entity"
+            />
+          </div>
+
+          {/* All Field Filters */}
+          <div>
+            <Text variant="body" weight="medium" className="mb-4">
+              Field Filters
+            </Text>
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {sidebarFilters.map((filter) => (
+                <div
+                  key={filter.id}
+                  className="border border-gray-200 rounded-lg p-3"
+                >
+                  <div className="mb-2">
+                    <Text
+                      variant="body"
+                      size="sm"
+                      weight="medium"
+                      className="text-gray-700"
+                    >
+                      {filter.fieldLabel}
+                    </Text>
+                  </div>
+                  <Input
+                    value={filter.value}
+                    onChange={(e) =>
+                      updateSidebarFilter(filter.id, "value", e.target.value)
+                    }
+                    placeholder={`Filter ${filter.fieldLabel?.toLowerCase()}...`}
+                    size="small"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Modal Footer */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSidebarFilters(initializeAllFilters());
+                setSelectedLegalEntity("");
+              }}
+            >
+              Clear All
+            </Button>
+            <Button variant="outline" onClick={() => setShowFilterModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleApplyFilters}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin mr-2" />
+                  Loading...
+                </>
+              ) : (
+                "Apply Filters"
+              )}
+            </Button>
           </div>
         </div>
       </Modal>
