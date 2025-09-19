@@ -2,43 +2,10 @@ import { useState, useEffect } from "react";
 import Modal from "../Modal";
 import Button from "../Button";
 import Text from "../Text";
-import TreeSelect from "../TreeSelect";
+import Input from "../Input";
+import Checkbox from "../Checkbox";
 
 // Field definitions from CustomerDetailForm
-const MAIN_CUSTOMER_FIELDS = [
-  {
-    label: "Main Customer",
-    type: "text",
-    required: true,
-    key: "mainCustomerCode",
-  },
-  {
-    label: "Main Customer Name",
-    type: "text",
-    required: true,
-    key: "mainCustomerName",
-  },
-  {
-    label: "Company",
-    type: "select",
-    options: ["DHV", "PBH", "PHP", "PHY", "DGC", "DGD"],
-    required: true,
-    key: "company",
-  },
-  {
-    label: "Address",
-    type: "text",
-    required: true,
-    key: "address",
-  },
-  {
-    label: "NIK/NPWP",
-    type: "text",
-    required: false,
-    key: "nikNpwp",
-  },
-];
-
 const FINAL_CUSTOMER_GENERAL = [
   {
     label: "Customer Account",
@@ -236,119 +203,163 @@ const FieldSelectionModal = ({
   title = "Select Fields for Template",
 }) => {
   const [selectedFields, setSelectedFields] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  // Build tree data structure
-  const buildTreeData = () => {
-    const treeData = [
-      {
-        id: "final_customer",
-        label: "Final Customer",
-        children: [
-          {
-            id: "final_customer_general",
-            label: "General",
-            children: FINAL_CUSTOMER_GENERAL.map((field, index) => ({
-              id: `final_customer_general_${field.key}`,
-              label: field.label,
-              key: field.key,
-              group: "final_customer_general",
-            })),
-          },
-          {
-            id: "final_customer_address",
-            label: "Address",
-            children: ADDRESS_FIELDS.map((field, index) => ({
-              id: `final_customer_address_${field.key}`,
-              label: field.label,
-              key: field.key,
-              group: "final_customer_address",
-            })),
-          },
-          {
-            id: "final_customer_contact",
-            label: "Contact Information",
-            children: FINAL_CUSTOMER_CONTACT.map((field, index) => ({
-              id: `final_customer_contact_${field.key}`,
-              label: field.label,
-              key: field.key,
-              group: "final_customer_contact",
-            })),
-          },
-          {
-            id: "final_customer_sales",
-            label: "Sales Demographic",
-            children: FINAL_CUSTOMER_SALES.map((field, index) => ({
-              id: `final_customer_sales_${field.key}`,
-              label: field.label,
-              key: field.key,
-              group: "final_customer_sales",
-            })),
-          },
-          {
-            id: "final_customer_credit",
-            label: "Credit and Collection",
-            children: FINAL_CUSTOMER_CREDIT.map((field, index) => ({
-              id: `final_customer_credit_${field.key}`,
-              label: field.label,
-              key: field.key,
-              group: "final_customer_credit",
-            })),
-          },
-          {
-            id: "final_customer_payment",
-            label: "Payment & Invoice",
-            children: FINAL_CUSTOMER_PAYMENT.map((field, index) => ({
-              id: `final_customer_payment_${field.key}`,
-              label: field.label,
-              key: field.key,
-              group: "final_customer_payment",
-            })),
-          },
-          {
-            id: "final_customer_tax",
-            label: "Tax Exempt Number",
-            children: TAX_FIELDS.map((field, index) => ({
-              id: `final_customer_tax_${field.key}`,
-              label: field.label,
-              key: field.key,
-              group: "final_customer_tax",
-            })),
-          },
-        ],
-      },
-    ];
+  // Build flat field options for MultiSelect
+  const buildFieldOptions = () => {
+    const fieldOptions = [];
 
-    return treeData;
+    // Add General fields
+    FINAL_CUSTOMER_GENERAL.forEach((field) => {
+      fieldOptions.push({
+        value: `final_customer_general_${field.key}`,
+        label: `General - ${field.label}`,
+        key: field.key,
+        group: "final_customer_general",
+      });
+    });
+
+    // Add Address fields
+    ADDRESS_FIELDS.forEach((field) => {
+      fieldOptions.push({
+        value: `final_customer_address_${field.key}`,
+        label: `Address - ${field.label}`,
+        key: field.key,
+        group: "final_customer_address",
+      });
+    });
+
+    // Add Contact fields
+    FINAL_CUSTOMER_CONTACT.forEach((field) => {
+      fieldOptions.push({
+        value: `final_customer_contact_${field.key}`,
+        label: `Contact - ${field.label}`,
+        key: field.key,
+        group: "final_customer_contact",
+      });
+    });
+
+    // Add Sales fields
+    FINAL_CUSTOMER_SALES.forEach((field) => {
+      fieldOptions.push({
+        value: `final_customer_sales_${field.key}`,
+        label: `Sales - ${field.label}`,
+        key: field.key,
+        group: "final_customer_sales",
+      });
+    });
+
+    // Add Credit fields
+    FINAL_CUSTOMER_CREDIT.forEach((field) => {
+      fieldOptions.push({
+        value: `final_customer_credit_${field.key}`,
+        label: `Credit - ${field.label}`,
+        key: field.key,
+        group: "final_customer_credit",
+      });
+    });
+
+    // Add Payment fields
+    FINAL_CUSTOMER_PAYMENT.forEach((field) => {
+      fieldOptions.push({
+        value: `final_customer_payment_${field.key}`,
+        label: `Payment - ${field.label}`,
+        key: field.key,
+        group: "final_customer_payment",
+      });
+    });
+
+    // Add Tax fields
+    TAX_FIELDS.forEach((field) => {
+      fieldOptions.push({
+        value: `final_customer_tax_${field.key}`,
+        label: `Tax - ${field.label}`,
+        key: field.key,
+        group: "final_customer_tax",
+      });
+    });
+
+    return fieldOptions;
   };
 
   // Get selected field details for CSV generation
   const getSelectedFieldDetails = () => {
-    const treeData = buildTreeData();
+    const fieldOptions = buildFieldOptions();
     const selectedFieldDetails = [];
 
-    const findFieldDetails = (nodes) => {
-      nodes.forEach((node) => {
-        if (selectedFields.includes(node.id) && node.key) {
-          selectedFieldDetails.push({
-            key: node.key,
-            label: node.label,
-            group: node.group,
-          });
-        }
-        if (node.children) {
-          findFieldDetails(node.children);
-        }
-      });
-    };
+    selectedFields.forEach((selectedValue) => {
+      const field = fieldOptions.find(
+        (option) => option.value === selectedValue
+      );
+      if (field) {
+        selectedFieldDetails.push({
+          key: field.key,
+          label: field.label.split(" - ")[1], // Remove the group prefix
+          group: field.group,
+        });
+      }
+    });
 
-    findFieldDetails(treeData);
     return selectedFieldDetails;
+  };
+
+  // Filter fields based on search term
+  const getFilteredFields = () => {
+    const fieldOptions = buildFieldOptions();
+    if (!searchTerm.trim()) {
+      return fieldOptions;
+    }
+
+    return fieldOptions.filter(
+      (field) =>
+        field.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        field.key.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  };
+
+  // Handle checkbox change
+  const handleFieldToggle = (fieldValue) => {
+    setSelectedFields((prev) => {
+      if (prev.includes(fieldValue)) {
+        return prev.filter((value) => value !== fieldValue);
+      } else {
+        return [...prev, fieldValue];
+      }
+    });
+  };
+
+  // Handle select all filtered fields
+  const handleSelectAllFiltered = () => {
+    const filteredFields = getFilteredFields();
+    const filteredValues = filteredFields.map((field) => field.value);
+    const allFilteredSelected = filteredValues.every((value) =>
+      selectedFields.includes(value)
+    );
+
+    if (allFilteredSelected) {
+      // Deselect all filtered fields
+      setSelectedFields((prev) =>
+        prev.filter((value) => !filteredValues.includes(value))
+      );
+    } else {
+      // Select all filtered fields
+      setSelectedFields((prev) => {
+        const newSelection = [...prev];
+        filteredValues.forEach((value) => {
+          if (!newSelection.includes(value)) {
+            newSelection.push(value);
+          }
+        });
+        return newSelection;
+      });
+    }
   };
 
   // Reset selection when modal opens
   useEffect(() => {
     if (isOpen) {
       setSelectedFields([]);
+      setSearchTerm("");
     }
   }, [isOpen]);
 
@@ -358,23 +369,83 @@ const FieldSelectionModal = ({
     onClose();
   };
 
-  const treeData = buildTreeData();
+  const filteredFields = getFilteredFields();
+  const filteredValues = filteredFields.map((field) => field.value);
+  const allFilteredSelected =
+    filteredValues.length > 0 &&
+    filteredValues.every((value) => selectedFields.includes(value));
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={title} size="lg">
       <div className="space-y-4">
         <Text variant="body" color="muted">
-          Select the fields you want to include in the CSV template. You can
-          select entire groups or individual fields.
+          Select the fields you want to include in the CSV template.
         </Text>
 
-        <div className="max-h-96 overflow-y-auto">
-          <TreeSelect
-            data={treeData}
-            value={selectedFields}
-            onChange={setSelectedFields}
-            showSelectAll={true}
+        {/* Search Input */}
+        <div>
+          <Input
+            type="text"
+            placeholder="Search fields..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full"
           />
+        </div>
+
+        {/* Field List */}
+        <div className="border border-gray-300 rounded-lg bg-white">
+          {/* Select All */}
+          {filteredFields.length > 0 && (
+            <div className="border-b border-gray-200 p-3">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  checked={allFilteredSelected}
+                  onChange={handleSelectAllFiltered}
+                />
+                <Text
+                  variant="body"
+                  weight="medium"
+                  className="cursor-pointer"
+                  onClick={handleSelectAllFiltered}
+                >
+                  Select All {searchTerm ? "Filtered " : ""}Fields
+                </Text>
+              </div>
+            </div>
+          )}
+
+          {/* Field Options */}
+          <div className="p-2 max-h-80 overflow-y-auto">
+            {filteredFields.length > 0 ? (
+              filteredFields.map((field) => (
+                <div
+                  key={field.value}
+                  className="flex items-center gap-2 py-2 px-2 hover:bg-gray-50 rounded"
+                >
+                  <Checkbox
+                    checked={selectedFields.includes(field.value)}
+                    onChange={() => handleFieldToggle(field.value)}
+                  />
+                  <Text
+                    variant="body"
+                    className="flex-1 cursor-pointer"
+                    onClick={() => handleFieldToggle(field.value)}
+                  >
+                    {field.label}
+                  </Text>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <Text variant="body" color="muted">
+                  {searchTerm
+                    ? "No fields found matching your search."
+                    : "No fields available."}
+                </Text>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center justify-between pt-4 border-t border-gray-200">

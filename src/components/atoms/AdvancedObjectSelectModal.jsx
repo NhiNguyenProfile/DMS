@@ -30,15 +30,26 @@ const AdvancedObjectSelectModal = ({
     columns.map((col) => col.key)
   );
 
+  // Initialize filters for all columns
+  const initializeAllFilters = (columns) => {
+    return columns.map((col, index) => ({
+      field: col.key,
+      value: "",
+      id: index + 1,
+      label: col.label,
+      fieldLabel: col.label,
+    }));
+  };
+
   // Reset when modal opens/closes
   useEffect(() => {
     if (isOpen) {
       setSelectedLegalEntity("");
       setColumnFilters({});
-      setSidebarFilters([]);
-      setFilteredData([]);
+      setSidebarFilters(initializeAllFilters(columns)); // Show all columns as filters
+      setFilteredData([]); // Start with empty data
       setSelectedItems([]);
-      setHasSearched(false);
+      setHasSearched(false); // Don't show data initially
       setShowFilterSidebar(false);
       setVisibleColumns(columns.map((col) => col.key));
     }
@@ -128,14 +139,7 @@ const AdvancedObjectSelectModal = ({
     }
   };
 
-  const removeSidebarFilter = (id) => {
-    setSidebarFilters((prev) => prev.filter((filter) => filter.id !== id));
-
-    // Auto-apply filters after removing
-    if (hasSearched) {
-      setTimeout(() => applyFilters(), 100);
-    }
-  };
+  // Removed removeSidebarFilter since filters are now predefined
 
   const handleSelectItem = (item) => {
     setSelectedItems((prev) => {
@@ -273,13 +277,13 @@ const AdvancedObjectSelectModal = ({
                 <Text variant="heading" size="md" weight="semibold">
                   Advanced Filters
                 </Text>
-                <Button
+                {/* <Button
                   variant="outline"
                   size="small"
                   onClick={addSidebarFilter}
                 >
                   Add Filter
-                </Button>
+                </Button> */}
               </div>
 
               <div className="space-y-4">
@@ -288,44 +292,24 @@ const AdvancedObjectSelectModal = ({
                     key={filter.id}
                     className="border border-gray-200 rounded-lg p-3"
                   >
-                    <div className="flex gap-2 items-center">
-                      <div className="flex-1 space-y-2">
-                        <Select
-                          value={filter.field}
-                          onChange={(value) =>
-                            updateSidebarFilter(filter.id, "field", value)
-                          }
-                          options={columns.map((col) => ({
-                            value: col.key,
-                            label: col.label,
-                          }))}
-                          placeholder="Select Field"
-                          size="small"
-                        />
-                        <Input
-                          value={filter.value}
-                          onChange={(e) =>
-                            updateSidebarFilter(
-                              filter.id,
-                              "value",
-                              e.target.value
-                            )
-                          }
-                          placeholder="Filter value (contains)"
-                          size="small"
-                        />
-                      </div>
-                      <div className="col-span-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeSidebarFilter(filter.id)}
-                          className="w-full border-none hover:bg-transparent text-red-600 hover:!text-red-700 flex items-center justify-center gap-1"
-                        >
-                          <X size={14} />
-                        </Button>
-                      </div>
+                    <div className="mb-2">
+                      <Text
+                        variant="body"
+                        size="sm"
+                        weight="medium"
+                        className="text-gray-700"
+                      >
+                        {filter.fieldLabel}
+                      </Text>
                     </div>
+                    <Input
+                      value={filter.value}
+                      onChange={(e) =>
+                        updateSidebarFilter(filter.id, "value", e.target.value)
+                      }
+                      placeholder={`Filter ${filter.fieldLabel?.toLowerCase()}...`}
+                      size="small"
+                    />
                   </div>
                 ))}
               </div>
